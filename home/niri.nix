@@ -46,6 +46,7 @@ in
     // Terminal — alacritty (primary per user preference, RICE §19).
     binds {
         "Mod+T" { spawn "alacritty"; }
+        "Mod+Return" { spawn "alacritty"; }
     }
 
     // Predictable screenshot location.
