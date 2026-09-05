@@ -47,7 +47,10 @@
   home-manager.useUserPackages = true;
 
   home-manager.users.vageesh = {
-    imports = [ ../home/niri.nix ];
+    imports = [
+      ../home/niri.nix
+      ../home/desktop.nix
+    ];
 
     home.stateVersion = "26.05";
 

@@ -17,7 +17,17 @@
     // The default config is included first so our overrides take precedence.
     include "${pkgs.niri.src}/resources/default-config.kdl"
 
-    // --- Phase 1 foundation overrides ---
+    // --- Phase 3 skeleton overrides ---
+
+    // Wallpaper fallback (Tokyo Night Storm background — solid color, per RICE §18).
+    // Decorative only; functionality must not depend on it.
+    spawn-at-startup "swaybg" "-c" "#24283b"
+
+    // Terminal — prefer ghostty (primary candidate per RICE §19).
+    // Overrides the default Mod+T → alacritty from the included config.
+    binds {
+        "Mod+T" { spawn "ghostty"; }
+    }
 
     // Predictable screenshot location.
     screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
