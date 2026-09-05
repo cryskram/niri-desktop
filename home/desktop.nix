@@ -19,9 +19,9 @@
   # PAM is configured at system level (modules/niri.nix).
   programs.swaylock.enable = true;
 
-  # Terminal — ghostty (primary candidate per RICE §19; alacritty remains
-  # available via niri's default bind until keybinds are refined)
-  programs.ghostty.enable = true;
+  # Terminal — alacritty (primary per user preference, RICE §19).
+  # Ghostty remains available in nixpkgs for evaluation (`nix shell nixpkgs#ghostty`).
+  programs.alacritty.enable = true;
 
   # Wallpaper — swaybg (static fallback, per RICE §18)
   # Spawned via niri's spawn-at-startup (see home/niri.nix) so it is tied

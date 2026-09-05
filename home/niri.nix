@@ -23,10 +23,19 @@
     // Decorative only; functionality must not depend on it.
     spawn-at-startup "swaybg" "-c" "#24283b"
 
-    // Terminal — prefer ghostty (primary candidate per RICE §19).
-    // Overrides the default Mod+T → alacritty from the included config.
+    // No window borders — clean tiling (border is off by default, focus-ring disabled here).
+    layout {
+        focus-ring {
+            off
+        }
+        border {
+            off
+        }
+    }
+
+    // Terminal — alacritty (primary per user preference, RICE §19).
     binds {
-        "Mod+T" { spawn "ghostty"; }
+        "Mod+T" { spawn "alacritty"; }
     }
 
     // Predictable screenshot location.

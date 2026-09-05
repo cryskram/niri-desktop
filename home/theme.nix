@@ -31,16 +31,50 @@ in
     style.name = "gtk2";
   };
 
-  # Terminal — ghostty uses built-in TokyoNight Storm theme + mono font
-  programs.ghostty.settings = {
-    theme = "TokyoNight Storm";
-    font-family = tokens.fonts.mono;
-    font-size = 12;
-    # Fallback explicit colors (ensures coherence even if theme missing)
-    background = cn.background;
-    foreground = cn.foreground;
-    selection-background = cn.surface-elevated;
-    selection-foreground = cn.foreground;
+  # Terminal — alacritty (Tokyo Night Storm)
+  programs.alacritty.settings = {
+    window = {
+      padding = {
+        x = 12;
+        y = 12;
+      };
+      opacity = 0.95;
+      decorations = "None";
+    };
+    font = {
+      normal.family = tokens.fonts.mono;
+      size = 11;
+    };
+    colors = {
+      primary = {
+        background = c.background;
+        foreground = c.foreground;
+      };
+      normal = {
+        black = c.background-deep;
+        red = c.error;
+        green = c.success;
+        yellow = c.warning;
+        blue = c.accent-primary;
+        magenta = c.accent-secondary;
+        cyan = c.info;
+        white = c.foreground-muted;
+      };
+      bright = {
+        black = c.surface-elevated;
+        red = c.error;
+        green = c.success;
+        yellow = c.warning;
+        blue = c.accent-primary;
+        magenta = c.accent-secondary;
+        cyan = c.info;
+        white = c.foreground;
+      };
+      selection = {
+        background = c.surface-elevated;
+        text = c.foreground;
+      };
+    };
   };
 
   # Launcher — fuzzel (INI format)
