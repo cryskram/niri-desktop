@@ -26,74 +26,106 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, pi, home-manager, ... }: {
-    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+  outputs =
+    {
+      self,
+      nixpkgs,
+      nixpkgs-unstable,
+      pi,
+      home-manager,
+      ...
+    }:
+    let
       system = "x86_64-linux";
-      specialArgs = { inherit pi; };
+    in
+    {
+      formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt;
 
-      modules = [
-        ./configuration.nix
-        ./hardware-configuration.nix
-        pi.nixosModules.default
-        home-manager.nixosModules.home-manager
+      checks.${system} = {
+        # Validate the generated niri config at build time (`nix flake check`).
+        niri-config-validate =
+          let
+            pkgs = nixpkgs.legacyPackages.${system};
+            configFile =
+              self.nixosConfigurations.nixos.config.home-manager.users.vageesh.xdg.configFile."niri/config.kdl";
+          in
+          pkgs.runCommand "niri-config-validate"
+            {
+              nativeBuildInputs = [ pkgs.niri ];
+              inherit (configFile) source;
+            }
+            ''
+              niri validate --config "$source"
+              touch "$out"
+            '';
+      };
 
-        ({ pkgs, ... }: {
-          nix.settings = {
-            experimental-features = [
-              "nix-command"
-              "flakes"
-            ];
+      nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit pi; };
 
-            extra-substituters = [
-              "https://pi.cachix.org"
-              "https://nix-community.cachix.org"
-            ];
+        modules = [
+          ./configuration.nix
+          ./hardware-configuration.nix
+          ./modules/niri.nix
+          pi.nixosModules.default
+          home-manager.nixosModules.home-manager
 
-            extra-trusted-public-keys = [
-              "pi.cachix.org-1:lGeoGJaZ5ZDabuRzkcD5EBTNnDM4HJ1vqeOxlWk1Flk="
-              "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-            ];
-          };
+          ({ pkgs, ... }: {
+            nix.settings = {
+              experimental-features = [
+                "nix-command"
+                "flakes"
+              ];
 
-          nixpkgs.overlays = [
-            (final: prev: {
-              opencode =
-                nixpkgs-unstable.legacyPackages.${prev.system}.opencode;
+              extra-substituters = [
+                "https://pi.cachix.org"
+                "https://nix-community.cachix.org"
+              ];
 
-              pi-coding-agent =
-                nixpkgs-unstable.legacyPackages.${prev.system}.pi-coding-agent;
-            })
-          ];
-
-          programs.pi.coding-agent = {
-            enable = true;
-            package =
-              nixpkgs-unstable.legacyPackages.${pkgs.system}.pi-coding-agent;
-
-            settings = {
-              defaultProvider = "opencode-go";
-              defaultModel = "kimi-k2.6";
-              defaultThinkingLevel = "medium";
+              extra-trusted-public-keys = [
+                "pi.cachix.org-1:lGeoGJaZ5ZDabuRzkcD5EBTNnDM4HJ1vqeOxlWk1Flk="
+                "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+              ];
             };
-          };
 
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
+            nixpkgs.overlays = [
+              (final: prev: {
+                opencode = nixpkgs-unstable.legacyPackages.${prev.system}.opencode;
 
-          home-manager.users.vageesh = {
-            home.stateVersion = "26.05";
+                pi-coding-agent = nixpkgs-unstable.legacyPackages.${prev.system}.pi-coding-agent;
+              })
+            ];
 
-            xdg.configFile."opencode/opencode.json".text =
-              builtins.toJSON {
+            programs.pi.coding-agent = {
+              enable = true;
+              package = nixpkgs-unstable.legacyPackages.${pkgs.system}.pi-coding-agent;
+
+              settings = {
+                defaultProvider = "opencode-go";
+                defaultModel = "kimi-k2.6";
+                defaultThinkingLevel = "medium";
+              };
+            };
+
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+
+            home-manager.users.vageesh = {
+              imports = [ ./home/niri.nix ];
+
+              home.stateVersion = "26.05";
+
+              xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
                 "$schema" = "https://opencode.ai/config.json";
               };
-          };
+            };
 
-          environment.systemPackages = with pkgs; [
-            opencode
-          ];
-        })
-      ];
+            environment.systemPackages = with pkgs; [
+              opencode
+            ];
+          })
+        ];
+      };
     };
-  };
 }
