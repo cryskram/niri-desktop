@@ -62,69 +62,17 @@
 
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit pi; };
+        specialArgs = {
+          inherit pi nixpkgs-unstable;
+        };
 
         modules = [
           ./configuration.nix
           ./hardware-configuration.nix
+          ./modules/core.nix
           ./modules/niri.nix
           pi.nixosModules.default
           home-manager.nixosModules.home-manager
-
-          ({ pkgs, ... }: {
-            nix.settings = {
-              experimental-features = [
-                "nix-command"
-                "flakes"
-              ];
-
-              extra-substituters = [
-                "https://pi.cachix.org"
-                "https://nix-community.cachix.org"
-              ];
-
-              extra-trusted-public-keys = [
-                "pi.cachix.org-1:lGeoGJaZ5ZDabuRzkcD5EBTNnDM4HJ1vqeOxlWk1Flk="
-                "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-              ];
-            };
-
-            nixpkgs.overlays = [
-              (final: prev: {
-                opencode = nixpkgs-unstable.legacyPackages.${prev.system}.opencode;
-
-                pi-coding-agent = nixpkgs-unstable.legacyPackages.${prev.system}.pi-coding-agent;
-              })
-            ];
-
-            programs.pi.coding-agent = {
-              enable = true;
-              package = nixpkgs-unstable.legacyPackages.${pkgs.system}.pi-coding-agent;
-
-              settings = {
-                defaultProvider = "opencode-go";
-                defaultModel = "kimi-k2.6";
-                defaultThinkingLevel = "medium";
-              };
-            };
-
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-
-            home-manager.users.vageesh = {
-              imports = [ ./home/niri.nix ];
-
-              home.stateVersion = "26.05";
-
-              xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
-                "$schema" = "https://opencode.ai/config.json";
-              };
-            };
-
-            environment.systemPackages = with pkgs; [
-              opencode
-            ];
-          })
         ];
       };
     };
