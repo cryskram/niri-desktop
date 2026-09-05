@@ -57,6 +57,7 @@
     imports = [
       ../home/niri.nix
       ../home/desktop.nix
+      ../home/theme.nix
     ];
 
     home.stateVersion = "26.05";

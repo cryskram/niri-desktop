@@ -70,6 +70,7 @@
           ./configuration.nix
           ./hardware-configuration.nix
           ./modules/core.nix
+          ./modules/theme.nix
           ./modules/niri.nix
           pi.nixosModules.default
           home-manager.nixosModules.home-manager
