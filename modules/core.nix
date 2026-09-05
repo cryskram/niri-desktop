@@ -12,6 +12,13 @@
       "nix-command"
       "flakes"
     ];
+    # Allow the flake's `nixConfig` (extra caches) without prompting for
+    # `nixos-rebuild --accept-flake-config` on every switch.
+    accept-flake-config = true;
+    trusted-users = [
+      "root"
+      "vageesh"
+    ];
 
     extra-substituters = [
       "https://pi.cachix.org"
