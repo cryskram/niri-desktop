@@ -11,25 +11,35 @@
   pkgs,
   ...
 }:
+let
+  tokens = import ../theme/tokens.nix;
+in
 {
   xdg.configFile."niri/config.kdl".text = ''
     // Managed by ~/niri-desktop (home/niri.nix). Local edits will be overwritten.
     // The default config is included first so our overrides take precedence.
     include "${pkgs.niri.src}/resources/default-config.kdl"
 
+    // Prefer Niri-drawn decorations over client-side (removes GTK header-bar borders).
+    prefer-no-csd
+
     // --- Phase 3 skeleton overrides ---
 
     // Wallpaper fallback (Tokyo Night Storm background — solid color, per RICE §18).
     // Decorative only; functionality must not depend on it.
-    spawn-at-startup "swaybg" "-c" "#24283b"
+    spawn-at-startup "swaybg" "-c" "${tokens.colors.background}"
 
-    // No window borders — clean tiling (border is off by default, focus-ring disabled here).
+    // Rings for every window — active vs inactive distinct (so you always know focus).
+    // Border is always visible; focus-ring disabled to avoid double ring.
     layout {
         focus-ring {
             off
         }
         border {
-            off
+            width 2
+            active-color "${tokens.colors.accent-primary}"
+            inactive-color "${tokens.colors.border}"
+            urgent-color "${tokens.colors.error}"
         }
     }
 
