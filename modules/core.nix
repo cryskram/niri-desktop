@@ -3,6 +3,7 @@
 # No behavior change — purely structural refactor.
 {
   pkgs,
+  noctalia,
   nixpkgs-unstable,
   ...
 }:
@@ -53,6 +54,7 @@
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
   home-manager.backupFileExtension = "backup";
+  home-manager.extraSpecialArgs = { inherit noctalia; };
 
   home-manager.users.vageesh = {
     imports = [
@@ -62,6 +64,7 @@
       ../home/ux.nix
       ../home/shell.nix
       ../home/files.nix
+      ../home/noctalia.nix
     ];
 
     home.stateVersion = "26.05";
