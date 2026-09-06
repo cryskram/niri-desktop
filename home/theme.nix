@@ -24,11 +24,10 @@ in
     };
   };
 
-  # Qt follows GTK
+  # Qt — use qt5ct on Wayland (gtk2 platform theme requires X DISPLAY and breaks Quickshell on pure Wayland)
   qt = {
     enable = true;
-    platformTheme.name = "gtk";
-    style.name = "gtk2";
+    platformTheme.name = "qt5ct";
   };
 
   # Terminal — alacritty (Tokyo Night Storm)
