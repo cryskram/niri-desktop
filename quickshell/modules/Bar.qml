@@ -19,7 +19,8 @@ Variants {
         }
 
         implicitHeight: 32
-        color: "#24283b"
+        // Storm with subtle transparency — blur if available, solid fallback per RICE §11
+        color: "#24283be6"
 
         // Subtle border bottom — Storm border
         Rectangle {

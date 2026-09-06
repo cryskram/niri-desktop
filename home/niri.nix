@@ -43,6 +43,13 @@ in
         }
     }
 
+    // Multi-monitor ready — single 1920x1080 now, architecture supports 2+ without redesign (RICE §28)
+    // Example second output (uncomment when attached):
+    // output "HDMI-A-1" {
+    //     mode "1920x1080@60"
+    //     position x=1920 y=0
+    // }
+
     // Terminal — alacritty (primary per user preference, RICE §19).
     // UX — clipboard, screenshots, recording (RICE §26-27)
     binds {
