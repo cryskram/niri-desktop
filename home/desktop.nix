@@ -34,7 +34,7 @@
   # Starts as a systemd user service tied to the niri session.
   programs.quickshell.enable = true;
   programs.quickshell.systemd.enable = true;
-  programs.quickshell.systemd.target = "niri.service";
+  programs.quickshell.systemd.target = "graphical-session.target";
   programs.quickshell.configs."niri-desktop" = ../quickshell;
   programs.quickshell.activeConfig = "niri-desktop";
 }
