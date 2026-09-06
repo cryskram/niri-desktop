@@ -93,9 +93,12 @@ Item {
                         }
                     }
 
-                    // Center — window title with app icon
+                    // Center — window title with app icon (constrained so right side never starves)
                     Rectangle {
                         Layout.fillWidth: true
+                        Layout.minimumWidth: 120
+                        Layout.preferredWidth: 320
+                        Layout.maximumWidth: 520
                         Layout.preferredHeight: 24
                         radius: 8
                         color: "#24283b"
