@@ -3,11 +3,10 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
-import State 1.0
 
 PanelWindow {
     id: root
-    visible: State.audioPanelVisible
+    visible: false
     implicitWidth: 360
     implicitHeight: 220
     color: "transparent"

@@ -1,7 +1,6 @@
 // Audio — via wpctl, PipeWire
 import Quickshell.Io
 import QtQuick
-import State 1.0
 
 Text {
     id: root
@@ -11,12 +10,6 @@ Text {
     property string display: "Vol —"
 
     text: display
-
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: State.audioPanelVisible = !State.audioPanelVisible
-    }
 
     Process {
         id: proc

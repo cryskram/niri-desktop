@@ -1,7 +1,6 @@
 // Network — via nmcli, survives disconnected/unavailable
 import Quickshell.Io
 import QtQuick
-import State 1.0
 
 Text {
     id: root
@@ -10,12 +9,6 @@ Text {
     font.pixelSize: 10
     property string display: "Net —"
     text: display
-
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: State.networkPanelVisible = !State.networkPanelVisible
-    }
 
     Process {
         id: proc
