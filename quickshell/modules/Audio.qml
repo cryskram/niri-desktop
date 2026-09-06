@@ -4,12 +4,19 @@ import QtQuick
 
 Text {
     id: root
+    signal clicked()
     color: "#c0caf5"
     font.family: "Inter"
     font.pixelSize: 10
     property string display: "Vol —"
 
     text: display
+
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.clicked()
+    }
 
     Process {
         id: proc

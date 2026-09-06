@@ -5,7 +5,12 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-Variants {
+Item {
+    id: barRoot
+    signal networkClicked()
+    signal audioClicked()
+
+    Variants {
     model: Quickshell.screens
 
     PanelWindow {
@@ -64,8 +69,12 @@ Variants {
                 Ram {}
                 Gpu {}
                 Temp {}
-                Network {}
-                Audio {}
+                Network {
+                    onClicked: barRoot.networkClicked()
+                }
+                Audio {
+                    onClicked: barRoot.audioClicked()
+                }
                 Media {}
                 Battery {}
                 Bluetooth {}
@@ -80,5 +89,6 @@ Variants {
                 Clock {}
             }
         }
+    }
     }
 }
