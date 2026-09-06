@@ -35,7 +35,7 @@ Variants {
             anchors.rightMargin: 12
             spacing: 12
 
-            // Left — placeholder for workspaces (Niri IPC later). For now static.
+            // Left — live workspaces
             RowLayout {
                 Layout.fillWidth: false
                 spacing: 6
@@ -46,29 +46,13 @@ Variants {
                     font.pixelSize: 11
                     font.bold: true
                 }
-                // Placeholder workspace dots
-                Repeater {
-                    model: 4
-                    Rectangle {
-                        width: 8
-                        height: 8
-                        radius: 4
-                        color: index === 0 ? "#7aa2f7" : "#3b4261"
-                    }
-                }
+                Workspaces {}
             }
 
-            // Center — window title (truncated, flexible). No fixed width per AGENTS §16.
-            Text {
+            // Center — live window title (truncated, flexible). No fixed width per AGENTS §16.
+            WindowTitle {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideRight
-                maximumLineCount: 1
-                text: "—"
-                color: "#a9b1d6"
-                font.family: "Inter"
-                font.pixelSize: 11
             }
 
             // Right — clock + system hint
