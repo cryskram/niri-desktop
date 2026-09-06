@@ -55,16 +55,19 @@ Variants {
                 Layout.alignment: Qt.AlignVCenter
             }
 
-            // Right — clock + system hint
+            // Right — telemetry + clock (no fixed widths, truncation in center protects this)
             RowLayout {
                 Layout.fillWidth: false
-                spacing: 12
-                Clock {}
-                Text {
-                    text: "◷"
-                    color: "#787c99"
-                    font.pixelSize: 10
+                spacing: 10
+                Cpu {}
+                Ram {}
+                // Separator
+                Rectangle {
+                    width: 1
+                    height: 14
+                    color: "#3b4261"
                 }
+                Clock {}
             }
         }
     }
