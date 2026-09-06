@@ -55,13 +55,17 @@ Variants {
                 Layout.alignment: Qt.AlignVCenter
             }
 
-            // Right — telemetry + clock (no fixed widths, truncation in center protects this)
+            // Right — telemetry + system + clock (no fixed widths, center truncation protects this)
             RowLayout {
                 Layout.fillWidth: false
-                spacing: 10
+                spacing: 8
                 Cpu {}
                 Ram {}
-                // Separator
+                Network {}
+                Audio {}
+                Battery {}
+                Bluetooth {}
+                // Separator before clock
                 Rectangle {
                     width: 1
                     height: 14
