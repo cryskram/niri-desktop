@@ -3,7 +3,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
-import "../.."
+import State 1.0
 
 PanelWindow {
     id: root

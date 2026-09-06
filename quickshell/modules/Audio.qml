@@ -1,7 +1,7 @@
 // Audio — via wpctl, PipeWire
 import Quickshell.Io
 import QtQuick
-import ".."
+import State 1.0
 
 Text {
     id: root

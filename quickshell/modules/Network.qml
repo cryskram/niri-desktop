@@ -1,7 +1,7 @@
 // Network — via nmcli, survives disconnected/unavailable
 import Quickshell.Io
 import QtQuick
-import ".."
+import State 1.0
 
 Text {
     id: root
