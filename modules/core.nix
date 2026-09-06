@@ -59,6 +59,8 @@
       ../home/desktop.nix
       ../home/theme.nix
       ../home/ux.nix
+      ../home/shell.nix
+      ../home/files.nix
     ];
 
     home.stateVersion = "26.05";
