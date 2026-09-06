@@ -5,9 +5,11 @@
   fonts.packages = with pkgs; [
     inter
     jetbrains-mono
+    nerd-fonts.jetbrains-mono
     noto-fonts
     noto-fonts-color-emoji
     noto-fonts-cjk-sans
+    font-awesome
   ];
 
   fonts.fontconfig = {
