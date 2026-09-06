@@ -62,11 +62,14 @@ Variants {
                 spacing: 8
                 Cpu {}
                 Ram {}
+                Gpu {}
+                Temp {}
                 Network {}
                 Audio {}
                 Media {}
                 Battery {}
                 Bluetooth {}
+                Notifications {}
                 Power {}
                 // Separator before clock
                 Rectangle {
