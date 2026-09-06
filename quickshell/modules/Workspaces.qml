@@ -18,7 +18,7 @@ RowLayout {
                 try {
                     const data = JSON.parse(text)
                     if (Array.isArray(data))
-                        root.workspaces = data
+                        root.workspaces = data.slice().sort((a, b) => a.idx - b.idx)
                 } catch (e) {
                     // keep previous
                 }
