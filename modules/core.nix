@@ -58,6 +58,7 @@
       ../home/niri.nix
       ../home/desktop.nix
       ../home/theme.nix
+      ../home/ux.nix
     ];
 
     home.stateVersion = "26.05";
