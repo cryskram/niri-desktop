@@ -55,7 +55,7 @@ in
     binds {
         "Mod+T" { spawn "alacritty"; }
         "Mod+Return" { spawn "alacritty"; }
-        "Mod+V" { spawn "sh" "-c" "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"; }
+        "Mod+Ctrl+V" { spawn "sh" "-c" "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"; }
         "Mod+Shift+S" { spawn "sh" "-c" "grim -g \"$(slurp)\" - | satty --filename - --fullscreen --output-dir ~/Pictures/Screenshots"; }
         "Print" { spawn "sh" "-c" "grim - | satty --filename - --fullscreen --output-dir ~/Pictures/Screenshots"; }
         "Mod+Shift+R" { spawn "sh" "-c" "wf-recorder -g \"$(slurp -o)\" -f ~/Videos/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4"; }
