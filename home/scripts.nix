@@ -27,7 +27,8 @@
       niri msg output "$OUT" scale 1.0 2>/dev/null || true
       niri msg output "$OUT" position set 1670 0 2>/dev/null || niri msg output "$OUT" position auto 2>/dev/null || true
       # Start wl-mirror: mirror eDP-1 fullscreen onto HDMI-A-1, fit scaling
-      nohup wl-mirror eDP-1 --fullscreen-output "$OUT" --scaling fit >/dev/null 2>&1 &
+      # Note: output must be last arg, all options before it
+      nohup wl-mirror --fullscreen-output "$OUT" --scaling fit eDP-1 >/dev/null 2>&1 &
       sleep 0.4
       if pgrep -x wl-mirror >/dev/null 2>&1; then
         ${pkgs.libnotify}/bin/notify-send "Display" "Mirror — HDMI shows eDP (wl-mirror, Mod+M to unmirror)" 2>/dev/null || true
