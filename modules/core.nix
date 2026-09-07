@@ -82,6 +82,8 @@
       ../home/direnv.nix
       ../home/development.nix
       ../home/applications.nix
+      ../home/neovim.nix
+      ../home/zed.nix
     ];
 
     home.stateVersion = "26.05";
