@@ -60,12 +60,12 @@ in
         clip-to-geometry true
     }
 
-    // Multi-monitor ready — single 1920x1080 now, architecture supports 2+ without redesign (RICE §28)
-    // Example second output (uncomment when attached):
-    // output "HDMI-A-1" {
-    //     mode "1920x1080@60"
-    //     position x=1920 y=0
-    // }
+    // Multi-monitor — HDMI-A-1 Samsung 2560x1440 right of eDP (extend by default, RICE §28)
+    output "HDMI-A-1" {
+        mode "2560x1440@59.951"
+        scale 1.0
+        position x=1670 y=0
+    }
 
     // Terminal — alacritty (primary per user preference, RICE §19).
     // UX — clipboard, screenshots, recording, Noctalia panels (RICE §26-27, §7)
@@ -81,6 +81,8 @@ in
         "Print" { spawn "sh" "-c" "grim - | satty --filename - --fullscreen --output-dir ~/Pictures/Screenshots"; }
         "Mod+Shift+R" { spawn "sh" "-c" "wf-recorder -g \"$(slurp -o)\" -f ~/Videos/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4"; }
         "Mod+Shift+E" { spawn "wlogout"; }
+        "Mod+M" { spawn "niri-display-toggle"; }
+        "Mod+Shift+M" { spawn "niri-display-toggle"; }
     }
 
     // Predictable screenshot location.

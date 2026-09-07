@@ -77,6 +77,7 @@
       ../home/shell.nix
       ../home/files.nix
       ../home/noctalia.nix
+      ../home/scripts.nix
     ];
 
     home.stateVersion = "26.05";
