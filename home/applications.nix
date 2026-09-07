@@ -45,6 +45,5 @@
     # Keep both goland and idea available; user can pick.
     jetbrains.goland
     jetbrains.idea
-    jetbrains.clion # C/C++ complement (optional, useful with clang-tools)
   ];
 }
