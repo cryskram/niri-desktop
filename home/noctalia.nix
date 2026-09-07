@@ -13,6 +13,11 @@
     systemd.enable = true;
 
     settings = {
+      # Global scale 1 default (RICE §1: 100% scaling)
+      accessibility = {
+        ui_scale = 1.0;
+      };
+
       shell = {
         font_family = "JetBrainsMono Nerd Font";
         corner_radius_scale = 1.5;
@@ -48,6 +53,7 @@
           position = "top";
           thickness = 36;
           background_opacity = 0.0;
+          background_color = "#000000"; # fully transparent fallback
           radius = 0;
           margin_ends = 12;
           margin_edge = 8;
@@ -56,9 +62,13 @@
           shadow = false;
           reserve_space = true;
           border_width = 0.0;
+          scale = 1.0;
+          font_scale = 1.0;
           capsule = true;
           capsule_radius = 12;
           capsule_opacity = 1.0;
+          capsule_thickness = 0.8;
+          capsule_padding = 12;
           # Left pills — launcher + workspaces
           start = [
             "launcher"
@@ -73,16 +83,50 @@
             "control-center"
             "session"
           ];
-          # Per-pill Storm — wifi green, bluetooth red, etc. per theme/tokens.nix
-          widgets.launcher.capsule_fill = "primary";
-          widgets.workspaces.capsule_fill = "surface";
-          widgets.clock.capsule_fill = "surface_variant";
-          widgets.network.capsule_fill = "success";
-          widgets.bluetooth.capsule_fill = "error";
-          widgets.volume.capsule_fill = "info";
-          widgets.battery.capsule_fill = "warning";
-          widgets."control-center".capsule_fill = "secondary";
-          widgets.session.capsule_fill = "error";
+        };
+      };
+
+      # Per-pill Storm colors — TOP-LEVEL [widget.<name>] tables (valid Noctalia syntax),
+      # fixed hex per theme/tokens.nix (success/info/warning are not palette roles, hex works).
+      widget = {
+        # Left — launcher + workspaces
+        launcher = {
+          capsule_fill = "#7aa2f7";
+          capsule_foreground = "#1a1b26";
+        };
+        workspaces = {
+          capsule_fill = "#414868";
+          capsule_foreground = "#c0caf5";
+        };
+        # Center — clock
+        clock = {
+          capsule_fill = "#292e42";
+          capsule_foreground = "#c0caf5";
+        };
+        # Right — system
+        network = {
+          capsule_fill = "#9ece6a";
+          capsule_foreground = "#1a1b26";
+        };
+        bluetooth = {
+          capsule_fill = "#f7768e";
+          capsule_foreground = "#1a1b26";
+        };
+        volume = {
+          capsule_fill = "#7dcfff";
+          capsule_foreground = "#1a1b26";
+        };
+        battery = {
+          capsule_fill = "#e0af68";
+          capsule_foreground = "#1a1b26";
+        };
+        "control-center" = {
+          capsule_fill = "#bb9af7";
+          capsule_foreground = "#1a1b26";
+        };
+        session = {
+          capsule_fill = "#f7768e";
+          capsule_foreground = "#1a1b26";
         };
       };
 
