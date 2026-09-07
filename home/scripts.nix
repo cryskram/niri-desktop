@@ -4,9 +4,26 @@
     wl-mirror
     (writeShellScriptBin "vpn-toggle" ''
       set -euo pipefail
-      # Simple on/off for wg-quick-wg0 — no ip-link toggle logic per user request
-      # Requires `secrets/wg0.conf` + `sudo nixos-rebuild switch` (unit wg-quick-wg0 must exist)
+      # Toggle VPN — matches Noctalia (NetworkManager wg0), fallback to wg-quick if present
+      CONN="wg0"
       SVC="wg-quick-wg0"
+      # Prefer NM if connection exists (what Noctalia toggles)
+      if nmcli connection show "$CONN" >/dev/null 2>&1; then
+        if nmcli -t -f TYPE,STATE device status 2>/dev/null | grep -q "^wireguard:connected"; then
+          echo "Stopping NM $CONN..."
+          nmcli connection down "$CONN" 2>&1 || true
+          notify-send "VPN" "VPN disconnected" 2>/dev/null || true
+        else
+          echo "Starting NM $CONN..."
+          if nmcli connection up "$CONN" 2>&1; then
+            notify-send "VPN" "VPN connected" 2>/dev/null || true
+          else
+            notify-send "VPN" "VPN failed — check nmcli" 2>/dev/null || true
+          fi
+        fi
+        exit 0
+      fi
+      # Fallback wg-quick (if NM not used)
       if systemctl is-active --quiet "$SVC" 2>/dev/null; then
         echo "Stopping $SVC..."
         sudo systemctl stop "$SVC" 2>&1 || true
@@ -27,8 +44,13 @@
     '')
     (writeShellScriptBin "vpn-status" ''
       set -euo pipefail
+      CONN="wg0"
       SVC="wg-quick-wg0"
-      if systemctl is-active --quiet "$SVC" 2>/dev/null; then echo "up"; else echo "down"; fi
+      if nmcli connection show "$CONN" >/dev/null 2>&1; then
+        if nmcli -t -f TYPE,STATE device status 2>/dev/null | grep -q "^wireguard:connected"; then echo "up"; else echo "down"; fi
+      else
+        if systemctl is-active --quiet "$SVC" 2>/dev/null; then echo "up"; else echo "down"; fi
+      fi
     '')
     (writeShellScriptBin "niri-display-toggle" ''
       set -euo pipefail
