@@ -40,27 +40,25 @@
         tint_intensity = 0.2;
       };
 
-      # Bar — floating capsule, r/unixporn
+      # Bar — floating ISLANDS, r/unixporn, Tokyo Night dots
       bar = {
         main = {
           position = "top";
-          thickness = 38;
-          background_opacity = 0.88;
-          radius = 14;
-          margin_ends = 12;
+          thickness = 36;
+          background_opacity = 0.0;
+          radius = 12;
+          margin_ends = 10;
           margin_edge = 8;
-          padding = 10;
+          padding = 6;
           widget_spacing = 8;
           shadow = true;
           reserve_space = true;
-          capsule = true;
-          capsule_radius = 12;
-          capsule_opacity = 0.92;
+          capsule = false;
           start = [
             "launcher"
             "workspaces"
           ];
-          center = [ "window" ];
+          center = [ "clock" ];
           end = [
             "tray"
             "media"
@@ -70,7 +68,6 @@
             "battery"
             "control-center"
             "session"
-            "clock"
           ];
         };
       };
