@@ -79,7 +79,6 @@
             "bluetooth"
             "volume"
             "battery"
-            "felipeartur/ai-usagebar:bar"
             "control-center"
             "session"
           ];

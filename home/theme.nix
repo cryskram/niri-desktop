@@ -44,53 +44,7 @@ in
     platformTheme.name = "qt5ct";
   };
 
-  # Terminals — both Storm, blur/glass, follow Noctalia palette
-  programs.alacritty.settings = {
-    window = {
-      padding = {
-        x = 12;
-        y = 12;
-      };
-      opacity = 0.92;
-      blur = true;
-      decorations = "None";
-    };
-    font = {
-      normal.family = tokens.fonts.mono;
-      size = 11;
-    };
-    colors = {
-      primary = {
-        background = c.background;
-        foreground = c.foreground;
-      };
-      normal = {
-        black = c.background-deep;
-        red = c.error;
-        green = c.success;
-        yellow = c.warning;
-        blue = c.accent-primary;
-        magenta = c.accent-secondary;
-        cyan = c.info;
-        white = c.foreground-muted;
-      };
-      bright = {
-        black = c.surface-elevated;
-        red = c.error;
-        green = c.success;
-        yellow = c.warning;
-        blue = c.accent-primary;
-        magenta = c.accent-secondary;
-        cyan = c.info;
-        white = c.foreground;
-      };
-      selection = {
-        background = c.surface-elevated;
-        text = c.foreground;
-      };
-    };
-  };
-
+  # Terminal — ghostty Storm, blur/glass via Noctalia
   programs.ghostty.settings = {
     font-family = tokens.fonts.mono;
     font-size = 11;

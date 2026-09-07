@@ -22,9 +22,8 @@
     LC_TIME = "en_IN";
   };
 
-  services.displayManager.gdm.enable = true;
-  # GNOME desktop removed — Niri is the primary session (GDM still provides login).
-  # This also stops GNOME from forcing ibus + the "Input Method" login notification.
+  # GDM removed — greetd + regreet provide the highly customized login per RICE §16
+  services.displayManager.gdm.enable = false;
   services.xserver.xkb = {
     layout = "us";
     variant = "";
@@ -48,7 +47,6 @@
     ];
   };
 
-  programs.firefox.enable = true;
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [
     "nix-command"
@@ -56,11 +54,9 @@
   ];
 
   environment.systemPackages = with pkgs; [
-    vim
-    wget
+    neovim
     git
     gh
-    neovim
     curl
     google-chrome
     nodejs

@@ -5,7 +5,6 @@
   lib,
   pkgs,
   noctalia,
-  ai-usagebar,
   nixpkgs-unstable,
   ...
 }:
@@ -101,6 +100,5 @@
 
   environment.systemPackages = with pkgs; [
     opencode
-    ai-usagebar.packages.${pkgs.system}.default
   ];
 }

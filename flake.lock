@@ -1,25 +1,5 @@
 {
   "nodes": {
-    "ai-usagebar": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1788723535,
-        "narHash": "sha256-2ZRerwyOq+iS3VLmenFw6AHHJhpZ/GtNEHc4ir2swbc=",
-        "owner": "akitaonrails",
-        "repo": "ai-usagebar",
-        "rev": "f274e035f1cd981c600f5acedf7655b1b5c628a5",
-        "type": "github"
-      },
-      "original": {
-        "owner": "akitaonrails",
-        "repo": "ai-usagebar",
-        "type": "github"
-      }
-    },
     "bun2nix": {
       "inputs": {
         "flake-parts": "flake-parts",
@@ -197,7 +177,6 @@
     },
     "root": {
       "inputs": {
-        "ai-usagebar": "ai-usagebar",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",

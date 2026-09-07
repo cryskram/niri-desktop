@@ -38,8 +38,7 @@ in
     separator-color = "00000000";
   };
 
-  # Terminals — both with blur/glass, follow Noctalia Storm via templates (RICE §19)
-  programs.alacritty.enable = true;
+  # Terminal — ghostty only (RICE §19) — Storm, blur/glass via Noctalia theme
   programs.ghostty.enable = true;
 
   # Wallpaper — swaybg (static fallback, per RICE §18)
