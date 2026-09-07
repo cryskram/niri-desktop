@@ -24,6 +24,20 @@ in
     };
   };
 
+  # Cursor — Bibata Modern Classic at 24px (was abnormally big at default 32)
+  home.pointerCursor = {
+    package = pkgs.bibata-cursors;
+    name = "Bibata-Modern-Classic";
+    size = 24;
+    x11.enable = true;
+    gtk.enable = true;
+  };
+
+  home.sessionVariables = {
+    XCURSOR_SIZE = "24";
+    XCURSOR_THEME = "Bibata-Modern-Classic";
+  };
+
   # Qt — use qt5ct on Wayland (gtk2 platform theme requires X DISPLAY and breaks Quickshell on pure Wayland)
   qt = {
     enable = true;
