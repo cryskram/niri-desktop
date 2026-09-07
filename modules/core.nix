@@ -78,6 +78,10 @@
       ../home/files.nix
       ../home/noctalia.nix
       ../home/scripts.nix
+      ../home/git.nix
+      ../home/direnv.nix
+      ../home/development.nix
+      ../home/applications.nix
     ];
 
     home.stateVersion = "26.05";

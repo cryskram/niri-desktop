@@ -1,0 +1,12 @@
+# Example: dev/company/project-a.nix — personal env for company/project-a
+# Copy to dev/company/<real-project>.nix and customize. Do NOT move to company repo.
+{ pkgs, ... }:
+{
+  imports = [ ../shared/go.nix ];
+  # Pin language version if needed: languages.go.package = pkgs.go_1_22;
+  # services.postgres.enable = true;
+  # env.DATABASE_URL = "postgres://localhost/mydb";
+  enterShell = ''
+    echo "personal dev env for project-a (from ~/niri-desktop/dev/company)"
+  '';
+}

@@ -80,6 +80,9 @@
           ./modules/shell.nix
           ./modules/niri.nix
           ./modules/sddm.nix
+          ./modules/docker.nix
+          ./modules/direnv.nix
+          ./modules/vpn.nix
           pi.nixosModules.default
           home-manager.nixosModules.home-manager
         ];

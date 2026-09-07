@@ -1,14 +1,37 @@
-# Secrets
+# Secrets — NEVER commit (DEV_ENVIRONMENT §15, RICE §31)
 .env
 .env.*
 !.env.example
-secrets/
+secrets/*
+!secrets/README.md
+!secrets/.gitkeep
 *.key
 *.pem
+*.age
+*.sops
+*.sops.yaml
+*.sops.yml
+# VPN
+*.ovpn
+*.conf.vpn
+wg*.conf
+# direnv/devenv
+.direnv/
+.devenv/
+.devenv.*
+# Cloud / auth
+.aws/
+.azure/
+.gcp/
+*.cloud
+# Pi/OpenCode auth (outside repo, but ensure no accidental copy)
+.pi/
+.opencode/
 
 # Nix build outputs
 result
 result-*
+.direnv/
 
 # Editors
 .vscode/
