@@ -15,8 +15,8 @@ in
       name = "Tokyonight-Dark";
     };
     iconTheme = {
-      package = pkgs.papirus-icon-theme;
-      name = "Papirus-Dark";
+      package = pkgs.colloid-icon-theme;
+      name = "Colloid-Dark";
     };
     font = {
       name = tokens.fonts.ui;
