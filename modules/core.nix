@@ -35,15 +35,16 @@
 
   nixpkgs.overlays = [
     (final: prev: {
-      opencode = nixpkgs-unstable.legacyPackages.${prev.system}.opencode;
+      opencode = nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.opencode;
 
-      pi-coding-agent = nixpkgs-unstable.legacyPackages.${prev.system}.pi-coding-agent;
+      pi-coding-agent =
+        nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.pi-coding-agent;
     })
   ];
 
   programs.pi.coding-agent = {
     enable = true;
-    package = nixpkgs-unstable.legacyPackages.${pkgs.system}.pi-coding-agent;
+    package = nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.pi-coding-agent;
 
     settings = {
       defaultProvider = "opencode-go";

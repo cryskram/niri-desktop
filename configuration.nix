@@ -3,8 +3,20 @@
   imports = [ ./hardware-configuration.nix ];
 
   boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.configurationLimit = 8; # don’t keep zillion generations at boot picker
+  boot.loader.systemd-boot.editor = false; # no edit at boot
+  boot.loader.systemd-boot.consoleMode = "max";
+  boot.loader.timeout = 3; # quick picker, Tokyo Night friendly (systemd-boot is text-only)
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
+
+  # GC — keep store sane (weekly, keep 7d)
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
+  };
+  nix.settings.auto-optimise-store = true;
 
   networking.hostName = "nixos";
   networking.networkmanager.enable = true;
@@ -47,6 +59,7 @@
     ];
   };
 
+  nixpkgs.hostPlatform = "x86_64-linux";
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [
     "nix-command"
