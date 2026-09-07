@@ -63,7 +63,7 @@
           reserve_space = true;
           border_width = 0.0;
           scale = 1.0;
-          font_scale = 1.15;
+          font_scale = 1.0;
           capsule = true;
           capsule_radius = 12;
           capsule_opacity = 1.0;

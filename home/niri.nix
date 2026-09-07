@@ -23,6 +23,11 @@ in
     // Prefer Niri-drawn decorations over client-side (removes GTK header-bar borders).
     prefer-no-csd
 
+    // No "Important Hotkeys" pop-up at every login.
+    hotkey-overlay {
+        skip-at-startup
+    }
+
     // --- Phase 3 skeleton overrides ---
 
     // Wallpaper fallback (Tokyo Night Storm background — solid color, per RICE §18).
