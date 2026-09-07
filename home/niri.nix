@@ -29,9 +29,9 @@ in
     // Decorative only; functionality must not depend on it.
     spawn-at-startup "swaybg" "-c" "${tokens.colors.background}"
 
-    // RICE §1: 100% scaling — override the default config's example scale 2.
+    // Desktop scale — override the default config's example scale 2.
     output "eDP-1" {
-        scale 1
+        scale 1.15
     }
 
     // Rings for every window — active vs inactive distinct (so you always know focus).

@@ -85,6 +85,12 @@
     };
   };
 
+  environment.sessionVariables = {
+    # System-wide cursor (compositor + apps read at session start; needs relogin)
+    XCURSOR_SIZE = "24";
+    XCURSOR_THEME = "Bibata-Modern-Classic";
+  };
+
   environment.systemPackages = with pkgs; [
     opencode
   ];
