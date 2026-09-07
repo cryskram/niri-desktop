@@ -49,6 +49,17 @@
       defaultModel = "kimi-k2.6";
       defaultThinkingLevel = "medium";
     };
+
+    extensions =
+      let
+        pi-web-search = pkgs.fetchFromGitHub {
+          owner = "ttttmr";
+          repo = "pi-web-search";
+          rev = "83ac115e87bce29cf4c93af329b94ce5c306eaa8";
+          hash = "sha256-MgpL9tSmjDSyIgLhxR874DZHga4SfmcN8xRmdRItf1I=";
+        };
+      in
+      [ "${pi-web-search}/src/index.ts" ];
   };
 
   home-manager.useGlobalPkgs = true;
