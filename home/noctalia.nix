@@ -146,6 +146,43 @@
         background_opacity = 0.92;
         scale = 1.0;
       };
+
+      # Lock screen (RICE §17) — elaborate: blurred desktop + Storm tint + big clock
+      lockscreen = {
+        enabled = true;
+        blurred_desktop = true; # requires wlr-screencopy (falls back to solid)
+        blur_intensity = 0.6;
+        tint_intensity = 0.3;
+      };
+
+      lockscreen_widgets = {
+        enabled = true;
+        widget_order = [ "clock_main" ];
+      };
+      lockscreen_widgets.widget.clock_main = {
+        type = "clock";
+        cx = 960.0; # 1920x1080 center — refine for multi-monitor later (RICE §28)
+        cy = 440.0;
+        scale = 3.0;
+        settings.format = "{:%H:%M}";
+      };
+
+      # Dynamic wallpaper (RICE §18): fade transitions, random rotation, static fallback
+      wallpaper = {
+        enabled = true;
+        fill_mode = "crop";
+        fill_color = "surface";
+        transition = [ "fade" ];
+        transition_duration = 1500;
+        directory = "~/Pictures/Wallpapers";
+        default.path = "";
+        automation = {
+          enabled = true;
+          interval_seconds = 1800;
+          order = "random";
+          recursive = true;
+        };
+      };
     };
   };
 
