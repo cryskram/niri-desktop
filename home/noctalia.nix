@@ -40,27 +40,26 @@
         tint_intensity = 0.2;
       };
 
-      # Bar — ISLANDS: left pills / center pill / right pills, each widget its own capsule.
-      # capsule=true + background_opacity=0 → every widget is a separate Storm pill,
-      # grouped into start/center/end (left/center/right) with gaps.
+      # Bar — TRUE ISLANDS: no bar background, 3 separate pill clusters
+      # left (launcher+workspaces) / center (clock) / right (system) — each island Storm
       bar = {
         order = [ "main" ];
-        # Kill the packaged fallback bar so only ONE bar renders.
         default.enabled = false;
         main = {
           position = "top";
-          thickness = 38;
+          thickness = 36;
           background_opacity = 0.0;
-          radius = 14;
-          margin_ends = 16;
-          margin_edge = 10;
-          padding = 6;
-          widget_spacing = 8;
-          shadow = true;
+          radius = 0;
+          margin_ends = 12;
+          margin_edge = 8;
+          padding = 0;
+          widget_spacing = 12;
+          shadow = false;
           reserve_space = true;
+          border_width = 0.0;
           capsule = true;
-          capsule_radius = 12;
-          capsule_opacity = 1.0;
+          capsule_radius = 10;
+          capsule_opacity = 0.96;
           # Left pills — launcher + workspaces
           start = [
             "launcher"
@@ -80,11 +79,11 @@
         };
       };
 
-      # Theme — Tokyo Night Storm
+      # Theme — Tokyo Night Storm via custom palette (theme/noctalia-storm.json)
       theme = {
         mode = "dark";
-        source = "builtin";
-        builtin = "Tokyo-Night";
+        source = "custom";
+        custom_palette = "Storm";
         pure_black_dark = false;
       };
 
@@ -100,4 +99,6 @@
 
   programs.quickshell.enable = lib.mkForce false;
   programs.quickshell.systemd.enable = lib.mkForce false;
+
+  xdg.configFile."noctalia/palettes/Storm.json".source = ../theme/noctalia-storm.json;
 }

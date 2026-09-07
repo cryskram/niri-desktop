@@ -51,11 +51,14 @@ in
     // }
 
     // Terminal — alacritty (primary per user preference, RICE §19).
-    // UX — clipboard, screenshots, recording (RICE §26-27)
+    // UX — clipboard, screenshots, recording, Noctalia panels (RICE §26-27, §7)
     binds {
         "Mod+T" { spawn "alacritty"; }
         "Mod+Return" { spawn "alacritty"; }
+        "Mod+D" { spawn "sh" "-c" "noctalia msg panel-toggle launcher 2>/dev/null || fuzzel"; }
         "Mod+Ctrl+V" { spawn "sh" "-c" "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"; }
+        "Mod+Super+C" { spawn "sh" "-c" "noctalia msg panel-toggle control-center 2>/dev/null"; }
+        "Mod+Super+P" { spawn "sh" "-c" "noctalia msg panel-toggle session 2>/dev/null || wlogout"; }
         "Mod+Shift+S" { spawn "sh" "-c" "grim -g \"$(slurp)\" - | satty --filename - --fullscreen --output-dir ~/Pictures/Screenshots"; }
         "Print" { spawn "sh" "-c" "grim - | satty --filename - --fullscreen --output-dir ~/Pictures/Screenshots"; }
         "Mod+Shift+R" { spawn "sh" "-c" "wf-recorder -g \"$(slurp -o)\" -f ~/Videos/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4"; }
