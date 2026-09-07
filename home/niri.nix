@@ -42,6 +42,7 @@ in
     // Rings for every window — active vs inactive distinct (so you always know focus).
     // Border is always visible; focus-ring disabled to avoid double ring.
     layout {
+        gaps 8
         focus-ring {
             off
         }
@@ -51,6 +52,12 @@ in
             inactive-color "${tokens.colors.border}"
             urgent-color "${tokens.colors.error}"
         }
+    }
+
+    // Rounded windows + less gaps: feat engineered, soft futuristic (RICE §18-19)
+    window-rule {
+        geometry-corner-radius 12
+        clip-to-geometry true
     }
 
     // Multi-monitor ready — single 1920x1080 now, architecture supports 2+ without redesign (RICE §28)

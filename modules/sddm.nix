@@ -10,6 +10,16 @@
     wayland.enable = true;
     theme = "sddm-astronaut-theme";
     package = pkgs.kdePackages.sddm;
+    # QtMultimedia/gst needed by sddm-astronaut (video background, effects) — fixes "QtMultimedia not found" error
+    extraPackages = with pkgs; [
+      kdePackages.qtmultimedia
+      kdePackages.qtsvg
+      kdePackages.qtvirtualkeyboard
+      gst_all_1.gstreamer
+      gst_all_1.gst-plugins-base
+      gst_all_1.gst-plugins-good
+      gst_all_1.gst-plugins-bad
+    ];
   };
 
   # Ensure SDDM can show the greeter on Wayland via cage (handled by sddm-astronaut's Main.qml)
