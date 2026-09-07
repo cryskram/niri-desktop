@@ -40,8 +40,7 @@
         tint_intensity = 0.2;
       };
 
-      # Bar — TRUE ISLANDS: no bar background, 3 separate pill clusters
-      # left (launcher+workspaces) / center (clock) / right (system) — each island Storm
+      # Bar — TRUE ISLANDS: no bar background, each pill its own Storm color
       bar = {
         order = [ "main" ];
         default.enabled = false;
@@ -53,13 +52,13 @@
           margin_ends = 12;
           margin_edge = 8;
           padding = 0;
-          widget_spacing = 12;
+          widget_spacing = 10;
           shadow = false;
           reserve_space = true;
           border_width = 0.0;
           capsule = true;
-          capsule_radius = 10;
-          capsule_opacity = 0.96;
+          capsule_radius = 12;
+          capsule_opacity = 1.0;
           # Left pills — launcher + workspaces
           start = [
             "launcher"
@@ -74,15 +73,15 @@
             "control-center"
             "session"
           ];
-          # Per-pill Storm colors — left accent, center surface, right elevated
+          # Per-pill Storm — wifi green, bluetooth red, etc. per theme/tokens.nix
           widgets.launcher.capsule_fill = "primary";
           widgets.workspaces.capsule_fill = "surface";
           widgets.clock.capsule_fill = "surface_variant";
-          widgets.network.capsule_fill = "surface";
-          widgets.bluetooth.capsule_fill = "surface";
-          widgets.volume.capsule_fill = "surface";
-          widgets.battery.capsule_fill = "surface_variant";
-          widgets."control-center".capsule_fill = "surface";
+          widgets.network.capsule_fill = "success";
+          widgets.bluetooth.capsule_fill = "error";
+          widgets.volume.capsule_fill = "info";
+          widgets.battery.capsule_fill = "warning";
+          widgets."control-center".capsule_fill = "secondary";
           widgets.session.capsule_fill = "error";
         };
       };
