@@ -112,6 +112,8 @@
         tray = {
           capsule_fill = "#414868";
           capsule_foreground = "#c0caf5";
+          hide_passive = false;
+          drawer = false;
         };
         bluetooth = {
           capsule_fill = "#f7768e";
