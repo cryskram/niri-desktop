@@ -40,10 +40,13 @@
         tint_intensity = 0.2;
       };
 
-      # Bar — 3 ISLANDS (left/center/right) — Tokyo Night Storm per theme/tokens.nix
-      # Left: launcher+workspaces (accent), Center: clock (surface), Right: system cluster (elevated)
+      # Bar — ISLANDS: left pills / center pill / right pills, each widget its own capsule.
+      # capsule=true + background_opacity=0 → every widget is a separate Storm pill,
+      # grouped into start/center/end (left/center/right) with gaps.
       bar = {
         order = [ "main" ];
+        # Kill the packaged fallback bar so only ONE bar renders.
+        default.enabled = false;
         main = {
           position = "top";
           thickness = 38;
@@ -51,20 +54,21 @@
           radius = 14;
           margin_ends = 16;
           margin_edge = 10;
-          padding = 8;
-          widget_spacing = 10;
+          padding = 6;
+          widget_spacing = 8;
           shadow = true;
           reserve_space = true;
-          capsule = false;
-          capsule_radius = 10;
-          # Left island — launcher + workspaces
+          capsule = true;
+          capsule_radius = 12;
+          capsule_opacity = 1.0;
+          # Left pills — launcher + workspaces
           start = [
             "launcher"
             "workspaces"
           ];
-          # Center island — clock alone (dots)
+          # Center pill — clock
           center = [ "clock" ];
-          # Right island — system cluster as one visual island (grouped via widget_spacing)
+          # Right pills — system cluster
           end = [
             "network"
             "bluetooth"
