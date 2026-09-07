@@ -1,26 +1,50 @@
-# Shell — zsh + Starship + modern CLI (RICE §20)
-# Fast startup, Wayland-friendly, Tokyo Night Storm via Starship palette
+# Shell — fish + Starship + modern CLI (RICE §20) — Tokyo Night Storm
+# Fast, Wayland-friendly, awesome fish (no zsh). Completions + tide-like starship.
 { pkgs, ... }:
 {
-  programs.zsh = {
+  programs.fish = {
     enable = true;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
-    history.size = 10000;
-    shellAliases = {
+    # Interactive helpers: vi-mode off (emacs), fast completions
+    shellAbbrs = {
+      g = "git";
+      gs = "git status -sb";
+      gc = "git commit";
+      gp = "git push";
+      lg = "lazygit";
+      y = "yazi";
+      cat = "bat";
       ls = "eza --icons";
       ll = "eza -l --icons --git";
       la = "eza -la --icons --git";
+      grep = "rg";
+      find = "fd";
+    };
+    shellAliases = {
+      # keep abbreviations + aliases compatible with fish
       cat = "bat";
       grep = "rg";
       find = "fd";
     };
+    interactiveShellInit = ''
+      set -g fish_greeting ""
+      # Tokyo Night Storm palette for fish
+      set -g fish_color_command 7aa2f7
+      set -g fish_color_param c0caf5
+      set -g fish_color_quote 9ece6a
+      set -g fish_color_error f7768e
+      # history
+      set -g fish_history_max 10000
+      # zoxide + fzf keybinds are handled by HM integrations below
+      # ensure starship transients work
+    '';
+    plugins = [
+      # bass not needed — direnv handles env via fish integration
+    ];
   };
 
   programs.starship = {
     enable = true;
-    enableZshIntegration = true;
+    enableFishIntegration = true;
     settings = {
       format = "$directory$git_branch$git_status$cmd_duration$character";
       character = {
@@ -34,12 +58,12 @@
 
   programs.fzf = {
     enable = true;
-    enableZshIntegration = true;
+    enableFishIntegration = true;
   };
 
   programs.zoxide = {
     enable = true;
-    enableZshIntegration = true;
+    enableFishIntegration = true;
   };
 
   programs.eza.enable = true;
@@ -51,7 +75,6 @@
 
   home.packages = with pkgs; [
     yq-go
+    fish
   ];
-
-  # Ensure zsh is the login shell (NixOS side sets users.users.vageesh.shell)
 }

@@ -155,6 +155,30 @@ opencode --version  # 1.18.25
 
 Known fix: `gcc`/`clang` both provide `bin/c++` → `lib.hiPrio gcc` / `lib.lowPrio clang`; `corepack` bundled in `nodejs_24`.
 
+## Screenshots
+
+> Placeholders — replace with actual captures before publishing.
+
+| Desktop | Terminal | Files |
+|---|---|---|
+| ![desktop](assets/screenshots/01-desktop.png) | ![terminal](assets/screenshots/02-terminal.png) | ![files](assets/screenshots/03-files.png) |
+| Bar + wallpaper + islands | Ghostty + Starship + Tokyo Night | Nautilus + Tela-circle-dark |
+
+| Launcher | Control Center | Multi-monitor |
+|---|---|---|
+| ![launcher](assets/screenshots/04-launcher.png) | ![control-center](assets/screenshots/05-control-center.png) | ![multi](assets/screenshots/06-multi.png) |
+| Noctalia launcher (`Mod+D`) | Noctalia control-center (`Mod+Ctrl+C`) | `eDP-1` + `HDMI-A-1` extend/mirror (`Mod+M`) |
+
+Capture:
+```bash
+mkdir -p assets/screenshots
+# fullscreen / region
+ grim assets/screenshots/01-desktop.png
+ # with windows open, then:
+ grim assets/screenshots/02-terminal.png
+```
+`assets/screenshots/` is tracked — add real `*.png` before push (keep placeholders until then).
+
 ## Rollback & tags
 
 ```

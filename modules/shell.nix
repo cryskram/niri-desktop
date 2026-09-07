@@ -1,6 +1,8 @@
-# System shell — ensure zsh is available as login shell (RICE §20)
+# System shell — fish as login shell (RICE §20)
 { pkgs, ... }:
 {
-  programs.zsh.enable = true;
-  users.users.vageesh.shell = pkgs.zsh;
+  programs.fish.enable = true;
+  users.users.vageesh.shell = pkgs.fish;
+  # Ensure fish is in /etc/shells
+  environment.shells = with pkgs; [ fish ];
 }
