@@ -53,7 +53,6 @@
           position = "top";
           thickness = 36;
           background_opacity = 0.0;
-          background_color = "#000000"; # fully transparent fallback
           radius = 0;
           margin_ends = 12;
           margin_edge = 8;
@@ -80,6 +79,7 @@
             "bluetooth"
             "volume"
             "battery"
+            "felipeartur/ai-usagebar:bar"
             "control-center"
             "session"
           ];
