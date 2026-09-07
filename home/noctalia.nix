@@ -40,28 +40,32 @@
         tint_intensity = 0.2;
       };
 
-      # Bar — floating ISLANDS, r/unixporn, Tokyo Night dots
+      # Bar — 3 ISLANDS (left/center/right) — Tokyo Night Storm per theme/tokens.nix
+      # Left: launcher+workspaces (accent), Center: clock (surface), Right: system cluster (elevated)
       bar = {
+        order = [ "main" ];
         main = {
           position = "top";
-          thickness = 36;
+          thickness = 38;
           background_opacity = 0.0;
-          radius = 12;
-          margin_ends = 10;
-          margin_edge = 8;
-          padding = 6;
-          widget_spacing = 8;
+          radius = 14;
+          margin_ends = 16;
+          margin_edge = 10;
+          padding = 8;
+          widget_spacing = 10;
           shadow = true;
           reserve_space = true;
           capsule = false;
+          capsule_radius = 10;
+          # Left island — launcher + workspaces
           start = [
             "launcher"
             "workspaces"
           ];
+          # Center island — clock alone (dots)
           center = [ "clock" ];
+          # Right island — system cluster as one visual island (grouped via widget_spacing)
           end = [
-            "tray"
-            "media"
             "network"
             "bluetooth"
             "volume"
