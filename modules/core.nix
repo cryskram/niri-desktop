@@ -2,6 +2,7 @@
 # Extracted from the inline module in flake.nix for clean architecture (RICE Phase 1).
 # No behavior change — purely structural refactor.
 {
+  lib,
   pkgs,
   noctalia,
   nixpkgs-unstable,
