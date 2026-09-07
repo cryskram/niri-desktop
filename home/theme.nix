@@ -44,14 +44,15 @@ in
     platformTheme.name = "qt5ct";
   };
 
-  # Terminal — alacritty (Tokyo Night Storm)
+  # Terminals — both Storm, blur/glass, follow Noctalia palette
   programs.alacritty.settings = {
     window = {
       padding = {
         x = 12;
         y = 12;
       };
-      opacity = 0.95;
+      opacity = 0.92;
+      blur = true;
       decorations = "None";
     };
     font = {
@@ -88,6 +89,17 @@ in
         text = c.foreground;
       };
     };
+  };
+
+  programs.ghostty.settings = {
+    font-family = tokens.fonts.mono;
+    font-size = 11;
+    theme = "TokyoNight Storm";
+    background-opacity = 0.92;
+    background-blur-radius = 20;
+    window-decoration = false;
+    window-padding-x = 12;
+    window-padding-y = 12;
   };
 
   # Launcher — fuzzel (INI format)

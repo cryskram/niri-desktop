@@ -25,6 +25,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    ai-usagebar = {
+      url = "github:akitaonrails/ai-usagebar";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -38,6 +43,7 @@
       nixpkgs-unstable,
       pi,
       noctalia,
+      ai-usagebar,
       home-manager,
       ...
     }:
@@ -69,7 +75,7 @@
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = {
-          inherit pi noctalia nixpkgs-unstable;
+          inherit pi noctalia ai-usagebar nixpkgs-unstable;
         };
 
         modules = [

@@ -38,9 +38,9 @@ in
     separator-color = "00000000";
   };
 
-  # Terminal — alacritty (primary per user preference, RICE §19).
-  # Ghostty remains available in nixpkgs for evaluation (`nix shell nixpkgs#ghostty`).
+  # Terminals — both with blur/glass, follow Noctalia Storm via templates (RICE §19)
   programs.alacritty.enable = true;
+  programs.ghostty.enable = true;
 
   # Wallpaper — swaybg (static fallback, per RICE §18)
   # Spawned via niri's spawn-at-startup (see home/niri.nix) so it is tied

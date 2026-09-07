@@ -5,6 +5,7 @@
   lib,
   pkgs,
   noctalia,
+  ai-usagebar,
   nixpkgs-unstable,
   ...
 }:
@@ -33,28 +34,8 @@
     ];
   };
 
-  # ai-usagebar — not in nixpkgs; prebuilt release binary (Noctalia plugin dep).
-  # Credentials live in ~/.config/ai-usagebar/config.toml (never committed).
   nixpkgs.overlays = [
     (final: prev: {
-      ai-usagebar =
-        let
-          version = "1.12.0";
-          src = final.fetchurl {
-            url = "https://github.com/akitaonrails/ai-usagebar/releases/download/v${version}/ai-usagebar-linux-x86_64.tar.gz";
-            sha256 = "617254ada35b5a41fdf5953e3ffbcf18a4b5be92f513dbcba70dc5f41745e379";
-          };
-        in
-        final.stdenv.mkDerivation {
-          pname = "ai-usagebar";
-          inherit version src;
-          sourceRoot = ".";
-          installPhase = ''
-            install -Dm755 ai-usagebar $out/bin/ai-usagebar
-            install -Dm755 ai-usagebar-tui $out/bin/ai-usagebar-tui
-          '';
-        };
-
       opencode = nixpkgs-unstable.legacyPackages.${prev.system}.opencode;
 
       pi-coding-agent = nixpkgs-unstable.legacyPackages.${prev.system}.pi-coding-agent;
@@ -120,6 +101,6 @@
 
   environment.systemPackages = with pkgs; [
     opencode
-    ai-usagebar
+    ai-usagebar.packages.${pkgs.system}.default
   ];
 }

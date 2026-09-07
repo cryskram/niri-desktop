@@ -65,6 +65,8 @@ in
     binds {
         "Mod+T" { spawn "alacritty"; }
         "Mod+Return" { spawn "alacritty"; }
+        "Mod+G" { spawn "ghostty"; }
+        "Mod+Shift+Return" { spawn "ghostty"; }
         "Mod+D" { spawn "sh" "-c" "noctalia msg panel-toggle launcher 2>/dev/null || fuzzel"; }
         "Mod+Ctrl+V" { spawn "sh" "-c" "noctalia msg panel-toggle clipboard 2>/dev/null"; }
         "Mod+Ctrl+C" { spawn "sh" "-c" "noctalia msg panel-toggle control-center 2>/dev/null"; }
