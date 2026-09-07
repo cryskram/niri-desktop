@@ -83,7 +83,7 @@ in
         "Mod+Shift+E" { spawn "wlogout"; }
         "Mod+M" { spawn "niri-display-toggle"; }
         "Mod+Shift+M" { spawn "niri-display-toggle"; }
-        "Mod+Shift+V" { spawn "vpn-toggle"; }
+        "Mod+Shift+N" { spawn "vpn-toggle"; }
     }
 
     // Predictable screenshot location.
