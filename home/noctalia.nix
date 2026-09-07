@@ -75,6 +75,7 @@
           ];
           center = [ "clock" ];
           end = [
+            "tray"
             "network"
             "bluetooth"
             "volume"
@@ -107,6 +108,10 @@
         network = {
           capsule_fill = "#9ece6a";
           capsule_foreground = "#1a1b26";
+        };
+        tray = {
+          capsule_fill = "#414868";
+          capsule_foreground = "#c0caf5";
         };
         bluetooth = {
           capsule_fill = "#f7768e";
