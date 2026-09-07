@@ -24,7 +24,7 @@
         niri_overview_type_to_launch_enabled = false;
         clipboard_enabled = true;
         panel = {
-          transparency_mode = "glass";
+          transparency_mode = "soft";
           borders = true;
           shadow = true;
         };
@@ -51,14 +51,14 @@
         default.enabled = false;
         main = {
           position = "top";
-          thickness = 36;
-          background_opacity = 0.0;
-          radius = 0;
-          margin_ends = 12;
+          thickness = 38;
+          background_opacity = 0.88;
+          radius = 12;
+          margin_ends = 14;
           margin_edge = 8;
-          padding = 0;
-          widget_spacing = 10;
-          shadow = false;
+          padding = 6;
+          widget_spacing = 8;
+          shadow = true;
           reserve_space = true;
           border_width = 0.0;
           scale = 1.0;
@@ -178,7 +178,7 @@
         default.path = "";
         automation = {
           enabled = true;
-          interval_seconds = 1800;
+          interval_seconds = 300;
           order = "random";
           recursive = true;
         };
