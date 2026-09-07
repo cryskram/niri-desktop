@@ -94,7 +94,8 @@
 
   # GNOME desktop forces ibus (mkDefault) → this overrides it: no ibus daemon,
   # no GTK/QT_IM_MODULE exports, no "Input Method: ibus" notification at login.
-  i18n.inputMethod.type = lib.mkForce "none";
+  # null disables any IM, overriding GNOME's mkDefault "ibus"
+  i18n.inputMethod.type = lib.mkForce null;
 
   environment.systemPackages = with pkgs; [
     opencode
