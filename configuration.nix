@@ -23,7 +23,8 @@
   };
 
   services.displayManager.gdm.enable = true;
-  services.desktopManager.gnome.enable = true;
+  # GNOME desktop removed — Niri is the primary session (GDM still provides login).
+  # This also stops GNOME from forcing ibus + the "Input Method" login notification.
   services.xserver.xkb = {
     layout = "us";
     variant = "";
