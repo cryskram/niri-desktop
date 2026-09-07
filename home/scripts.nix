@@ -2,6 +2,30 @@
 {
   home.packages = with pkgs; [
     wl-mirror
+    (writeShellScriptBin "vpn-toggle" ''
+      set -euo pipefail
+      # WireGuard toggle for secrets/wg0.conf (wg-quick) — never prints secrets
+      IF="wg0"
+      if ip link show "$IF" >/dev/null 2>&1; then
+        echo "Stopping $IF..."
+        sudo systemctl stop "wg-quick-$IF" 2>&1 || sudo wg-quick down "$IF" 2>&1 || true
+        notify-send "VPN" "$IF disconnected" 2>/dev/null || true
+      else
+        echo "Starting $IF..."
+        sudo systemctl start "wg-quick-$IF" 2>&1 || sudo wg-quick up "$IF" 2>&1 || true
+        sleep 0.5
+        if ip link show "$IF" >/dev/null 2>&1; then
+          notify-send "VPN" "$IF connected" 2>/dev/null || true
+        else
+          notify-send "VPN" "$IF failed — check journalctl -u wg-quick-$IF" 2>/dev/null || true
+        fi
+      fi
+    '')
+    (writeShellScriptBin "vpn-status" ''
+      set -euo pipefail
+      IF="wg0"
+      if ip link show "$IF" >/dev/null 2>&1; then echo "up"; else echo "down"; fi
+    '')
     (writeShellScriptBin "niri-display-toggle" ''
       set -euo pipefail
       OUT="HDMI-A-1"

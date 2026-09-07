@@ -44,6 +44,35 @@ in
     })
   ];
 
+  # Allow toggling wg-quick without password (for vpn-toggle + noctalia)
+  security.sudo.extraRules = [
+    {
+      users = [ "vageesh" ];
+      commands = [
+        {
+          command = "/run/current-system/sw/bin/systemctl start wg-quick-wg0";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/systemctl stop wg-quick-wg0";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/systemctl restart wg-quick-wg0";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/wg-quick up wg0";
+          options = [ "NOPASSWD" ];
+        }
+        {
+          command = "/run/current-system/sw/bin/wg-quick down wg0";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
+
   # Ensure VPN tooling is available regardless (no secrets needed)
   environment.systemPackages = with pkgs; [
     wireguard-tools

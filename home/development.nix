@@ -1,7 +1,7 @@
 # Development toolchains — Home Manager (DEV_ENVIRONMENT §3)
 # Machine-level global toolchains; project deps stay in devenv.
 # Preserves existing shell/file tooling; adds missing languages + LSPs.
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   home.packages = with pkgs; [
     # ── Core additions not yet in shell/files ──
@@ -62,8 +62,9 @@
     rustfmt
 
     # ── C / C++ ──
-    gcc
-    clang
+    # gcc + clang both provide bin/c++ -> clang lower priority so gcc wins (DEV fix)
+    (lib.lowPrio clang)
+    (lib.hiPrio gcc)
     gdb
     lldb
     cmake
