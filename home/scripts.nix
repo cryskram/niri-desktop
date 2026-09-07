@@ -4,27 +4,31 @@
     wl-mirror
     (writeShellScriptBin "vpn-toggle" ''
       set -euo pipefail
-      # WireGuard toggle for secrets/wg0.conf (wg-quick) — never prints secrets
-      IF="wg0"
-      if ip link show "$IF" >/dev/null 2>&1; then
-        echo "Stopping $IF..."
-        sudo systemctl stop "wg-quick-$IF" 2>&1 || sudo wg-quick down "$IF" 2>&1 || true
-        notify-send "VPN" "$IF disconnected" 2>/dev/null || true
+      # Simple on/off for wg-quick-wg0 — no ip-link toggle logic per user request
+      # Requires `secrets/wg0.conf` + `sudo nixos-rebuild switch` (unit wg-quick-wg0 must exist)
+      SVC="wg-quick-wg0"
+      if systemctl is-active --quiet "$SVC" 2>/dev/null; then
+        echo "Stopping $SVC..."
+        sudo systemctl stop "$SVC" 2>&1 || true
+        notify-send "VPN" "VPN disconnected" 2>/dev/null || true
       else
-        echo "Starting $IF..."
-        sudo systemctl start "wg-quick-$IF" 2>&1 || sudo wg-quick up "$IF" 2>&1 || true
+        echo "Starting $SVC..."
+        if ! sudo systemctl start "$SVC" 2>&1; then
+          notify-send "VPN" "VPN failed — run: journalctl -u $SVC" 2>/dev/null || true
+          exit 0
+        fi
         sleep 0.5
-        if ip link show "$IF" >/dev/null 2>&1; then
-          notify-send "VPN" "$IF connected" 2>/dev/null || true
+        if systemctl is-active --quiet "$SVC" 2>/dev/null; then
+          notify-send "VPN" "VPN connected" 2>/dev/null || true
         else
-          notify-send "VPN" "$IF failed — check journalctl -u wg-quick-$IF" 2>/dev/null || true
+          notify-send "VPN" "VPN failed — check journalctl -u $SVC" 2>/dev/null || true
         fi
       fi
     '')
     (writeShellScriptBin "vpn-status" ''
       set -euo pipefail
-      IF="wg0"
-      if ip link show "$IF" >/dev/null 2>&1; then echo "up"; else echo "down"; fi
+      SVC="wg-quick-wg0"
+      if systemctl is-active --quiet "$SVC" 2>/dev/null; then echo "up"; else echo "down"; fi
     '')
     (writeShellScriptBin "niri-display-toggle" ''
       set -euo pipefail
