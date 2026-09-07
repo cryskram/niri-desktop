@@ -60,11 +60,11 @@ in
         clip-to-geometry true
     }
 
-    // Multi-monitor — HDMI-A-1 Samsung 2560x1440 right of eDP (extend by default, RICE §28)
+    // Multi-monitor — HDMI-A-1 Samsung 2560x1440 (auto-right of eDP by default, RICE §28)
     output "HDMI-A-1" {
         mode "2560x1440@59.951"
         scale 1.0
-        position x=1670 y=0
+        // position is auto by default (extend); toggle via Mod+M uses temporary niri msg output
     }
 
     // Terminal — alacritty (primary per user preference, RICE §19).
