@@ -1,8 +1,8 @@
 # Desktop skeleton services (Home Manager).
 #
-# Phase 3: launcher, notifications, wallpaper, lock, quickshell, terminal.
-# Theme (Tokyo Night Storm) and visual polish land in Phase 4.
-# All services are intentionally minimal here — correctness first.
+# Phase 3: launcher, notifications, wallpaper, lock, terminal.
+# Noctalia now provides the shell (bar, panels, launcher, notifications,
+# wallpaper, lock) — quickshell custom bar removed (archived). Theme in Phase 4.
 {
   pkgs,
   ...
@@ -49,11 +49,6 @@ in
     swaybg
   ];
 
-  # Desktop shell toolkit — quickshell (modular QML shell, RICE §7)
-  # Starts as a systemd user service tied to the niri session.
-  programs.quickshell.enable = true;
-  programs.quickshell.systemd.enable = true;
-  programs.quickshell.systemd.target = "graphical-session.target";
-  programs.quickshell.configs."niri-desktop" = ../quickshell;
-  programs.quickshell.activeConfig = "niri-desktop";
+  # Shell now via Noctalia (home/noctalia.nix) — quickshell custom bar archived.
+  # Fallback wallpaper via swaybg remains for Noctalia's solid fallback.
 }

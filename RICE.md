@@ -176,15 +176,16 @@ Niri is responsible for:
 * window rules
 * monitor configuration
 
-Quickshell is responsible for:
+Noctalia (on Quickshell) is responsible for:
 
 * desktop UI
 * panels
 * bar
 * system widgets
 * interactions
+* launcher, notifications, wallpaper, lock (cohesive shell)
 
-Other tools should provide focused functionality.
+Other tools provide focused functionality where Noctalia defers (e.g., `fuzzel`/`mako` as fallback).
 
 Conceptual stack:
 
@@ -192,21 +193,28 @@ Conceptual stack:
 NixOS
 └── Wayland
     └── Niri
-        ├── Quickshell
-        ├── launcher
-        ├── notifications
-        ├── lock screen
-        ├── wallpaper
+        ├── Noctalia (Quickshell)
+        │   ├── bar / dock
+        │   ├── launcher
+        │   ├── notifications
+        │   ├── control center
+        │   ├── wallpaper
+        │   └── lock screen
         └── desktop utilities
 ```
+
+> Decision 2026-09-06: Noctalia over hand-rolled Quickshell — see `docs/decisions/noctalia.md` for alternatives and tradeoffs.
 
 ---
 
 # 7. Desktop Shell
 
-Preferred technology:
+Chosen technology:
 
-Quickshell.
+**Noctalia** (built on Quickshell) — a cohesive, highly customizable Wayland shell.
+
+Hand-rolled Quickshell bar was prototyped and archived; Noctalia provides the same modular
+components as one integrated shell with fewer moving parts and r/unixporn polish out of the box.
 
 The shell must be modular.
 

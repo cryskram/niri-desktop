@@ -1,6 +1,5 @@
-# Noctalia — polished Quickshell shell (RICE §7, replaces custom bar)
-# Highly customizable, Tokyo Night Storm via settings, Niri workspaces native.
-# Docs: https://docs.noctalia.dev/noctalia/configuration/
+# Noctalia — crazy beautiful r/unixporn shell, Tokyo Night Storm
+# Glass, blur, capsule bar, Niri workspaces, Storm palette
 {
   lib,
   noctalia,
@@ -12,46 +11,88 @@
   programs.noctalia = {
     enable = true;
     systemd.enable = true;
-    # Use the flake's package (follows nixpkgs 26.05 via inputs.nixpkgs.follows)
-    # package is set via mkDefault in the module, no need to override
 
     settings = {
       shell = {
         font_family = "JetBrainsMono Nerd Font";
-        corner_radius_scale = 1.0;
-        # Niri integration
+        corner_radius_scale = 1.5;
         niri_overview_type_to_launch_enabled = false;
-        # Noctalia handles launcher, clipboard, wallpaper, lock, etc.
         clipboard_enabled = true;
-        # Transparency mode: glass for floating panels per RICE §11
         panel = {
           transparency_mode = "glass";
           borders = true;
           shadow = true;
         };
+        animation = {
+          enabled = true;
+          speed = 1.2;
+        };
+        shadow = {
+          direction = "down";
+          alpha = 0.6;
+        };
       };
 
-      # Bar — keep it floating, r/unixporn
+      # Glass backdrop with blur — mission-control vibe
+      backdrop = {
+        enabled = true;
+        blur_intensity = 0.6;
+        tint_intensity = 0.2;
+      };
+
+      # Bar — floating capsule, r/unixporn
       bar = {
-        # Noctalia's bar is highly configurable; defaults are already floating.
-        # We keep defaults and let the user tweak via Noctalia Settings GUI.
-        # The bar will show workspaces, window, system, clock via its widgets.
+        main = {
+          position = "top";
+          thickness = 38;
+          background_opacity = 0.88;
+          radius = 14;
+          margin_ends = 12;
+          margin_edge = 8;
+          padding = 10;
+          widget_spacing = 8;
+          shadow = true;
+          reserve_space = true;
+          capsule = true;
+          capsule_radius = 12;
+          capsule_opacity = 0.92;
+          start = [
+            "launcher"
+            "workspaces"
+          ];
+          center = [ "window" ];
+          end = [
+            "tray"
+            "media"
+            "network"
+            "bluetooth"
+            "volume"
+            "battery"
+            "control-center"
+            "session"
+            "clock"
+          ];
+        };
       };
 
-      # Theme — Tokyo Night Storm (Noctalia has Catppuccin built-in, Storm via custom)
-      # For now use dark mode with Storm palette via custom colors;
-      # Noctalia's GUI Settings can override at runtime.
+      # Theme — Tokyo Night Storm
       theme = {
         mode = "dark";
-        # Noctalia 4.7+ supports custom themes via `custom` source, but we keep
-        # builtin Catppuccin as close fallback and override via quickshell tokens
-        # for now. Storm hexes are available via theme/tokens.nix for manual tweak.
+        source = "builtin";
+        builtin = "Tokyo-Night";
+        pure_black_dark = false;
+      };
+
+      # Notifications — glass toasts
+      notification = {
+        enable_daemon = true;
+        show_app_name = true;
+        background_opacity = 0.92;
+        scale = 1.0;
       };
     };
   };
 
-  # Keep our custom quickshell bar disabled when Noctalia is active to avoid duplicate bars.
-  # The quickshell files remain in repo as fallback/reference.
   programs.quickshell.enable = lib.mkForce false;
   programs.quickshell.systemd.enable = lib.mkForce false;
 }
