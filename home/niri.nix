@@ -66,7 +66,7 @@ in
         "Mod+T" { spawn "alacritty"; }
         "Mod+Return" { spawn "alacritty"; }
         "Mod+D" { spawn "sh" "-c" "noctalia msg panel-toggle launcher 2>/dev/null || fuzzel"; }
-        "Mod+Ctrl+V" { spawn "sh" "-c" "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"; }
+        "Mod+Ctrl+V" { spawn "sh" "-c" "noctalia msg panel-toggle clipboard 2>/dev/null"; }
         "Mod+Ctrl+C" { spawn "sh" "-c" "noctalia msg panel-toggle control-center 2>/dev/null"; }
         "Mod+P" { spawn "sh" "-c" "noctalia msg panel-toggle session 2>/dev/null || wlogout"; }
         "Mod+Shift+S" { spawn "sh" "-c" "grim -g \"$(slurp)\" - | satty --filename - --fullscreen --output-dir ~/Pictures/Screenshots"; }
