@@ -18,6 +18,7 @@
       la = "eza -la --icons --git";
       grep = "rg";
       find = "fd";
+      zed = "zeditor";
     };
     shellAliases = {
       # keep abbreviations + aliases compatible with fish
