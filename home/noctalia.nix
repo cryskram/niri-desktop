@@ -65,9 +65,7 @@
             "launcher"
             "workspaces"
           ];
-          # Center pill — clock
           center = [ "clock" ];
-          # Right pills — system cluster
           end = [
             "network"
             "bluetooth"
@@ -76,6 +74,16 @@
             "control-center"
             "session"
           ];
+          # Per-pill Storm colors — left accent, center surface, right elevated
+          widgets.launcher.capsule_fill = "primary";
+          widgets.workspaces.capsule_fill = "surface";
+          widgets.clock.capsule_fill = "surface_variant";
+          widgets.network.capsule_fill = "surface";
+          widgets.bluetooth.capsule_fill = "surface";
+          widgets.volume.capsule_fill = "surface";
+          widgets.battery.capsule_fill = "surface_variant";
+          widgets."control-center".capsule_fill = "surface";
+          widgets.session.capsule_fill = "error";
         };
       };
 
