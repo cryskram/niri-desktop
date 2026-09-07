@@ -15,8 +15,8 @@ in
       name = "Tokyonight-Dark";
     };
     iconTheme = {
-      package = pkgs.colloid-icon-theme;
-      name = "Colloid-Dark";
+      package = pkgs.tela-circle-icon-theme;
+      name = "Tela-circle-dark";
     };
     font = {
       name = tokens.fonts.ui;
