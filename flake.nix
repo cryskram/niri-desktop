@@ -79,7 +79,7 @@
           ./modules/theme.nix
           ./modules/shell.nix
           ./modules/niri.nix
-          ./modules/greetd.nix
+          ./modules/sddm.nix
           pi.nixosModules.default
           home-manager.nixosModules.home-manager
         ];
