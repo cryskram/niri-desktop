@@ -52,8 +52,8 @@
         order = [ "main" ];
         default.enabled = false;
         main = {
-          position = "left";
-          thickness = 52; # sidebar width
+          position = "top";
+          thickness = 38;
           background_opacity = 0.88;
           radius = 12;
           margin_ends = 14;
@@ -121,7 +121,7 @@
           capsule_foreground = "#c0caf5";
         };
         media = {
-          capsule_fill = "#73daca";
+          capsule_fill = "#ff9e64";
           capsule_foreground = "#1a1b26";
         };
         sysmon = {
