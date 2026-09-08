@@ -46,12 +46,14 @@
       };
 
       # Bar — TRUE ISLANDS: no bar background, each pill its own Storm color
+      # Sidebar-ready: position top (horizontal) now, change to "left" for vertical sidebar.
+      # For sidebar: thickness = width, start=top center=middle end=bottom, clock vertical_format used.
       bar = {
         order = [ "main" ];
         default.enabled = false;
         main = {
-          position = "top";
-          thickness = 38;
+          position = "top"; # "left" for sidebar (vertical)
+          thickness = 38; # 48-56 for sidebar width
           background_opacity = 0.88;
           radius = 12;
           margin_ends = 14;
@@ -68,14 +70,21 @@
           capsule_opacity = 1.0;
           capsule_thickness = 0.8;
           capsule_padding = 12;
-          # Left pills — launcher + workspaces
+          # Horizontal top: start=left center middle end=right
+          # Vertical left: start=top center=middle end=bottom (same arrays)
           start = [
             "launcher"
             "workspaces"
           ];
-          center = [ "clock" ];
+          center = [
+            "clock"
+            "taskbar"
+            "media"
+          ];
           end = [
             "tray"
+            "sysmon"
+            "notifications"
             "network"
             "bluetooth"
             "volume"
@@ -99,9 +108,28 @@
           capsule_foreground = "#c0caf5";
           capsule_padding = 16;
         };
-        # Center — clock
+        # Center — clock (date+time same capsule, sidebar vertical format)
         clock = {
           capsule_fill = "#292e42";
+          capsule_foreground = "#c0caf5";
+          format = "{:%a %d %b  %H:%M}";
+          vertical_format = "{:%H:%M\n%a %d}";
+          tooltip_format = "{:%A, %d %B %Y %H:%M}";
+        };
+        taskbar = {
+          capsule_fill = "#414868";
+          capsule_foreground = "#c0caf5";
+        };
+        media = {
+          capsule_fill = "#bb9af7";
+          capsule_foreground = "#1a1b26";
+        };
+        sysmon = {
+          capsule_fill = "#414868";
+          capsule_foreground = "#c0caf5";
+        };
+        notifications = {
+          capsule_fill = "#414868";
           capsule_foreground = "#c0caf5";
         };
         # Right — system
