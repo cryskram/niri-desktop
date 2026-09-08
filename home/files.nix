@@ -19,5 +19,23 @@
     file-roller
   ];
 
-  xdg.mimeApps.enable = true;
+  xdg.mimeApps = {
+    enable = true;
+    associations.added = {
+      "image/png" = "satty.desktop";
+      "image/jpeg" = "satty.desktop";
+      "image/jpg" = "satty.desktop";
+      "image/webp" = "satty.desktop";
+      "image/gif" = "satty.desktop";
+      "image/bmp" = "satty.desktop";
+    };
+    defaultApplications = {
+      "image/png" = "satty.desktop";
+      "image/jpeg" = "satty.desktop";
+      "image/jpg" = "satty.desktop";
+      "image/webp" = "satty.desktop";
+      "image/gif" = "satty.desktop";
+      "image/bmp" = "satty.desktop";
+    };
+  };
 }

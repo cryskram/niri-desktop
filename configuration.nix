@@ -30,7 +30,7 @@
     LC_TIME = "en_IN";
   };
 
-  # GDM removed — greetd + regreet provide the highly customized login per RICE §16
+  # GDM removed — SDDM Astronaut provides the highly customized login per RICE §16
   services.displayManager.gdm.enable = false;
   services.xserver.xkb = {
     layout = "us";
