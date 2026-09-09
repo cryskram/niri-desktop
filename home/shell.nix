@@ -13,9 +13,7 @@
       lg = "lazygit";
       y = "yazi";
       cat = "bat";
-      ls = "eza --icons";
-      ll = "eza -l --icons --git";
-      la = "eza -la --icons --git";
+      ls = "eza -la --icons --git";
       grep = "rg";
       find = "fd";
       zed = "zeditor";
