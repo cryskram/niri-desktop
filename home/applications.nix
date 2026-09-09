@@ -28,6 +28,7 @@
     ghostty
     nautilus # also in home/files.nix, duplicate ok
     yazi # also in home/files.nix
+    obsidian # note taking
 
     # ── Communication ──
     spotify
@@ -45,7 +46,7 @@
     # Keep both goland and idea available; user can pick.
     jetbrains.goland
     jetbrains.idea
-  
+
     # database viewers
     beekeeper-studio
     jetbrains.datagrip
