@@ -17,25 +17,30 @@
   home.packages = with pkgs; [
     nautilus
     file-roller
+    loupe # Image Viewer (Wayland-native, handles all formats; satty stays for annotation)
   ];
 
   xdg.mimeApps = {
     enable = true;
     associations.added = {
-      "image/png" = "satty.desktop";
-      "image/jpeg" = "satty.desktop";
-      "image/jpg" = "satty.desktop";
-      "image/webp" = "satty.desktop";
-      "image/gif" = "satty.desktop";
-      "image/bmp" = "satty.desktop";
+      "image/png" = "org.gnome.Loupe.desktop";
+      "image/jpeg" = "org.gnome.Loupe.desktop";
+      "image/jpg" = "org.gnome.Loupe.desktop";
+      "image/webp" = "org.gnome.Loupe.desktop";
+      "image/gif" = "org.gnome.Loupe.desktop";
+      "image/bmp" = "org.gnome.Loupe.desktop";
+      "image/tiff" = "org.gnome.Loupe.desktop";
+      "image/svg+xml" = "org.gnome.Loupe.desktop";
     };
     defaultApplications = {
-      "image/png" = "satty.desktop";
-      "image/jpeg" = "satty.desktop";
-      "image/jpg" = "satty.desktop";
-      "image/webp" = "satty.desktop";
-      "image/gif" = "satty.desktop";
-      "image/bmp" = "satty.desktop";
+      "image/png" = "org.gnome.Loupe.desktop";
+      "image/jpeg" = "org.gnome.Loupe.desktop";
+      "image/jpg" = "org.gnome.Loupe.desktop";
+      "image/webp" = "org.gnome.Loupe.desktop";
+      "image/gif" = "org.gnome.Loupe.desktop";
+      "image/bmp" = "org.gnome.Loupe.desktop";
+      "image/tiff" = "org.gnome.Loupe.desktop";
+      "image/svg+xml" = "org.gnome.Loupe.desktop";
     };
   };
 }
