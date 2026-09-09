@@ -45,5 +45,9 @@
     # Keep both goland and idea available; user can pick.
     jetbrains.goland
     jetbrains.idea
+  
+    # database viewers
+    beekeeper-studio
+    jetbrains.datagrip
   ];
 }
