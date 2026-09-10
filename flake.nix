@@ -34,6 +34,11 @@
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    catppuccin = {
+      url = "github:catppuccin/nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -45,6 +50,7 @@
       noctalia,
       home-manager,
       spicetify-nix,
+      catppuccin,
       ...
     }:
     let
@@ -79,13 +85,16 @@
             noctalia
             nixpkgs-unstable
             spicetify-nix
+            catppuccin
             ;
         };
 
         modules = [
+          catppuccin.nixosModules.catppuccin
           ./configuration.nix
           ./hardware-configuration.nix
           ./modules/core.nix
+          ./modules/catppuccin.nix
           ./modules/theme.nix
           ./modules/shell.nix
           ./modules/niri.nix

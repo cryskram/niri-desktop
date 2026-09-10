@@ -19,7 +19,7 @@ in
   services.mako.enable = true;
 
   # Lock screen — swaylock (referenced by niri default Super+Alt+L)
-  # PAM is configured at system level (modules/niri.nix). Themed Storm.
+  # PAM is configured at system level (modules/niri.nix). Themed Mocha.
   programs.swaylock.enable = true;
   programs.swaylock.settings = {
     color = tokens.colorsNoHash.background;
@@ -38,7 +38,7 @@ in
     separator-color = "00000000";
   };
 
-  # Terminal — ghostty only (RICE §19) — Storm, blur/glass via Noctalia theme
+  # Terminal — ghostty only (RICE §19) — Mocha, blur/glass via Noctalia theme
   programs.ghostty.enable = true;
 
   # Wallpaper — swaybg (static fallback, per RICE §18)

@@ -1,5 +1,5 @@
-# Noctalia — crazy beautiful r/unixporn shell, Tokyo Night Storm
-# Glass, blur, capsule bar, Niri workspaces, Storm palette
+# Noctalia — crazy beautiful r/unixporn shell, Catppuccin Mocha
+# Glass, blur, capsule bar, Niri workspaces, Mocha palette
 {
   lib,
   noctalia,
@@ -95,81 +95,77 @@
         };
       };
 
-      # Per-pill Storm colors — TOP-LEVEL [widget.<name>] tables (valid Noctalia syntax),
-      # fixed hex per theme/tokens.nix (success/info/warning are not palette roles, hex works).
+      # Per-pill Mocha colors — Catppuccin pastels on mantle/base
       widget = {
-        # Left — launcher + workspaces
         launcher = {
-          capsule_fill = "#7aa2f7";
-          capsule_foreground = "#1a1b26";
+          capsule_fill = "#cba6f7"; # mauve
+          capsule_foreground = "#1e1e2e";
         };
         workspaces = {
-          capsule_fill = "#414868";
-          capsule_foreground = "#c0caf5";
+          capsule_fill = "#313244"; # surface0
+          capsule_foreground = "#cdd6f4";
           capsule_padding = 16;
         };
-        # Center — clock (date+time same capsule, sidebar vertical format)
         clock = {
-          capsule_fill = "#292e42";
-          capsule_foreground = "#c0caf5";
+          capsule_fill = "#313244";
+          capsule_foreground = "#cdd6f4";
           format = "{:%a %d %b  %H:%M}";
           vertical_format = "{:%H:%M\n%a %d}";
           tooltip_format = "{:%A, %d %B %Y %H:%M}";
         };
         taskbar = {
-          capsule_fill = "#414868";
-          capsule_foreground = "#c0caf5";
+          capsule_fill = "#313244";
+          capsule_foreground = "#cdd6f4";
         };
         media = {
-          capsule_fill = "#ff9e64";
-          capsule_foreground = "#1a1b26";
+          capsule_fill = "#fab387"; # peach
+          capsule_foreground = "#1e1e2e";
         };
         sysmon = {
-          capsule_fill = "#414868";
-          capsule_foreground = "#c0caf5";
+          capsule_fill = "#313244";
+          capsule_foreground = "#cdd6f4";
         };
         notifications = {
-          capsule_fill = "#414868";
-          capsule_foreground = "#c0caf5";
+          capsule_fill = "#313244";
+          capsule_foreground = "#cdd6f4";
         };
-        # Right — system
         network = {
-          capsule_fill = "#9ece6a";
-          capsule_foreground = "#1a1b26";
+          capsule_fill = "#a6e3a1"; # green
+          capsule_foreground = "#1e1e2e";
         };
         tray = {
-          capsule_fill = "#414868";
-          capsule_foreground = "#c0caf5";
+          capsule_fill = "#313244";
+          capsule_foreground = "#cdd6f4";
           hide_passive = false;
           drawer = false;
         };
         bluetooth = {
-          capsule_fill = "#f7768e";
-          capsule_foreground = "#1a1b26";
+          capsule_fill = "#f38ba8"; # red
+          capsule_foreground = "#1e1e2e";
         };
         volume = {
-          capsule_fill = "#7dcfff";
-          capsule_foreground = "#1a1b26";
+          capsule_fill = "#89dceb"; # sky
+          capsule_foreground = "#1e1e2e";
         };
         battery = {
-          capsule_fill = "#e0af68";
-          capsule_foreground = "#1a1b26";
+          capsule_fill = "#f9e2af"; # yellow
+          capsule_foreground = "#1e1e2e";
         };
         "control-center" = {
-          capsule_fill = "#bb9af7";
-          capsule_foreground = "#1a1b26";
+          capsule_fill = "#cba6f7";
+          capsule_foreground = "#1e1e2e";
         };
         session = {
-          capsule_fill = "#f7768e";
-          capsule_foreground = "#1a1b26";
+          capsule_fill = "#f38ba8";
+          capsule_foreground = "#1e1e2e";
         };
       };
 
-      # Theme — Tokyo Night Storm via custom palette (theme/noctalia-storm.json)
+      # Theme — Catppuccin Mocha via custom palette (theme/noctalia-mocha.json)
       theme = {
         mode = "dark";
         source = "custom";
-        custom_palette = "Storm";
+        custom_palette = "Mocha";
         pure_black_dark = false;
       };
 
@@ -223,5 +219,5 @@
   programs.quickshell.enable = lib.mkForce false;
   programs.quickshell.systemd.enable = lib.mkForce false;
 
-  xdg.configFile."noctalia/palettes/Storm.json".source = ../theme/noctalia-storm.json;
+  xdg.configFile."noctalia/palettes/Mocha.json".source = ../theme/noctalia-mocha.json;
 }

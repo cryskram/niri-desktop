@@ -33,7 +33,7 @@
     ];
   };
 
-  # LazyVim config — bootstrap + Storm touches
+  # LazyVim config — bootstrap + Mocha touches
   xdg.configFile."nvim/init.lua".text = ''
     -- Managed by ~/niri-desktop/home/neovim.nix — LazyVim starter
     -- Bootstrap lazy.nvim from nix (fallback to git if not found)
@@ -59,26 +59,27 @@
         { import = "plugins" },
       },
       defaults = { lazy = false, version = false },
-      install = { colorscheme = { "tokyonight", "habamax" } },
+      install = { colorscheme = { "catppuccin", "habamax" } },
       checker = { enabled = false },
       performance = { rtp = { disabled_plugins = { "gzip", "tarPlugin", "tohtml", "tutor", "zipPlugin" } } },
     })
   '';
 
-  # Minimal LazyVim overrides — keep Storm, ensure lazyvim.plugins loads
+  # Minimal LazyVim overrides — keep Mocha, ensure lazyvim.plugins loads
   xdg.configFile."nvim/lua/config/lazy.lua".text = ''
     return {
       defaults = { lazy = true },
-      install = { colorscheme = { "tokyonight" } },
+      install = { colorscheme = { "catppuccin" } },
       checker = { enabled = false },
     }
   '';
 
-  xdg.configFile."nvim/lua/plugins/tokyonight.lua".text = ''
+  xdg.configFile."nvim/lua/plugins/catppuccin.lua".text = ''
     return {
       {
-        "folke/tokyonight.nvim",
-        opts = { style = "storm", transparent = false },
+        "catppuccin/nvim",
+        name = "catppuccin",
+        opts = { flavour = "mocha", transparent_background = false },
       },
     }
   '';

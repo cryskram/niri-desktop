@@ -1,4 +1,4 @@
-# Spicetify — Spotify Tokyo Night Storm (DEV, RICE §4)
+# Spicetify — Spotify Catppuccin Mocha (DEV, RICE §4)
 # Uses spicetify-nix (follows nixpkgs) for declarative theming.
 { pkgs, spicetify-nix, ... }:
 let
@@ -8,26 +8,26 @@ in
 
   programs.spicetify = {
     enable = true;
-    # Theme: text (clean, easy to recolor) + Storm palette
+    # Theme: text + Catppuccin Mocha palette
     theme = spicePkgs.themes.text;
     colorScheme = "custom";
     customColorScheme = {
-      text = "c0caf5";
-      subtext = "a9b1d6";
-      sidebarText = "c0caf5";
-      main = "24283b";
-      sidebar = "1a1b26";
-      player = "24283b";
-      card = "2a2f4a";
-      shadow = "1a1b26";
-      selectedRow = "414868";
-      button = "7aa2f7";
-      buttonActive = "7aa2f7";
-      buttonDisabled = "565f89";
-      tabActive = "7aa2f7";
-      notification = "7aa2f7";
-      notificationError = "f7768e";
-      misc = "565f89";
+      text = "cdd6f4";
+      subtext = "bac2de";
+      sidebarText = "cdd6f4";
+      main = "1e1e2e";
+      sidebar = "181825";
+      player = "1e1e2e";
+      card = "313244";
+      shadow = "11111b";
+      selectedRow = "45475a";
+      button = "cba6f7";
+      buttonActive = "cba6f7";
+      buttonDisabled = "585b70";
+      tabActive = "cba6f7";
+      notification = "cba6f7";
+      notificationError = "f38ba8";
+      misc = "585b70";
     };
     enabledExtensions = with spicePkgs.extensions; [
       shuffle

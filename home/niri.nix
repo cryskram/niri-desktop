@@ -72,7 +72,8 @@ in
     binds {
         "Mod+T" { spawn "ghostty"; }
         "Mod+Return" { spawn "ghostty"; }
-        "Mod+D" { spawn "sh" "-c" "noctalia msg panel-toggle launcher 2>/dev/null || fuzzel"; }
+        "Mod+Slash" { spawn "sh" "-c" "noctalia msg panel-toggle launcher 2>/dev/null || fuzzel"; }
+        "Mod+D" { spawn "sh" "-c" "noctalia msg panel-toggle launcher 2>/dev/null || fuzzel"; } // keep legacy Mod+D
         "Mod+Ctrl+V" { spawn "sh" "-c" "noctalia msg panel-toggle clipboard 2>/dev/null"; }
         "Mod+Ctrl+C" { spawn "sh" "-c" "noctalia msg panel-toggle control-center 2>/dev/null"; }
         "Mod+P" { spawn "sh" "-c" "noctalia msg panel-toggle session 2>/dev/null || wlogout"; }

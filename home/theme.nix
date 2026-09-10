@@ -1,4 +1,4 @@
-# Home-level theming — Tokyo Night Storm
+# Home-level theming — Catppuccin Mocha
 # Imports centralized tokens; no hard-coded palette elsewhere per RICE §4.
 { pkgs, ... }:
 let
@@ -7,12 +7,15 @@ let
   cn = tokens.colorsNoHash;
 in
 {
-  # GTK — Tokyonight-Dark (closest to Storm in nixpkgs)
+  # GTK — Catppuccin Mocha (via catppuccin/nix + catppuccin-gtk)
   gtk = {
     enable = true;
     theme = {
-      package = pkgs.tokyonight-gtk-theme;
-      name = "Tokyonight-Dark";
+      package = pkgs.catppuccin-gtk.override {
+        variant = "mocha";
+        accents = [ "mauve" ];
+      };
+      name = "catppuccin-mocha-mauve-standard";
     };
     iconTheme = {
       package = pkgs.tela-circle-icon-theme;
@@ -44,11 +47,11 @@ in
     platformTheme.name = "qt5ct";
   };
 
-  # Terminal — ghostty Storm, blur/glass via Noctalia
+  # Terminal — ghostty Mocha, blur/glass via Noctalia
   programs.ghostty.settings = {
     font-family = tokens.fonts.mono;
     font-size = 11;
-    theme = "TokyoNight Storm";
+    theme = "catppuccin-mocha";
     background-opacity = 0.92;
     background-blur-radius = 20;
     window-decoration = false;

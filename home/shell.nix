@@ -1,5 +1,5 @@
-# Shell — fish + Starship + modern CLI (RICE §20) — Tokyo Night Storm
-# Fast, Wayland-friendly, awesome fish (no zsh). Completions + tide-like starship.
+# Shell — fish + Starship + modern CLI (RICE §20) — Catppuccin Mocha
+# Fast, Wayland-friendly, awesome fish. Mocha mauve palette.
 { pkgs, ... }:
 {
   programs.fish = {
@@ -26,11 +26,11 @@
     };
     interactiveShellInit = ''
       set -g fish_greeting ""
-      # Tokyo Night Storm palette for fish
-      set -g fish_color_command 7aa2f7
-      set -g fish_color_param c0caf5
-      set -g fish_color_quote 9ece6a
-      set -g fish_color_error f7768e
+      # Catppuccin Mocha palette for fish
+      set -g fish_color_command cba6f7
+      set -g fish_color_param cdd6f4
+      set -g fish_color_quote a6e3a1
+      set -g fish_color_error f38ba8
       # history
       set -g fish_history_max 10000
       # zoxide + fzf keybinds are handled by HM integrations below
@@ -47,11 +47,11 @@
     settings = {
       format = "$directory$git_branch$git_status$cmd_duration$character";
       character = {
-        success_symbol = "[❯](bold #7aa2f7)";
-        error_symbol = "[❯](bold #f7768e)";
+        success_symbol = "[❯](bold #cba6f7)";
+        error_symbol = "[❯](bold #f38ba8)";
       };
-      directory.style = "bold #7aa2f7";
-      git_branch.style = "bold #bb9af7";
+      directory.style = "bold #cba6f7";
+      git_branch.style = "bold #89b4fa";
     };
   };
 
