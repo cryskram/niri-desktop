@@ -84,6 +84,15 @@
     }
   '';
 
+  xdg.configFile."nvim/lua/plugins/colorscheme.lua".text = ''
+    return {
+      {
+        "LazyVim/LazyVim",
+        opts = { colorscheme = "catppuccin" },
+      },
+    }
+  '';
+
   # Ensure lua/plugins dir exists (user will get lazy-lock.json after first run)
   home.activation.ensureNvimPluginsDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     mkdir -p $HOME/.config/nvim/lua/plugins
