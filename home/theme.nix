@@ -18,8 +18,8 @@ in
       name = "catppuccin-mocha-mauve-standard";
     };
     iconTheme = {
-      package = pkgs.tela-circle-icon-theme;
-      name = "Tela-circle-dark";
+      package = pkgs.papirus-icon-theme;
+      name = "Papirus-Dark";
     };
     font = {
       name = tokens.fonts.ui;
@@ -27,10 +27,10 @@ in
     };
   };
 
-  # Cursor — Bibata Modern Classic at 24px (was abnormally big at default 32)
+  # Cursor — Catppuccin Mocha Mauve at 24px
   home.pointerCursor = {
-    package = pkgs.bibata-cursors;
-    name = "Bibata-Modern-Classic";
+    package = pkgs.catppuccin-cursors.mochaMauve;
+    name = "catppuccin-mocha-mauve-cursors";
     size = 24;
     x11.enable = true;
     gtk.enable = true;
@@ -38,7 +38,7 @@ in
 
   home.sessionVariables = {
     XCURSOR_SIZE = "24";
-    XCURSOR_THEME = "Bibata-Modern-Classic";
+    XCURSOR_THEME = "catppuccin-mocha-mauve-cursors";
   };
 
   # Qt — use qt5ct on Wayland (gtk2 platform theme requires X DISPLAY and breaks Quickshell on pure Wayland)

@@ -45,7 +45,8 @@
     enable = true;
     enableFishIntegration = true;
     settings = {
-      format = "$directory$git_branch$git_status$nix_shell$direnv$container$golang$nodejs$python$rust$java$character";
+      add_newline = true;
+      format = "$directory$git_branch$git_status$nix_shell$direnv$container$golang$nodejs$python$rust$java$line_break$character";
       character = {
         success_symbol = "[>](bold #cba6f7)";
         error_symbol = "[>](bold #f38ba8)";

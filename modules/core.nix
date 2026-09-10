@@ -98,9 +98,9 @@
   };
 
   environment.sessionVariables = {
-    # System-wide cursor (compositor + apps read at session start; needs relogin)
+    # System-wide cursor Catppuccin Mocha Mauve
     XCURSOR_SIZE = "24";
-    XCURSOR_THEME = "Bibata-Modern-Classic";
+    XCURSOR_THEME = "catppuccin-mocha-mauve-cursors";
     # Electron Wayland (Postman, Slack, Discord, Figma) — fixes Missing X server on Niri
     NIXOS_OZONE_WL = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
