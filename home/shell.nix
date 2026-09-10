@@ -45,7 +45,7 @@
     enable = true;
     enableFishIntegration = true;
     settings = {
-      format = "$directory$git_branch$git_status$nix_shell$direnv$container$character";
+      format = "$directory$git_branch$git_status$nix_shell$direnv$container$golang$nodejs$python$rust$java$character";
       character = {
         success_symbol = "[>](bold #cba6f7)";
         error_symbol = "[>](bold #f38ba8)";
@@ -89,6 +89,31 @@
       cmd_duration = {
         min_time = 2000;
         format = "[took $duration](bold #f38ba8) ";
+      };
+      golang = {
+        symbol = " ";
+        style = "bold #89dceb";
+        format = "[\($symbol$version\)](bold #89dceb) ";
+      };
+      nodejs = {
+        symbol = " ";
+        style = "bold #a6e3a1";
+        format = "[\($symbol$version\)](bold #a6e3a1) ";
+      };
+      python = {
+        symbol = " ";
+        style = "bold #f9e2af";
+        format = "[\($symbol$version\)](bold #f9e2af) ";
+      };
+      rust = {
+        symbol = " ";
+        style = "bold #f38ba8";
+        format = "[\($symbol$version\)](bold #f38ba8) ";
+      };
+      java = {
+        symbol = " ";
+        style = "bold #fab387";
+        format = "[\($symbol$version\)](bold #fab387) ";
       };
     };
   };
