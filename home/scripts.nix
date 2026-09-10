@@ -55,15 +55,43 @@
     (writeShellScriptBin "niri-display-toggle" ''
       set -euo pipefail
       OUT="HDMI-A-1"
-      # True mirror via wl-mirror (niri has no overlapping mirror) — toggles a fullscreen
-      # mirror of eDP-1 onto HDMI-A-1. Extend = side-by-side, Mirror = HDMI shows eDP content.
-      if pgrep -x wl-mirror >/dev/null 2>&1; then
-        pkill -x wl-mirror 2>/dev/null || killall wl-mirror 2>/dev/null || true
-        # Restore HDMI to native extend
+      # If called with 1 or 2 -> force left/right extend (no mirror toggle)
+      if [ "''${1:-}" = "1" ]; then
+        pkill -x wl-mirror 2>/dev/null || true
+        niri msg output "$OUT" mode "2560x1440@59.951" 2>/dev/null || niri msg output "$OUT" mode "2560x1440" 2>/dev/null || true
+        niri msg output "$OUT" scale 1.0 2>/dev/null || true
+        niri msg output "$OUT" position set 0 0 2>/dev/null || true
+        niri msg output "eDP-1" position set 2560 0 2>/dev/null || true
+        ${pkgs.libnotify}/bin/notify-send "Display" "Extend — HDMI left, eDP right (1)" 2>/dev/null || true
+        exit 0
+      fi
+      if [ "''${1:-}" = "2" ]; then
+        pkill -x wl-mirror 2>/dev/null || true
+        niri msg output "eDP-1" position set 0 0 2>/dev/null || true
         niri msg output "$OUT" mode "2560x1440@59.951" 2>/dev/null || niri msg output "$OUT" mode "2560x1440" 2>/dev/null || true
         niri msg output "$OUT" scale 1.0 2>/dev/null || true
         niri msg output "$OUT" position set 1670 0 2>/dev/null || niri msg output "$OUT" position auto 2>/dev/null || true
-        ${pkgs.libnotify}/bin/notify-send "Display" "Extend — eDP left, HDMI 2560×1440 right" 2>/dev/null || true
+        ${pkgs.libnotify}/bin/notify-send "Display" "Extend — eDP left, HDMI right (2)" 2>/dev/null || true
+        exit 0
+      fi
+      # True mirror via wl-mirror — toggles mirror vs extend (extend side via menu)
+      if pgrep -x wl-mirror >/dev/null 2>&1; then
+        pkill -x wl-mirror 2>/dev/null || killall wl-mirror 2>/dev/null || true
+        # Was mirror -> ask left/right for extend
+        CHOICE=$(printf "2 Right (eDP left)\n1 Left (HDMI left)" | ${pkgs.fuzzel}/bin/fuzzel --dmenu --prompt "Extend side: " 2>/dev/null || echo "2")
+        if echo "$CHOICE" | grep -q "^1"; then
+          niri msg output "$OUT" mode "2560x1440@59.951" 2>/dev/null || niri msg output "$OUT" mode "2560x1440" 2>/dev/null || true
+          niri msg output "$OUT" scale 1.0 2>/dev/null || true
+          niri msg output "$OUT" position set 0 0 2>/dev/null || true
+          niri msg output "eDP-1" position set 2560 0 2>/dev/null || true
+          ${pkgs.libnotify}/bin/notify-send "Display" "Extend — HDMI left, eDP right (1)" 2>/dev/null || true
+        else
+          niri msg output "eDP-1" position set 0 0 2>/dev/null || true
+          niri msg output "$OUT" mode "2560x1440@59.951" 2>/dev/null || niri msg output "$OUT" mode "2560x1440" 2>/dev/null || true
+          niri msg output "$OUT" scale 1.0 2>/dev/null || true
+          niri msg output "$OUT" position set 1670 0 2>/dev/null || niri msg output "$OUT" position auto 2>/dev/null || true
+          ${pkgs.libnotify}/bin/notify-send "Display" "Extend — eDP left, HDMI right (2)" 2>/dev/null || true
+        fi
         exit 0
       fi
       # Not mirroring → check if HDMI connected, then start mirror

@@ -84,6 +84,8 @@ in
         "Mod+Shift+E" { spawn "wlogout"; }
         "Mod+M" { spawn "niri-display-toggle"; }
         "Mod+Shift+M" { spawn "niri-display-toggle"; }
+        "Mod+Shift+1" { spawn "sh" "-c" "niri-display-toggle 1"; }
+        "Mod+Shift+2" { spawn "sh" "-c" "niri-display-toggle 2"; }
         "Mod+Shift+N" { spawn "vpn-toggle"; }
     }
 
