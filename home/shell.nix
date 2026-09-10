@@ -47,8 +47,9 @@
     settings = {
       format = "$directory$git_branch$git_status$nix_shell$direnv$container$character";
       character = {
-        success_symbol = "[❯](bold #cba6f7)";
-        error_symbol = "[❯](bold #f38ba8)";
+        success_symbol = "[>](bold #cba6f7)";
+        error_symbol = "[>](bold #f38ba8)";
+        vicmd_symbol = "[>](bold #89b4fa)";
       };
       directory = {
         style = "bold #cba6f7";
@@ -61,7 +62,7 @@
       };
       git_status = {
         style = "bold #f9e2af";
-        format = "([\[$all_status$ahead_behind\]]($style) )";
+        format = "([$all_status]($style) )";
       };
       nix_shell = {
         symbol = " ";
