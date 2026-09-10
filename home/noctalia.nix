@@ -137,7 +137,7 @@
           capsule_fill = "#313244";
           capsule_foreground = "#cdd6f4";
           hide_passive = false;
-          drawer = false;
+          drawer = true;
           drawer_columns = 3;
         };
         bluetooth = {

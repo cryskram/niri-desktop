@@ -23,6 +23,7 @@
   };
 
   home.packages = with pkgs; [
+    networkmanagerapplet # nm-applet for tray test (StatusNotifierItem)
     wl-clipboard
     # Screenshots — grim + slurp (region), satty for annotation
     grim

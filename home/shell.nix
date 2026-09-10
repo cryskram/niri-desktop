@@ -45,13 +45,50 @@
     enable = true;
     enableFishIntegration = true;
     settings = {
-      format = "$directory$git_branch$git_status$cmd_duration$character";
+      format = "$directory$git_branch$git_status$nix_shell$direnv$container$character";
       character = {
         success_symbol = "[❯](bold #cba6f7)";
         error_symbol = "[❯](bold #f38ba8)";
       };
-      directory.style = "bold #cba6f7";
-      git_branch.style = "bold #89b4fa";
+      directory = {
+        style = "bold #cba6f7";
+        truncation_length = 3;
+        truncate_to_repo = true;
+      };
+      git_branch = {
+        style = "bold #89b4fa";
+        format = "[\($branch\)](bold #89b4fa) ";
+      };
+      git_status = {
+        style = "bold #f9e2af";
+        format = "([\[$all_status$ahead_behind\]]($style) )";
+      };
+      nix_shell = {
+        symbol = " ";
+        style = "bold #89dceb";
+        format = "[\($symbol$state\)](bold #89dceb) ";
+        impure_msg = "impure";
+        pure_msg = "pure";
+      };
+      direnv = {
+        disabled = false;
+        symbol = " ";
+        style = "bold #fab387";
+        format = "[\($symbol$loaded/$allowed\)](bold #fab387) ";
+        loaded_msg = "loaded";
+        unloaded_msg = "not loaded";
+        allowed_msg = "allowed";
+        not_allowed_msg = "not allowed";
+      };
+      container = {
+        symbol = " ";
+        style = "bold #a6e3a1";
+        format = "[\($symbol $name\)](bold #a6e3a1) ";
+      };
+      cmd_duration = {
+        min_time = 2000;
+        format = "[took $duration](bold #f38ba8) ";
+      };
     };
   };
 
