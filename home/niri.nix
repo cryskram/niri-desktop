@@ -54,16 +54,10 @@ in
         }
     }
 
-    // Rounded windows + less gaps + glass (Mocha blur via compositor is bar-only; windows get transparency)
+    // Rounded windows + less gaps: feat engineered, soft futuristic (RICE §18-19)
     window-rule {
         geometry-corner-radius 12
         clip-to-geometry true
-        opacity 0.92
-    }
-    // Keep focused window opaque for readability, unfocused slightly transparent
-    window-rule {
-        match is-focused=false
-        opacity 0.88
     }
 
     // Multi-monitor — HDMI-A-1 Samsung 2560x1440 (auto-right of eDP by default, RICE §28)
