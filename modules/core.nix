@@ -6,6 +6,7 @@
   pkgs,
   noctalia,
   nixpkgs-unstable,
+  spicetify-nix,
   ...
 }:
 {
@@ -67,10 +68,11 @@
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
   home-manager.backupFileExtension = "backup";
-  home-manager.extraSpecialArgs = { inherit noctalia; };
+  home-manager.extraSpecialArgs = { inherit noctalia spicetify-nix; };
 
   home-manager.users.vageesh = {
     imports = [
+      spicetify-nix.homeManagerModules.default
       ../home/niri.nix
       ../home/desktop.nix
       ../home/theme.nix
@@ -83,6 +85,7 @@
       ../home/direnv.nix
       ../home/development.nix
       ../home/applications.nix
+      ../home/spicetify.nix
       ../home/neovim.nix
       ../home/zed.nix
     ];

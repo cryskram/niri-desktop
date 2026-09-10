@@ -29,6 +29,11 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -39,6 +44,7 @@
       pi,
       noctalia,
       home-manager,
+      spicetify-nix,
       ...
     }:
     let
@@ -68,7 +74,12 @@
 
       nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
         specialArgs = {
-          inherit pi noctalia nixpkgs-unstable;
+          inherit
+            pi
+            noctalia
+            nixpkgs-unstable
+            spicetify-nix
+            ;
         };
 
         modules = [
