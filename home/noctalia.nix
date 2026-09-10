@@ -60,7 +60,7 @@
           margin_edge = 8;
           padding = 6;
           widget_spacing = 8;
-          shadow = true;
+          shadow = false;
           reserve_space = true;
           border_width = 0.0;
           scale = 1.0;
@@ -138,6 +138,7 @@
           capsule_foreground = "#cdd6f4";
           hide_passive = false;
           drawer = false;
+          drawer_columns = 3;
         };
         bluetooth = {
           capsule_fill = "#f38ba8"; # red
