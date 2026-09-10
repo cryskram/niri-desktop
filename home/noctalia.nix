@@ -38,14 +38,14 @@
         };
       };
 
-      # Glass backdrop with blur — mission-control vibe
+      # Glass backdrop with blur — mission-control vibe (more blur)
       backdrop = {
         enabled = true;
-        blur_intensity = 0.6;
-        tint_intensity = 0.2;
+        blur_intensity = 0.85;
+        tint_intensity = 0.25;
       };
 
-      # Bar — TRUE ISLANDS: no bar background, each pill its own Storm color
+      # Bar — TRUE ISLANDS: Mocha glass (more transparent)
       # Sidebar-ready: position top (horizontal) now, change to "left" for vertical sidebar.
       # For sidebar: thickness = width, start=top center=middle end=bottom, clock vertical_format used.
       bar = {
@@ -54,7 +54,7 @@
         main = {
           position = "top";
           thickness = 38;
-          background_opacity = 0.88;
+          background_opacity = 0.62;
           radius = 12;
           margin_ends = 14;
           margin_edge = 8;
@@ -67,7 +67,7 @@
           font_scale = 1.0;
           capsule = true;
           capsule_radius = 12;
-          capsule_opacity = 1.0;
+          capsule_opacity = 0.88;
           capsule_thickness = 0.8;
           capsule_padding = 12;
           # Horizontal top: start=left center middle end=right
@@ -169,20 +169,20 @@
         pure_black_dark = false;
       };
 
-      # Notifications — glass toasts
+      # Notifications — glass toasts (more transparent)
       notification = {
         enable_daemon = true;
         show_app_name = true;
-        background_opacity = 0.92;
+        background_opacity = 0.72;
         scale = 1.0;
       };
 
-      # Lock screen (RICE §17) — elaborate: blurred desktop + Storm tint + big clock
+      # Lock screen (RICE §17) — elaborate: more blur + Mocha tint
       lockscreen = {
         enabled = true;
-        blurred_desktop = true; # requires wlr-screencopy (falls back to solid)
-        blur_intensity = 0.6;
-        tint_intensity = 0.3;
+        blurred_desktop = true;
+        blur_intensity = 0.85;
+        tint_intensity = 0.35;
       };
 
       lockscreen_widgets = {

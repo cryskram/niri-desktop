@@ -47,19 +47,19 @@ in
     platformTheme.name = "qt5ct";
   };
 
-  # Terminal — ghostty Mocha (Ghostty theme name is "Catppuccin Mocha" with space/caps)
+  # Terminal — ghostty Mocha glass (more blur)
   programs.ghostty.settings = {
     font-family = tokens.fonts.mono;
     font-size = 11;
     theme = "Catppuccin Mocha";
-    background-opacity = 0.92;
-    background-blur-radius = 20;
+    background-opacity = 0.82;
+    background-blur-radius = 32;
     window-decoration = false;
     window-padding-x = 12;
     window-padding-y = 12;
   };
 
-  # Launcher — fuzzel (INI format)
+  # Launcher — fuzzel glass (transparent + blur via layer)
   programs.fuzzel.settings = {
     main = {
       font = "${tokens.fonts.ui}:size=10";
@@ -67,32 +67,34 @@ in
       horizontal-pad = 12;
       vertical-pad = 8;
       inner-pad = 8;
+      layer = "overlay";
     };
     colors = {
-      background = "${cn.background}ff";
+      background = "${cn.background}d9"; # d9 ~85% (glass)
       text = "${cn.foreground}ff";
       match = "${cn.accent-primary}ff";
-      selection = "${cn.surface-elevated}ff";
+      selection = "${cn.surface-elevated}cc"; # cc ~80%
       selection-text = "${cn.foreground}ff";
-      border = "${cn.border}ff";
+      border = "${cn.border}99"; # 60%
     };
     border = {
       width = 1;
-      radius = 8;
+      radius = 12;
     };
   };
 
-  # Notifications — mako
+  # Notifications — mako glass
   services.mako.settings = {
-    background-color = "${c.background}";
+    background-color = "${c.background}d9";
     text-color = "${c.foreground}";
-    border-color = "${c.border}";
+    border-color = "${c.border}99";
     border-size = 1;
-    border-radius = 8;
+    border-radius = 12;
     default-timeout = 4000;
-    # Urgency variants
+    background-blur = true;
+    # Urgency variants — keep glass
     "urgency=high" = {
-      background-color = "${c.surface}";
+      background-color = "${c.surface}e6";
       border-color = "${c.error}";
       text-color = "${c.foreground}";
     };
