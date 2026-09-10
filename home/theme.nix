@@ -47,11 +47,11 @@ in
     platformTheme.name = "qt5ct";
   };
 
-  # Terminal — ghostty Mocha, blur/glass via Noctalia
+  # Terminal — ghostty Mocha (Ghostty theme name is "Catppuccin Mocha" with space/caps)
   programs.ghostty.settings = {
     font-family = tokens.fonts.mono;
     font-size = 11;
-    theme = "catppuccin-mocha";
+    theme = "Catppuccin Mocha";
     background-opacity = 0.92;
     background-blur-radius = 20;
     window-decoration = false;
