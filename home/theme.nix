@@ -57,6 +57,7 @@ in
     window-decoration = false;
     window-padding-x = 12;
     window-padding-y = 12;
+    copy-on-select = "clipboard";
   };
 
   # Launcher — fuzzel glass (transparent + blur via layer)

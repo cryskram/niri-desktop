@@ -46,7 +46,7 @@
     enableFishIntegration = true;
     settings = {
       add_newline = true;
-      format = "$directory$git_branch$git_status$nix_shell$direnv$container$golang$nodejs$python$rust$java$line_break$character";
+      format = "$directory$git_branch$git_status$git_metrics$nix_shell$direnv$container$golang$nodejs$python$rust$java$line_break$character";
       character = {
         success_symbol = "[>](bold #cba6f7)";
         error_symbol = "[>](bold #f38ba8)";
@@ -63,7 +63,22 @@
       };
       git_status = {
         style = "bold #f9e2af";
-        format = "([$all_status]($style) )";
+        format = "([\\[$all_status$ahead_behind\\]]($style) )";
+        stashed = "\\$";
+        ahead = "⇡$count ";
+        behind = "⇣$count ";
+        diverged = "⇕⇡$ahead_count⇣$behind_count ";
+        modified = "!";
+        staged = "+";
+        renamed = "»";
+        deleted = "✘";
+        untracked = "?";
+      };
+      git_metrics = {
+        disabled = false;
+        added_style = "bold #a6e3a1";
+        deleted_style = "bold #f38ba8";
+        format = "([+$added]($added_style) )([-$deleted]($deleted_style) )";
       };
       nix_shell = {
         symbol = " ";
