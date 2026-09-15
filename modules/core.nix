@@ -51,7 +51,38 @@
       defaultProvider = "opencode-go";
       defaultModel = "kimi-k2.6";
       defaultThinkingLevel = "medium";
+      theme = "catppuccin-mocha";
     };
+
+    # Company skills stay outside repo (~/Projects/TAP) — not committed, but wired via extraArgs strings (bypasses pure flake path copy)
+    skills = [ ];
+
+    promptTemplates = [
+      ../pi/prompts
+    ];
+
+    themes = [
+      ../pi/themes/catppuccin-mocha.json
+    ];
+
+    extraArgs = [
+      "--skill"
+      "/home/vageesh/Projects/TAP/claude-plugins/engineering/skills/backend/backend-coding-practices"
+      "--skill"
+      "/home/vageesh/Projects/TAP/claude-plugins/engineering/skills/qa/backend-to-qa"
+      "--skill"
+      "/home/vageesh/Projects/TAP/claude-plugins/engineering/skills/qa/web-to-qa"
+      "--skill"
+      "/home/vageesh/Projects/TAP/claude-plugins/engineering/skills/qa/mobile-to-qa"
+      "--skill"
+      "/home/vageesh/Projects/TAP/claude-plugins/engineering/skills/qa/generate-test-cases"
+      "--skill"
+      "/home/vageesh/Projects/TAP/claude-plugins/engineering/skills/qa/qa-signoff"
+      "--skill"
+      "/home/vageesh/Projects/TAP/claude-plugins/ultra-mariadb/skills/schema-reference"
+      "--skill"
+      "/home/vageesh/Projects/TAP/claude-plugins/ultra-mariadb/skills/query-patterns"
+    ];
 
     extensions =
       let

@@ -27,6 +27,13 @@ wg*.conf
 # Pi/OpenCode auth (outside repo, but ensure no accidental copy)
 .pi/
 .opencode/
+# Company skills — keep outside repo (TAP claude-plugins) but usable via pi extraArgs
+pi/skills/
+# pi/prompts + pi/themes safe to commit (external plan/review + catppuccin)
+!pi/prompts/
+!pi/prompts/*.md
+!pi/themes/
+!pi/themes/*.json
 
 # Nix build outputs
 result
