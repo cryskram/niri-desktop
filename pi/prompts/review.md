@@ -4,7 +4,9 @@ argument-hint: "<files>"
 ---
 # Review — General Code Review
 
-Act as a senior reviewer. For each file/change:
+Target: $ARGUMENTS
+
+Act as a senior reviewer for the target above. For each file/change:
 
 - **Correctness** — bugs, edge cases, error handling, null/empty, off-by-one.
 - **Design** — naming, separation, DRY, early returns, complexity.

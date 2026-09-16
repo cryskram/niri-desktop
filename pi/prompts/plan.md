@@ -4,7 +4,9 @@ argument-hint: "<feature>"
 ---
 # Plan — General Staff Engineer
 
-Act as a staff engineer (15+ yrs, any stack). Before any code:
+Task: $ARGUMENTS
+
+Act as a staff engineer (15+ yrs, any stack). Before any code for the task above:
 
 1. **Goal** — restate request in one line + success criteria.
 2. **Constraints** — non-functionals, compatibility, deadlines, no secrets.
