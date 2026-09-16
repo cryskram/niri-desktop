@@ -1,11 +1,16 @@
-# Review — Backend Coding Practices
+---
+description: General code review — correctness, design, security, tests
+argument-hint: "<files>"
+---
+# Review — General Code Review
 
-Review per `backend-coding-practices` (Controller→Service→Repository, `hasAuthority('PERMISSION')`, cache `service:entity:id` TTL, soft-delete `deleted_at`, `created_at`/`updated_at`, transactions `WithTx`/`@Transactional`, PII mask `user***@`, `X-Correlation-ID`, RBAC not role, DRY/early-return, pagination max 100).
+Act as a senior reviewer. For each file/change:
 
-For each file:
-- **Flag** — violations, missing guards, raw errors escaping, hard deletes, string enums.
-- **Suggest** — minimal fix with file:line.
-- **Security** — secrets, permission strings `RESOURCE_ACTION`, headers.
-- **Tests** — `Test<Service>_<Scenario>` coverage.
+- **Correctness** — bugs, edge cases, error handling, null/empty, off-by-one.
+- **Design** — naming, separation, DRY, early returns, complexity.
+- **Security** — authZ/authN, input validation, secrets, injection, PII.
+- **Performance** — N+1, pagination, caching, allocations, async.
+- **Tests** — coverage, happy + negative + edge, naming `Test<Feature>_<Scenario>`.
+- **Style** — readability, comments where needed, minimal diff.
 
-Be concise, actionable, Mocha-style.
+For each issue: **Flag** (what/why) → **Suggest** (minimal fix file:line). Be concise, actionable.
