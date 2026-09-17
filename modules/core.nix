@@ -49,7 +49,7 @@
 
     settings = {
       defaultProvider = "opencode-go";
-      defaultModel = "kimi-k2.6";
+      defaultModel = "muse-spark-1.2-contributor";
       defaultThinkingLevel = "medium";
       theme = "catppuccin-mocha";
     };
