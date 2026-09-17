@@ -2,6 +2,50 @@
 {
   home.packages = with pkgs; [
     wl-mirror
+    # get-sts — sanitized for GitHub (no account/MFA hardcoded). Real values in ~/.config/aws-sts.env (gitignored)
+    # Create ~/.config/aws-sts.env from ~/.config/aws-sts.env.example and fill:
+    #   AWS_ACCOUNT_ID=313208865236
+    #   AWS_MFA_USER=vageesh.gn
+    #   AWS_PROFILE=vageesh.gn
+    #   AWS_CODEARTIFACT_DOMAIN=ppipl
+    #   AWS_CODEARTIFACT_DOMAIN_OWNER=313208865236
+    #   AWS_REGION=ap-south-1
+    (writeShellScriptBin "get-sts" ''
+      set -euo pipefail
+      if [[ -z "''${1:-}" ]]; then echo "Usage: get-sts <MFA_CODE>"; exit 1; fi
+      MFA_TOKEN="$1"
+      # Load secrets from gitignored env (not committed)
+      if [[ -f "$HOME/.config/aws-sts.env" ]]; then set -a; source "$HOME/.config/aws-sts.env"; set +a; fi
+      : "''${AWS_ACCOUNT_ID:?Set AWS_ACCOUNT_ID in ~/.config/aws-sts.env}"
+      : "''${AWS_MFA_USER:?Set AWS_MFA_USER in ~/.config/aws-sts.env}"
+      : "''${AWS_PROFILE:?Set AWS_PROFILE in ~/.config/aws-sts.env}"
+      MFA_DEVICE="arn:aws:iam::''${AWS_ACCOUNT_ID}:mfa/''${AWS_MFA_USER}"
+      PROFILE="''${AWS_PROFILE}"
+      DOMAIN="''${AWS_CODEARTIFACT_DOMAIN:-ppipl}"
+      DOMAIN_OWNER="''${AWS_CODEARTIFACT_DOMAIN_OWNER:-$AWS_ACCOUNT_ID}"
+      REGION="''${AWS_REGION:-ap-south-1}"
+      DURATION=129600
+      echo "→ STS for $PROFILE ..."
+      CREDS=$(aws sts get-session-token --duration-seconds $DURATION --serial-number "$MFA_DEVICE" --token-code "$MFA_TOKEN" --profile "$PROFILE" --output json)
+      AK=$(echo "$CREDS" | jq -r '.Credentials.AccessKeyId')
+      SK=$(echo "$CREDS" | jq -r '.Credentials.SecretAccessKey')
+      ST=$(echo "$CREDS" | jq -r '.Credentials.SessionToken')
+      aws configure set aws_access_key_id "$AK"
+      aws configure set aws_secret_access_key "$SK"
+      aws configure set aws_session_token "$ST"
+      echo "✅ STS credentials updated (36h)"
+      if TOKEN=$(aws codeartifact get-authorization-token --domain "$DOMAIN" --domain-owner "$DOMAIN_OWNER" --region "$REGION" --query authorizationToken --output text 2>/dev/null); then
+        export CODEARTIFACT_AUTH_TOKEN="$TOKEN"
+        export ENVIRONMENT=development
+        echo "✅ CodeArtifact token: ''${TOKEN:0:12}..."
+        echo "   export CODEARTIFACT_AUTH_TOKEN=$TOKEN"
+      else
+        echo "⚠ STS ok, CodeArtifact failed (check aws config)"
+      fi
+      EXP=$(echo "$CREDS" | jq -r '.Credentials.Expiration')
+      echo "   Expires: $EXP"
+      notify-send "AWS STS" "Updated — expires $EXP" 2>/dev/null || true
+    '')
     (writeShellScriptBin "vpn-toggle" ''
       set -euo pipefail
       # Toggle VPN — matches Noctalia (NetworkManager wg0), fallback to wg-quick if present

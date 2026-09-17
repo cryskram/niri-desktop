@@ -24,6 +24,9 @@ wg*.conf
 .azure/
 .gcp/
 *.cloud
+# AWS STS secrets — not committed
+.config/aws-sts.env
+.aws-sts.env
 # Pi/OpenCode auth (outside repo, but ensure no accidental copy)
 .pi/
 .opencode/
