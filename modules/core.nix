@@ -149,5 +149,6 @@
     jq
     jdk17
     jdk # latest (21) — for projects needing latest, use JAVA_HOME=${pkgs.jdk}/lib/openjdk or devenv override
+    glow
   ];
 }
