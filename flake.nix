@@ -102,6 +102,7 @@
           ./modules/docker.nix
           ./modules/direnv.nix
           ./modules/vpn.nix
+          ./modules/virtualbox.nix
           pi.nixosModules.default
           home-manager.nixosModules.home-manager
         ];
