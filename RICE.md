@@ -731,7 +731,8 @@ Do not replace this architecture casually.
 
 Authentication secrets remain outside Git.
 
-Future improvements may make Pi extensions, skills and themes declarative where practical.
+Pi prompt templates, skills, extension, rules and themes are declarative via the
+`pi/` directory and `modules/core.nix`.
 
 ---
 

@@ -54,8 +54,18 @@
       theme = "catppuccin-mocha";
     };
 
-    # Company skills stay outside repo (~/Projects/TAP) — not committed, but wired via extraArgs strings (bypasses pure flake path copy)
-    skills = [ ];
+    # Repo-owned skills (tracked via the flake). The parent dir is passed (like
+    # promptTemplates) so pi discovers pi/skills/<name>/SKILL.md and labels the
+    # skill by its own folder name instead of the hashed store root. Company
+    # skills stay outside the repo (~/Projects/TAP) and are wired via extraArgs
+    # strings (bypasses flake path copy).
+    skills = [
+      ../pi/skills
+    ];
+
+    # Global operating rules appended to pi's system prompt (safety, secrets,
+    # declarative-repo awareness). Enforced at the tool level by the extension below.
+    rules = ../pi/rules.md;
 
     promptTemplates = [
       ../pi/prompts
@@ -93,7 +103,13 @@
           hash = "sha256-MgpL9tSmjDSyIgLhxR874DZHga4SfmcN8xRmdRItf1I=";
         };
       in
-      [ "${pi-web-search}/src/index.ts" ];
+      [
+        "${pi-web-search}/src/index.ts"
+        ../pi/extensions/safety.ts
+        # Querion session archive — /sync uploads pi sessions for on-the-go reading.
+        # Configured via xdg.configFile."querion/config.json" (home-manager block below).
+        ../pi/extensions/querion-sync.ts
+      ];
   };
 
   home-manager.useGlobalPkgs = true;
@@ -125,6 +141,14 @@
 
     xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
       "$schema" = "https://opencode.ai/config.json";
+    };
+
+    # Querion (pi /sync). Written as a config file the extension reads directly,
+    # so it does not depend on session environment variables reaching the
+    # Niri/Ghostty/fish session. The token stays in a gitignored file.
+    xdg.configFile."querion/config.json".text = builtins.toJSON {
+      url = "https://querion-plum.vercel.app";
+      tokenFile = "/home/vageesh/niri-desktop/secrets/querion-token";
     };
   };
 

@@ -10,7 +10,7 @@ Act as a staff engineer (15+ yrs, any stack). Before any code for the task above
 
 1. **Goal** — restate request in one line + success criteria.
 2. **Constraints** — non-functionals, compatibility, deadlines, no secrets.
-3. **Scope & Files** — list areas/files to touch and those to avoid.
+3. **Scope & Files** — inspect the repo first (repo-understanding skill); list areas/files to touch and to avoid, and existing code to reuse rather than duplicate.
 4. **Design** — approach, alternatives, tradeoffs, data flow.
 5. **Risks** — unknowns, dependencies, rollback plan.
 6. **Steps** — smallest milestones: inspect → design → implement → test → validate.

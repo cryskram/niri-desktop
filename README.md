@@ -40,6 +40,7 @@ hardware-configuration.nix — generated, don't edit casually
 modules/                 — core.nix (flake wiring, pi, HM), theme/shell/niri/sddm/docker/direnv/vpn.nix
 home/                    — niri.nix, noctalia.nix, theme.nix, shell.nix, git.nix, development.nix, ...
 theme/                   — tokens.nix + noctalia-storm.json (Storm palette)
+pi/                      — pi prompts, skills, extension, rules, theme
 dev/                     — personal devenv definitions (shared/, templates/, company/)
 secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
 ```

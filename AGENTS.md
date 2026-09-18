@@ -171,11 +171,27 @@ If an input must be updated:
 
 Pi is a development agent.
 
-Pi itself is currently provided declaratively through the Nix architecture.
+Pi itself is provided declaratively through the Nix architecture.
 
-Do not create an independent imperative Pi installation unless explicitly requested.
+Do not create an independent imperative Pi installation (`~/.pi` config, global
+installs, ad-hoc extensions) unless explicitly requested. The repository is the
+source of truth, and every change must reproduce on a fresh system.
 
-Pi configuration should eventually be declarative where practical.
+Pi customization lives in `modules/core.nix` (`programs.pi.coding-agent`):
+
+* prompt templates → `pi/prompts/*.md` (`promptTemplates`)
+* skills → `pi/skills/` (`skills`); company skills stay outside the repo (TAP) via `extraArgs`
+* extension → `pi/extensions/safety.ts` (`extensions`)
+* global rules → `pi/rules.md` (`rules`)
+* theme → `pi/themes/catppuccin-mocha.json` (`themes`)
+
+To add Pi functionality, extend these mechanisms. Do not build a parallel
+configuration mechanism. Validate with:
+
+```bash
+nix flake check
+nixos-rebuild dry-build --flake .#nixos
+```
 
 Secrets remain outside Git.
 
