@@ -160,21 +160,7 @@ in
     };
   };
 
-  # Powerline-style status bar for the pi editor.
-  powerline-footer = plain {
-    pname = "pi-powerline-footer";
-    version = "0.17.1";
-    src = pkgs.fetchFromGitHub {
-      owner = "nicobailon";
-      repo = "pi-powerline-footer";
-      tag = "v0.17.1";
-      hash = "sha256-yLy6p/58NHbjP3zT6Kp4T6zMwqRq0L1t4X7OMONZXuI=";
-    };
-  };
-
-  # Starship-style statusline + opencode-style TUI.
-  # Note: its footer defaults to `starship`, which overlaps pi-powerline-footer.
-  # Set the footer to `native` (or hide one of them) via `/zentui` at runtime.
+  # Starship-style statusline + opencode-style TUI (owns the footer).
   zentui = plain {
     pname = "pi-zentui";
     version = "0.24.0";

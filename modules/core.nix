@@ -103,7 +103,6 @@
         inherit (import ../pi/packages.nix { inherit pkgs; })
           mcp-adapter
           pi-web-search
-          powerline-footer
           rpiv-ask-user-question
           zentui
           ;
@@ -113,7 +112,6 @@
         "${pi-web-search}"
         "${mcp-adapter}"
         "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
-        "${powerline-footer}"
         "${zentui}"
         ../pi/extensions/safety.ts
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
