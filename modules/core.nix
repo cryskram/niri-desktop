@@ -100,6 +100,13 @@
 
     extensions =
       let
+        inherit (import ../pi/packages.nix { inherit pkgs; })
+          mcp-adapter
+          powerline-footer
+          rpiv-ask-user-question
+          zentui
+          ;
+
         pi-web-search = pkgs.fetchFromGitHub {
           owner = "ttttmr";
           repo = "pi-web-search";
@@ -113,6 +120,11 @@
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
         # Configured via xdg.configFile."querion/config.json" (home-manager block below).
         ../pi/extensions/querion-sync.ts
+        # Third-party extensions, pinned in pi/packages.nix.
+        "${mcp-adapter}"
+        "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
+        "${powerline-footer}"
+        "${zentui}"
       ];
   };
 
