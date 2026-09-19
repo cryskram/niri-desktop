@@ -102,29 +102,23 @@
       let
         inherit (import ../pi/packages.nix { inherit pkgs; })
           mcp-adapter
+          pi-web-search
           powerline-footer
           rpiv-ask-user-question
           zentui
           ;
-
-        pi-web-search = pkgs.fetchFromGitHub {
-          owner = "ttttmr";
-          repo = "pi-web-search";
-          rev = "83ac115e87bce29cf4c93af329b94ce5c306eaa8";
-          hash = "sha256-MgpL9tSmjDSyIgLhxR874DZHga4SfmcN8xRmdRItf1I=";
-        };
       in
       [
-        "${pi-web-search}/src/index.ts"
-        ../pi/extensions/safety.ts
-        # Querion session archive — /sync uploads pi sessions for on-the-go reading.
-        # Configured via xdg.configFile."querion/config.json" (home-manager block below).
-        ../pi/extensions/querion-sync.ts
         # Third-party extensions, pinned in pi/packages.nix.
+        "${pi-web-search}"
         "${mcp-adapter}"
         "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
         "${powerline-footer}"
         "${zentui}"
+        ../pi/extensions/safety.ts
+        # Querion session archive — /sync uploads pi sessions for on-the-go reading.
+        # Configured via xdg.configFile."querion/config.json" (home-manager block below).
+        ../pi/extensions/querion-sync.ts
       ];
   };
 
