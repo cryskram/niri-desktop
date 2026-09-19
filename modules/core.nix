@@ -40,6 +40,10 @@
 
       pi-coding-agent =
         nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.pi-coding-agent;
+
+      # herdr — agent multiplexer / terminal workspace for coding agents.
+      # Only in nixpkgs-unstable so far, exposed via the overlay like pi/opencode.
+      herdr = nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.herdr;
     })
   ];
 

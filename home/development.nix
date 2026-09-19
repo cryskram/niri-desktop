@@ -4,6 +4,10 @@
 { pkgs, lib, ... }:
 {
   home.packages = with pkgs; [
+    # ── AI agent runtime ──
+    # herdr keeps coding-agent terminals alive across ssh/detach (nixpkgs-unstable)
+    herdr
+
     # ── Core additions not yet in shell/files ──
     tree
     file
