@@ -55,9 +55,28 @@ in
     }
 
     // Rounded windows + less gaps: feat engineered, soft futuristic (RICE §18-19)
+    // draw-border-with-background false: by default niri paints the border as a
+    // solid rectangle *behind* the window, which shows straight through a
+    // semitransparent window and makes it look tinted instead of translucent.
+    // With it off, the border is drawn around the window instead.
     window-rule {
         geometry-corner-radius 12
         clip-to-geometry true
+        draw-border-with-background false
+    }
+
+    // Terminal glass — blur behind Ghostty.
+    // Ghostty only implements background blur on macOS and KDE Plasma (no
+    // ext-background-effect support), so the blur is requested from the niri
+    // side instead. The window still has to be semitransparent or the blur is
+    // hidden behind opaque pixels; that comes from ghostty background-opacity.
+    // Xray blur is on by default whenever another background effect is active.
+    window-rule {
+        match app-id=r#"^com\.mitchellh\.ghostty$"#
+
+        background-effect {
+            blur true
+        }
     }
 
     // Multi-monitor — HDMI-A-1 Samsung 2560x1440 (auto-right of eDP by default, RICE §28)

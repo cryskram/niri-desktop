@@ -58,7 +58,10 @@ in
     background = tokens.colors.background-darkest;
     cursor-text = tokens.colors.background-darkest;
     background-opacity = 0.82;
-    background-blur-radius = 32;
+    # Canonical ghostty name for the blur intensity. Ghostty itself can only
+    # apply this on macOS and KDE Plasma, so under niri it is inert: the blur
+    # comes from niri's window-rule (home/niri.nix).
+    background-blur = 32;
     # Focus is already communicated by niri's 2px mauve active border, so do not
     # also fade unfocused splits. Ghostty defaults unfocused-split-opacity to
     # 0.7, which paints a background-coloured rectangle over every split that
