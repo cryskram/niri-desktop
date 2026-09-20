@@ -102,27 +102,17 @@ in
         }
     }
 
-    // Glass for layer-shell surfaces. This covers the bar, screen corners,
-    // Noctalia panels, and the fuzzel fallback launcher (namespace "launcher")
-    // without naming each one. Surfaces that already request blur themselves
-    // (Noctalia implements ext-background-effect) simply keep it.
+    // Glass for layer-shell surfaces that cannot ask for it themselves.
     //
-    // The background layer is deliberately excluded — there is nothing behind
-    // the wallpaper to blur. Click-shield surfaces are excluded too: they are
-    // full-screen invisible click catchers, so blurring behind one would blur
-    // the entire desktop.
+    // Deliberately narrow. A blanket rule on the top/overlay layers also
+    // matched noctalia-screen-corner, which is one transparent corner mask per
+    // screen corner: the blur rendered behind those masks as a visible square
+    // in every corner, on top of the bar and the windows below. Noctalia also
+    // implements ext-background-effect, so its bar, panels, launchers and
+    // lockscreen already blur on their own and need no rule here. That leaves
+    // only the fuzzel fallback launcher, which cannot request blur itself.
     layer-rule {
-        match layer="top"
-        exclude namespace="click-shield"
-
-        background-effect {
-            blur true
-        }
-    }
-
-    layer-rule {
-        match layer="overlay"
-        exclude namespace="click-shield"
+        match namespace=r#"^launcher$"#
 
         background-effect {
             blur true
