@@ -1,9 +1,9 @@
-# Catppuccin Mocha — native NixOS/Home Manager integration
-# Enables catppuccin/nix for all supported apps, flavor mocha + mauve accent.
+# Catppuccin Macchiato — native NixOS/Home Manager integration
+# Enables catppuccin/nix for all supported apps, flavor macchiato + mauve accent.
 {
   catppuccin = {
     enable = true;
-    flavor = "mocha";
+    flavor = "macchiato";
     accent = "mauve";
     autoEnable = true;
   };

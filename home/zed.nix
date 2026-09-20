@@ -1,5 +1,5 @@
 # Zed — fast GPU editor (DEV_ENVIRONMENT Phase 3)
-# fish + direnv + devenv friendly; Tokyo Night Storm via theme.
+# fish + direnv + devenv friendly; Catppuccin Macchiato via theme.
 { pkgs, ... }:
 {
   home.packages = with pkgs; [

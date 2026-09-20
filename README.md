@@ -1,6 +1,6 @@
 # niri-desktop
 
-Reproducible NixOS desktop and developer workstation built around [Niri](https://github.com/YaLTeR/niri) + [Noctalia](https://github.com/noctalia-dev/noctalia-shell) — Tokyo Night Storm, Wayland-native.
+Reproducible NixOS desktop and developer workstation built around [Niri](https://github.com/YaLTeR/niri) + [Noctalia](https://github.com/noctalia-dev/noctalia-shell) — Catppuccin Macchiato, Wayland-native.
 
 ![NixOS](https://img.shields.io/badge/NixOS-26.05-blue?logo=nixos)
 ![Niri](https://img.shields.io/badge/compositor-Niri-7aa2f7)
@@ -13,7 +13,7 @@ Single source of truth — clone and rebuild on compatible hardware.
 
 - **Compositor:** Niri scrollable tiling, dynamic workspaces, rounded corners (`12px`), `8px` gaps, rings `2px`
 - **Shell:** Noctalia (Quickshell) — island pills, glass/blur, launcher/control-center/wallpaper/lock
-- **Theme:** Tokyo Night Storm (centralized tokens, no hard-coded palette)
+- **Theme:** Catppuccin Macchiato (centralized tokens, no hard-coded palette)
 - **Login:** SDDM Astronaut (Wayland, `QtMultimedia` + Bibata cursor)
 - **Workstation:** `devenv` + `direnv` + Docker, full language toolchains
 
@@ -39,7 +39,7 @@ configuration.nix        — system (boot, networking, pipewire, locale)
 hardware-configuration.nix — generated, don't edit casually
 modules/                 — core.nix (flake wiring, pi, HM), theme/shell/niri/sddm/docker/direnv/vpn.nix
 home/                    — niri.nix, noctalia.nix, theme.nix, shell.nix, git.nix, development.nix, ...
-theme/                   — tokens.nix + noctalia-storm.json (Storm palette)
+theme/                   — tokens.nix + noctalia-macchiato.json (Noctalia palette)
 pi/                      — pi prompts, skills, extension, rules, theme
 dev/                     — personal devenv definitions (shared/, templates/, company/)
 secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
@@ -54,7 +54,7 @@ secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
 
 **Bar (Noctalia islands):** `[launcher|workspaces] [clock] [network|bluetooth|volume|battery|control-center|session]` — per-pill hex, no overflow, survives missing BT/NET/muted/battery states. Panels (network/audio/BT) share Storm tokens.
 
-**Tokens (`theme/tokens.nix`):** `background #24283b`, `surface #2a2f4a`, `accent #7aa2f7`, etc. — change there, not per-file.
+**Tokens (`theme/tokens.nix`):** `background #24273a`, `surface #363a4f`, `accent #c6a0f6`, etc. — change there, not per-file.
 
 **Fonts:** Inter (UI), JetBrains Mono (mono/code), Noto Emoji.
 
@@ -163,7 +163,7 @@ Known fix: `gcc`/`clang` both provide `bin/c++` → `lib.hiPrio gcc` / `lib.lowP
 | Desktop | Terminal | Files |
 |---|---|---|
 | ![desktop](assets/screenshots/01-desktop.png) | ![terminal](assets/screenshots/02-terminal.png) | ![files](assets/screenshots/03-files.png) |
-| Bar + wallpaper + islands | Ghostty + Starship + Tokyo Night | Nautilus + Tela-circle-dark |
+| Bar + wallpaper + islands | Ghostty + Starship + Catppuccin Macchiato | Nautilus + Tela-circle-dark |
 
 | Launcher | Control Center | Multi-monitor |
 |---|---|---|

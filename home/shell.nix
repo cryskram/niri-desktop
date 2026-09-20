@@ -1,5 +1,5 @@
-# Shell — fish + Starship + modern CLI (RICE §20) — Catppuccin Mocha
-# Fast, Wayland-friendly, awesome fish. Mocha mauve palette.
+# Shell — fish + Starship + modern CLI (RICE §20) — Catppuccin Macchiato
+# Fast, Wayland-friendly, awesome fish. Macchiato mauve palette.
 { pkgs, ... }:
 {
   programs.fish = {
@@ -26,11 +26,11 @@
     };
     interactiveShellInit = ''
       set -g fish_greeting ""
-      # Catppuccin Mocha palette for fish
-      set -g fish_color_command cba6f7
-      set -g fish_color_param cdd6f4
-      set -g fish_color_quote a6e3a1
-      set -g fish_color_error f38ba8
+      # Catppuccin Macchiato palette for fish
+      set -g fish_color_command c6a0f6
+      set -g fish_color_param cad3f5
+      set -g fish_color_quote a6da95
+      set -g fish_color_error ed8796
       # history
       set -g fish_history_max 10000
       # zoxide + fzf keybinds are handled by HM integrations below
@@ -48,21 +48,21 @@
       add_newline = true;
       format = "$directory$git_branch$git_status$git_metrics$nix_shell$direnv$container$golang$nodejs$python$rust$java$line_break$character";
       character = {
-        success_symbol = "[>](bold #cba6f7)";
-        error_symbol = "[>](bold #f38ba8)";
-        vicmd_symbol = "[>](bold #89b4fa)";
+        success_symbol = "[>](bold #c6a0f6)";
+        error_symbol = "[>](bold #ed8796)";
+        vicmd_symbol = "[>](bold #8aadf4)";
       };
       directory = {
-        style = "bold #cba6f7";
+        style = "bold #c6a0f6";
         truncation_length = 3;
         truncate_to_repo = true;
       };
       git_branch = {
-        style = "bold #89b4fa";
-        format = "[\($branch\)](bold #89b4fa) ";
+        style = "bold #8aadf4";
+        format = "[\($branch\)](bold #8aadf4) ";
       };
       git_status = {
-        style = "bold #f9e2af";
+        style = "bold #eed49f";
         format = "([\\[$all_status$ahead_behind\\]]($style) )";
         stashed = "\\$";
         ahead = "⇡$count ";
@@ -76,22 +76,22 @@
       };
       git_metrics = {
         disabled = false;
-        added_style = "bold #a6e3a1";
-        deleted_style = "bold #f38ba8";
+        added_style = "bold #a6da95";
+        deleted_style = "bold #ed8796";
         format = "([+$added]($added_style) )([-$deleted]($deleted_style) )";
       };
       nix_shell = {
         symbol = " ";
-        style = "bold #89dceb";
-        format = "[\($symbol$state\)](bold #89dceb) ";
+        style = "bold #91d7e3";
+        format = "[\($symbol$state\)](bold #91d7e3) ";
         impure_msg = "impure";
         pure_msg = "pure";
       };
       direnv = {
         disabled = false;
         symbol = " ";
-        style = "bold #fab387";
-        format = "[\($symbol$loaded/$allowed\)](bold #fab387) ";
+        style = "bold #f5a97f";
+        format = "[\($symbol$loaded/$allowed\)](bold #f5a97f) ";
         loaded_msg = "loaded";
         unloaded_msg = "not loaded";
         allowed_msg = "allowed";
@@ -99,37 +99,37 @@
       };
       container = {
         symbol = " ";
-        style = "bold #a6e3a1";
-        format = "[\($symbol $name\)](bold #a6e3a1) ";
+        style = "bold #a6da95";
+        format = "[\($symbol $name\)](bold #a6da95) ";
       };
       cmd_duration = {
         min_time = 2000;
-        format = "[took $duration](bold #f38ba8) ";
+        format = "[took $duration](bold #ed8796) ";
       };
       golang = {
         symbol = " ";
-        style = "bold #89dceb";
-        format = "[\($symbol$version\)](bold #89dceb) ";
+        style = "bold #91d7e3";
+        format = "[\($symbol$version\)](bold #91d7e3) ";
       };
       nodejs = {
         symbol = " ";
-        style = "bold #a6e3a1";
-        format = "[\($symbol$version\)](bold #a6e3a1) ";
+        style = "bold #a6da95";
+        format = "[\($symbol$version\)](bold #a6da95) ";
       };
       python = {
         symbol = " ";
-        style = "bold #f9e2af";
-        format = "[\($symbol$version\)](bold #f9e2af) ";
+        style = "bold #eed49f";
+        format = "[\($symbol$version\)](bold #eed49f) ";
       };
       rust = {
         symbol = " ";
-        style = "bold #f38ba8";
-        format = "[\($symbol$version\)](bold #f38ba8) ";
+        style = "bold #ed8796";
+        format = "[\($symbol$version\)](bold #ed8796) ";
       };
       java = {
         symbol = " ";
-        style = "bold #fab387";
-        format = "[\($symbol$version\)](bold #fab387) ";
+        style = "bold #f5a97f";
+        format = "[\($symbol$version\)](bold #f5a97f) ";
       };
     };
   };

@@ -55,7 +55,7 @@
       defaultProvider = "opencode-go";
       defaultModel = "muse-spark-1.2-contributor";
       defaultThinkingLevel = "medium";
-      theme = "catppuccin-mocha";
+      theme = "catppuccin-macchiato";
     };
 
     # Repo-owned skills (tracked via the flake). The parent dir is passed (like
@@ -76,7 +76,7 @@
     ];
 
     themes = [
-      ../pi/themes/catppuccin-mocha.json
+      ../pi/themes/catppuccin-macchiato.json
     ];
 
     extraArgs = [
@@ -161,9 +161,9 @@
   };
 
   environment.sessionVariables = {
-    # System-wide cursor Catppuccin Mocha Mauve
+    # System-wide cursor Catppuccin Macchiato Mauve
     XCURSOR_SIZE = "24";
-    XCURSOR_THEME = "catppuccin-mocha-mauve-cursors";
+    XCURSOR_THEME = "catppuccin-macchiato-mauve-cursors";
     # Electron Wayland (Postman, Slack, Discord, Figma) — fixes Missing X server on Niri
     NIXOS_OZONE_WL = "1";
     ELECTRON_OZONE_PLATFORM_HINT = "auto";

@@ -1,4 +1,4 @@
-# SDDM + Astronaut — highly customized Tokyo Night Storm login per RICE §16
+# SDDM + Astronaut — highly customized Catppuccin Macchiato login per RICE §16
 # Futuristic, technical, GUI-based, shows NixOS/hostname/kernel/session/network/time
 {
   pkgs,

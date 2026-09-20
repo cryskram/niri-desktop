@@ -21,7 +21,7 @@ r/unixporn look without rebuilding everything from scratch.
 3. **Noctalia** — single cohesive shell (bar, dock, launcher, control center,
    notifications, wallpaper, lock, clipboard, OSDs) built on Wayland + OpenGL ES
    with no Qt/GTK split, highly configurable via TOML, Niri workspaces native,
-   Tokyo Night theming via settings, and hot-reload.
+   Catppuccin Macchiato theming via settings, and hot-reload.
 
 ## Decision
 Adopt **Noctalia** (`github:noctalia-dev/noctalia-shell`, also in
@@ -36,8 +36,8 @@ Noctalia’s bar/panels replace the custom `quickshell/` bar. Custom
   Niri integration out of the box.
 - **Negative:** Less hand-rolled QML, more TOML config; custom bar is now
   fallback/reference only.
-- **Follow-up:** Tune `home/noctalia.nix` `settings` to pure Tokyo Night Storm
-  (`#24283b` etc.), enable `swww` dynamic wallpaper, and keep `fuzzel`/`mako`
+- **Follow-up:** Tune `home/noctalia.nix` `settings` to pure Catppuccin Macchiato
+  (`#24273a` etc.), enable `swww` dynamic wallpaper, and keep `fuzzel`/`mako`
   as fallback.
 
 ## References

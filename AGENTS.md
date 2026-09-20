@@ -183,7 +183,7 @@ Pi customization lives in `modules/core.nix` (`programs.pi.coding-agent`):
 * skills → `pi/skills/` (`skills`); company skills stay outside the repo (TAP) via `extraArgs`
 * extension → `pi/extensions/safety.ts` (`extensions`)
 * global rules → `pi/rules.md` (`rules`)
-* theme → `pi/themes/catppuccin-mocha.json` (`themes`)
+* theme → `pi/themes/catppuccin-macchiato.json` (`themes`)
 
 To add Pi functionality, extend these mechanisms. Do not build a parallel
 configuration mechanism. Validate with:
@@ -412,9 +412,9 @@ The architecture must support additional monitors.
 
 ---
 
-# 18. Tokyo Night Storm
+# 18. Catppuccin Macchiato
 
-Tokyo Night Storm is the global visual system.
+Catppuccin Macchiato is the global visual system.
 
 Do not introduce arbitrary colors.
 

@@ -70,7 +70,7 @@ A beautiful desktop that breaks when a network adapter disappears is not a finis
 
 The visual identity combines:
 
-* Tokyo Night Storm
+* Catppuccin Macchiato
 * futuristic operating-system UI
 * mission-control workstation
 * hacker/developer workstation
@@ -529,7 +529,7 @@ Evaluate both.
 
 The primary terminal should eventually use:
 
-* Tokyo Night Storm
+* Catppuccin Macchiato
 * selected font
 * sensible padding
 * Wayland-native behavior
@@ -836,7 +836,7 @@ Introduce:
 
 Establish:
 
-* Tokyo Night Storm
+* Catppuccin Macchiato
 * fonts
 * icons
 * GTK
@@ -1005,7 +1005,7 @@ The desktop is v1.0 when:
 * Nautilus works
 * terminal is polished
 * shell is polished
-* Tokyo Night Storm is coherent
+* Catppuccin Macchiato is coherent
 * one-monitor experience is excellent
 * two-monitor operation works
 * validation passes

@@ -1,5 +1,5 @@
-# Noctalia — crazy beautiful r/unixporn shell, Catppuccin Mocha
-# Glass, blur, capsule bar, Niri workspaces, Mocha palette
+# Noctalia — crazy beautiful r/unixporn shell, Catppuccin Macchiato
+# Glass, blur, capsule bar, Niri workspaces, Macchiato palette
 {
   lib,
   noctalia,
@@ -45,7 +45,7 @@
         tint_intensity = 0.25;
       };
 
-      # Bar — TRUE ISLANDS: Mocha glass (more transparent)
+      # Bar — TRUE ISLANDS: Macchiato glass (more transparent)
       # Sidebar-ready: position top (horizontal) now, change to "left" for vertical sidebar.
       # For sidebar: thickness = width, start=top center=middle end=bottom, clock vertical_format used.
       bar = {
@@ -95,78 +95,78 @@
         };
       };
 
-      # Per-pill Mocha colors — Catppuccin pastels on mantle/base
+      # Per-pill Macchiato colors — Catppuccin pastels on mantle/base
       widget = {
         launcher = {
-          capsule_fill = "#cba6f7"; # mauve
-          capsule_foreground = "#1e1e2e";
+          capsule_fill = "#c6a0f6"; # mauve
+          capsule_foreground = "#24273a";
         };
         workspaces = {
-          capsule_fill = "#313244"; # surface0
-          capsule_foreground = "#cdd6f4";
+          capsule_fill = "#363a4f"; # surface0
+          capsule_foreground = "#cad3f5";
           capsule_padding = 16;
         };
         clock = {
-          capsule_fill = "#313244";
-          capsule_foreground = "#cdd6f4";
+          capsule_fill = "#363a4f";
+          capsule_foreground = "#cad3f5";
           format = "{:%a %d %b  %H:%M}";
           vertical_format = "{:%H:%M\n%a %d}";
           tooltip_format = "{:%A, %d %B %Y %H:%M}";
         };
         taskbar = {
-          capsule_fill = "#313244";
-          capsule_foreground = "#cdd6f4";
+          capsule_fill = "#363a4f";
+          capsule_foreground = "#cad3f5";
         };
         media = {
-          capsule_fill = "#fab387"; # peach
-          capsule_foreground = "#1e1e2e";
+          capsule_fill = "#f5a97f"; # peach
+          capsule_foreground = "#24273a";
         };
         sysmon = {
-          capsule_fill = "#313244";
-          capsule_foreground = "#cdd6f4";
+          capsule_fill = "#363a4f";
+          capsule_foreground = "#cad3f5";
         };
         notifications = {
-          capsule_fill = "#313244";
-          capsule_foreground = "#cdd6f4";
+          capsule_fill = "#363a4f";
+          capsule_foreground = "#cad3f5";
         };
         network = {
-          capsule_fill = "#a6e3a1"; # green
-          capsule_foreground = "#1e1e2e";
+          capsule_fill = "#a6da95"; # green
+          capsule_foreground = "#24273a";
         };
         tray = {
-          capsule_fill = "#313244";
-          capsule_foreground = "#cdd6f4";
+          capsule_fill = "#363a4f";
+          capsule_foreground = "#cad3f5";
           hide_passive = false;
           drawer = true;
           drawer_columns = 3;
         };
         bluetooth = {
-          capsule_fill = "#f38ba8"; # red
-          capsule_foreground = "#1e1e2e";
+          capsule_fill = "#ed8796"; # red
+          capsule_foreground = "#24273a";
         };
         volume = {
-          capsule_fill = "#89dceb"; # sky
-          capsule_foreground = "#1e1e2e";
+          capsule_fill = "#91d7e3"; # sky
+          capsule_foreground = "#24273a";
         };
         battery = {
-          capsule_fill = "#f9e2af"; # yellow
-          capsule_foreground = "#1e1e2e";
+          capsule_fill = "#eed49f"; # yellow
+          capsule_foreground = "#24273a";
         };
         "control-center" = {
-          capsule_fill = "#cba6f7";
-          capsule_foreground = "#1e1e2e";
+          capsule_fill = "#c6a0f6";
+          capsule_foreground = "#24273a";
         };
         session = {
-          capsule_fill = "#f38ba8";
-          capsule_foreground = "#1e1e2e";
+          capsule_fill = "#ed8796";
+          capsule_foreground = "#24273a";
         };
       };
 
-      # Theme — Catppuccin Mocha via custom palette (theme/noctalia-mocha.json)
+      # Theme — Catppuccin Macchiato via custom palette (theme/noctalia-macchiato.json)
       theme = {
         mode = "dark";
         source = "custom";
-        custom_palette = "Mocha";
+        custom_palette = "Macchiato";
         pure_black_dark = false;
       };
 
@@ -178,7 +178,7 @@
         scale = 1.0;
       };
 
-      # Lock screen (RICE §17) — elaborate: more blur + Mocha tint
+      # Lock screen (RICE §17) — elaborate: more blur + Macchiato tint
       lockscreen = {
         enabled = true;
         blurred_desktop = true;
@@ -220,5 +220,5 @@
   programs.quickshell.enable = lib.mkForce false;
   programs.quickshell.systemd.enable = lib.mkForce false;
 
-  xdg.configFile."noctalia/palettes/Mocha.json".source = ../theme/noctalia-mocha.json;
+  xdg.configFile."noctalia/palettes/Macchiato.json".source = ../theme/noctalia-macchiato.json;
 }

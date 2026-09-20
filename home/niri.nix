@@ -30,7 +30,7 @@ in
 
     // --- Phase 3 skeleton overrides ---
 
-    // Wallpaper fallback (Tokyo Night Storm background — solid color, per RICE §18).
+    // Wallpaper fallback (Catppuccin Macchiato background — solid color, per RICE §18).
     // Decorative only; functionality must not depend on it.
     spawn-at-startup "swaybg" "-c" "${tokens.colors.background}"
 

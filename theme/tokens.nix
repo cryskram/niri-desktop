@@ -1,36 +1,36 @@
-# Centralized design tokens — Catppuccin Mocha
+# Centralized design tokens — Catppuccin Macchiato
 # Single source of truth per RICE §4. Derived via catppuccin/nix + manual tokens.
 rec {
   colors = {
     # Base
-    background = "#1e1e2e"; # base
-    background-deep = "#181825"; # mantle
-    surface = "#313244"; # surface0
-    surface-elevated = "#45475a"; # surface1
-    surface-hover = "#585b70"; # surface2
-    surface-active = "#585b70";
+    background = "#24273a"; # base
+    background-deep = "#1e2030"; # mantle
+    surface = "#363a4f"; # surface0
+    surface-elevated = "#494d64"; # surface1
+    surface-hover = "#5b6078"; # surface2
+    surface-active = "#5b6078";
 
     # Foreground
-    foreground = "#cdd6f4"; # text
-    foreground-muted = "#bac2de"; # subtext1
-    foreground-dim = "#a6adc8"; # subtext0
+    foreground = "#cad3f5"; # text
+    foreground-muted = "#b8c0e0"; # subtext1
+    foreground-dim = "#a5adcb"; # subtext0
 
     # Accent — catppuccin mauve + blue
-    accent-primary = "#cba6f7"; # mauve
-    accent-secondary = "#89b4fa"; # blue
+    accent-primary = "#c6a0f6"; # mauve
+    accent-secondary = "#8aadf4"; # blue
 
     # Borders
-    border = "#45475a"; # surface1
-    border-subtle = "#313244"; # surface0
+    border = "#494d64"; # surface1
+    border-subtle = "#363a4f"; # surface0
 
     # Semantic
-    success = "#a6e3a1"; # green
-    warning = "#f9e2af"; # yellow
-    error = "#f38ba8"; # red
-    info = "#89dceb"; # sky
+    success = "#a6da95"; # green
+    warning = "#eed49f"; # yellow
+    error = "#ed8796"; # red
+    info = "#91d7e3"; # sky
 
     # Effects
-    shadow = "#11111b"; # crust
+    shadow = "#181926"; # crust
   };
 
   fonts = {

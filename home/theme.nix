@@ -1,4 +1,4 @@
-# Home-level theming — Catppuccin Mocha
+# Home-level theming — Catppuccin Macchiato
 # Imports centralized tokens; no hard-coded palette elsewhere per RICE §4.
 { pkgs, ... }:
 let
@@ -7,15 +7,15 @@ let
   cn = tokens.colorsNoHash;
 in
 {
-  # GTK — Catppuccin Mocha (via catppuccin/nix + catppuccin-gtk)
+  # GTK — Catppuccin Macchiato (via catppuccin/nix + catppuccin-gtk)
   gtk = {
     enable = true;
     theme = {
       package = pkgs.catppuccin-gtk.override {
-        variant = "mocha";
+        variant = "macchiato";
         accents = [ "mauve" ];
       };
-      name = "catppuccin-mocha-mauve-standard";
+      name = "catppuccin-macchiato-mauve-standard";
     };
     iconTheme = {
       package = pkgs.papirus-icon-theme;
@@ -27,10 +27,10 @@ in
     };
   };
 
-  # Cursor — Catppuccin Mocha Mauve at 24px
+  # Cursor — Catppuccin Macchiato Mauve at 24px
   home.pointerCursor = {
-    package = pkgs.catppuccin-cursors.mochaMauve;
-    name = "catppuccin-mocha-mauve-cursors";
+    package = pkgs.catppuccin-cursors.macchiatoMauve;
+    name = "catppuccin-macchiato-mauve-cursors";
     size = 24;
     x11.enable = true;
     gtk.enable = true;
@@ -38,7 +38,7 @@ in
 
   home.sessionVariables = {
     XCURSOR_SIZE = "24";
-    XCURSOR_THEME = "catppuccin-mocha-mauve-cursors";
+    XCURSOR_THEME = "catppuccin-macchiato-mauve-cursors";
   };
 
   # Qt — use qt5ct on Wayland (gtk2 platform theme requires X DISPLAY and breaks Quickshell on pure Wayland)
@@ -47,11 +47,11 @@ in
     platformTheme.name = "qt5ct";
   };
 
-  # Terminal — ghostty Mocha glass (more blur)
+  # Terminal — ghostty Macchiato glass (more blur)
   programs.ghostty.settings = {
     font-family = tokens.fonts.mono;
     font-size = 11;
-    theme = "Catppuccin Mocha";
+    theme = "Catppuccin Macchiato";
     background-opacity = 0.82;
     background-blur-radius = 32;
     window-decoration = false;

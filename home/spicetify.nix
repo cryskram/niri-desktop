@@ -1,4 +1,4 @@
-# Spicetify — Spotify Catppuccin Mocha (DEV, RICE §4)
+# Spicetify — Spotify Catppuccin Macchiato (DEV, RICE §4)
 # Uses spicetify-nix (follows nixpkgs) for declarative theming.
 { pkgs, spicetify-nix, ... }:
 let
@@ -8,26 +8,26 @@ in
 
   programs.spicetify = {
     enable = true;
-    # Theme: text + Catppuccin Mocha palette
+    # Theme: text + Catppuccin Macchiato palette
     theme = spicePkgs.themes.text;
     colorScheme = "custom";
     customColorScheme = {
-      text = "cdd6f4";
-      subtext = "bac2de";
-      sidebarText = "cdd6f4";
-      main = "1e1e2e";
-      sidebar = "181825";
-      player = "1e1e2e";
-      card = "313244";
-      shadow = "11111b";
-      selectedRow = "45475a";
-      button = "cba6f7";
-      buttonActive = "cba6f7";
-      buttonDisabled = "585b70";
-      tabActive = "cba6f7";
-      notification = "cba6f7";
-      notificationError = "f38ba8";
-      misc = "585b70";
+      text = "cad3f5";
+      subtext = "b8c0e0";
+      sidebarText = "cad3f5";
+      main = "24273a";
+      sidebar = "1e2030";
+      player = "24273a";
+      card = "363a4f";
+      shadow = "181926";
+      selectedRow = "494d64";
+      button = "c6a0f6";
+      buttonActive = "c6a0f6";
+      buttonDisabled = "5b6078";
+      tabActive = "c6a0f6";
+      notification = "c6a0f6";
+      notificationError = "ed8796";
+      misc = "5b6078";
     };
     enabledExtensions = with spicePkgs.extensions; [
       shuffle

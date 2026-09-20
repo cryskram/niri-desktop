@@ -31,7 +31,7 @@
     obsidian # note taking
 
     # ── Communication ──
-    # spotify via spicetify (home/spicetify.nix) — Tokyo Night Storm
+    # spotify via spicetify (home/spicetify.nix) — Catppuccin Macchiato
     slack
     discord
 

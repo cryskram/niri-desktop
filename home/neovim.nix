@@ -33,7 +33,7 @@
     ];
   };
 
-  # LazyVim config — bootstrap + Mocha touches
+  # LazyVim config — bootstrap + Macchiato touches
   xdg.configFile."nvim/init.lua".text = ''
     -- Managed by ~/niri-desktop/home/neovim.nix — LazyVim starter
     -- Bootstrap lazy.nvim from nix (fallback to git if not found)
@@ -65,7 +65,7 @@
     })
   '';
 
-  # Minimal LazyVim overrides — keep Mocha, ensure lazyvim.plugins loads
+  # Minimal LazyVim overrides — keep Macchiato, ensure lazyvim.plugins loads
   xdg.configFile."nvim/lua/config/lazy.lua".text = ''
     return {
       defaults = { lazy = true },
@@ -79,7 +79,7 @@
       {
         "catppuccin/nvim",
         name = "catppuccin",
-        opts = { flavour = "mocha", transparent_background = false },
+        opts = { flavour = "macchiato", transparent_background = false },
       },
     }
   '';
