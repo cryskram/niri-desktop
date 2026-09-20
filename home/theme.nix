@@ -52,6 +52,11 @@ in
     font-family = tokens.fonts.mono;
     font-size = 11;
     theme = "Catppuccin Macchiato";
+    # Sink the terminal below the rest of the desktop: crust instead of the
+    # flavor's base. Ghostty applies explicit colors over theme colors, so the
+    # Macchiato palette/accent set is kept and only the base is darkened.
+    background = tokens.colors.background-darkest;
+    cursor-text = tokens.colors.background-darkest;
     background-opacity = 0.82;
     background-blur-radius = 32;
     window-decoration = false;

@@ -5,6 +5,7 @@ rec {
     # Base
     background = "#24273a"; # base
     background-deep = "#1e2030"; # mantle
+    background-darkest = "#181926"; # crust
     surface = "#363a4f"; # surface0
     surface-elevated = "#494d64"; # surface1
     surface-hover = "#5b6078"; # surface2

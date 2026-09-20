@@ -156,6 +156,38 @@
       url = "https://querion-plum.vercel.app";
       tokenFile = "/home/vageesh/niri-desktop/secrets/querion-token";
     };
+
+    # MCP servers for the pi-mcp-adapter extension. Previously an imperative
+    # ~/.config/mcp/mcp.json; the adapter reads this path as its "shared-global
+    # standard MCP" source. No secrets here.
+    #
+    # parallel-search uses /mcp-oauth, not /mcp: /mcp serves anonymous traffic
+    # and publishes no OAuth metadata (/.well-known/oauth-protected-resource
+    # returns 404), so Dynamic Client Registration fails there with
+    # "HTTP 404: Not found". /mcp-oauth returns 401 anonymously and advertises
+    # the metadata document, so OAuth sign-in works.
+    # deepwiki is a public service with no auth and no OAuth metadata, so it is
+    # left anonymous and must not be authenticated.
+    xdg.configFile."mcp/mcp.json".text = builtins.toJSON {
+      mcpServers = {
+        chrome-devtools = {
+          command = "npx";
+          args = [
+            "-y"
+            "chrome-devtools-mcp@1.6.0"
+          ];
+        };
+        parallel-search = {
+          url = "https://search.parallel.ai/mcp-oauth";
+          protocolVersion = "auto";
+          directTools = true;
+        };
+        deepwiki = {
+          url = "https://mcp.deepwiki.com/mcp";
+          protocolVersion = "auto";
+        };
+      };
+    };
   };
 
   environment.sessionVariables = {
