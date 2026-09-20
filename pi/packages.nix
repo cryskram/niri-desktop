@@ -103,6 +103,32 @@ let
           }
         }/node_modules $out/node_modules
       '';
+  # Both rpiv extensions ship from the same monorepo release and need only their
+  # own workspace installed (a sibling @juicesharp/rpiv-config plus the i18n
+  # peer). typebox and @earendil-works/* come from pi's bundled modules.
+  rpivExtension =
+    {
+      pname,
+      npmHash,
+      subdir,
+    }:
+    withDeps {
+      inherit pname npmHash subdir;
+      version = "2.10.1";
+      src = pkgs.fetchFromGitHub {
+        owner = "juicesharp";
+        repo = "rpiv-mono";
+        tag = "v2.10.1";
+        hash = "sha256-kgULSuw55OIqoF36kPyl69PCoDyajducrq3jeENnVKM=";
+      };
+      npmFlags = [
+        "--omit=dev"
+        "--legacy-peer-deps"
+        # Monorepo: install only this workspace, not every sibling's deps.
+        "--include-workspace-root=false"
+        "--workspace=@juicesharp/${pname}"
+      ];
+    };
 in
 {
   # MCP (Model Context Protocol) servers for pi.
@@ -126,25 +152,18 @@ in
   };
 
   # Structured questionnaires the model can put to you.
-  # Runtime deps: @juicesharp/rpiv-config (+ its i18n peer), typebox.
-  rpiv-ask-user-question = withDeps {
+  rpiv-ask-user-question = rpivExtension {
     pname = "rpiv-ask-user-question";
-    version = "2.10.1";
-    src = pkgs.fetchFromGitHub {
-      owner = "juicesharp";
-      repo = "rpiv-mono";
-      tag = "v2.10.1";
-      hash = "sha256-kgULSuw55OIqoF36kPyl69PCoDyajducrq3jeENnVKM=";
-    };
     npmHash = "sha256-JY4Y6vjY9g0haoEQNz1Zk6L0FJHoy+We7/93X/uxs58=";
-    npmFlags = [
-      "--omit=dev"
-      "--legacy-peer-deps"
-      # Monorepo: install only this workspace, not every sibling's deps.
-      "--include-workspace-root=false"
-      "--workspace=@juicesharp/rpiv-ask-user-question"
-    ];
     subdir = "packages/rpiv-ask-user-question";
+  };
+
+  # Todo list for the model, rendered as a live overlay that survives /reload
+  # and conversation compaction.
+  rpiv-todo = rpivExtension {
+    pname = "rpiv-todo";
+    npmHash = "sha256-GpCwN6upmIYw6hzFR1Vlpmt6GYow2j9crCZVwJviaas=";
+    subdir = "packages/rpiv-todo";
   };
 
   # Starship-style statusline + opencode-style TUI (owns the footer).

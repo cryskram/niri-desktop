@@ -103,6 +103,7 @@
         inherit (import ../pi/packages.nix { inherit pkgs; })
           mcp-adapter
           rpiv-ask-user-question
+          rpiv-todo
           zentui
           ;
       in
@@ -110,6 +111,7 @@
         # Third-party extensions, pinned in pi/packages.nix.
         "${mcp-adapter}"
         "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
+        "${rpiv-todo}/${rpiv-todo.extensionPath}"
         "${zentui}"
         ../pi/extensions/safety.ts
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
