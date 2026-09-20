@@ -59,6 +59,11 @@ in
     cursor-text = tokens.colors.background-darkest;
     background-opacity = 0.82;
     background-blur-radius = 32;
+    # Focus is already communicated by niri's 2px mauve active border, so do not
+    # also fade unfocused splits. Ghostty defaults unfocused-split-opacity to
+    # 0.7, which paints a background-coloured rectangle over every split that
+    # does not have focus (1 disables the effect entirely).
+    unfocused-split-opacity = 1;
     window-decoration = false;
     window-padding-x = 12;
     window-padding-y = 12;
