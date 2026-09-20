@@ -102,14 +102,12 @@
       let
         inherit (import ../pi/packages.nix { inherit pkgs; })
           mcp-adapter
-          pi-web-search
           rpiv-ask-user-question
           zentui
           ;
       in
       [
         # Third-party extensions, pinned in pi/packages.nix.
-        "${pi-web-search}"
         "${mcp-adapter}"
         "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
         "${zentui}"

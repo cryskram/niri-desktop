@@ -147,19 +147,6 @@ in
     subdir = "packages/rpiv-ask-user-question";
   };
 
-  # Provider-native web search (Gemini, Grok, OpenAI, Anthropic, OpenCode Zen/Go).
-  # Imports only pi's bundled modules; upstream has no release tags, so pinned by rev.
-  pi-web-search = plain {
-    pname = "pi-web-search";
-    version = "1.6.0";
-    src = pkgs.fetchFromGitHub {
-      owner = "ttttmr";
-      repo = "pi-web-search";
-      rev = "83ac115e87bce29cf4c93af329b94ce5c306eaa8";
-      hash = "sha256-MgpL9tSmjDSyIgLhxR874DZHga4SfmcN8xRmdRItf1I=";
-    };
-  };
-
   # Starship-style statusline + opencode-style TUI (owns the footer).
   zentui = plain {
     pname = "pi-zentui";
