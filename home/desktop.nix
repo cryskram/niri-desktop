@@ -14,10 +14,6 @@ in
   # Launcher — fuzzel (Wayland-native, keyboard-first, matches niri default Mod+D)
   programs.fuzzel.enable = true;
 
-  # Notifications — mako (lightweight Wayland compositor notifications)
-  # Runs as a systemd user service; a failure must not crash the shell.
-  services.mako.enable = true;
-
   # Lock screen — swaylock (referenced by niri default Super+Alt+L)
   # PAM is configured at system level (modules/niri.nix). Themed Macchiato.
   programs.swaylock.enable = true;

@@ -59,10 +59,27 @@ in
     // solid rectangle *behind* the window, which shows straight through a
     // semitransparent window and makes it look tinted instead of translucent.
     // With it off, the border is drawn around the window instead.
+    //
+    // Glass: every window is subtly translucent and blurred. Blur is only
+    // visible where there is transparency, so the opacity and the background
+    // effect belong together. 0.95 keeps text contrast intact while letting the
+    // wallpaper tint through.
     window-rule {
         geometry-corner-radius 12
         clip-to-geometry true
         draw-border-with-background false
+        opacity 0.95
+
+        background-effect {
+            blur true
+        }
+
+        // Pop-up menus (context menus, dropdowns) get the same treatment.
+        popups {
+            background-effect {
+                blur true
+            }
+        }
     }
 
     // Terminal glass — blur behind Ghostty.
@@ -71,8 +88,41 @@ in
     // side instead. The window still has to be semitransparent or the blur is
     // hidden behind opaque pixels; that comes from ghostty background-opacity.
     // Xray blur is on by default whenever another background effect is active.
+    //
+    // Rules are applied in order and later ones override earlier ones, so
+    // opacity 1.0 here cancels the generic 0.95 above: niri multiplies its own
+    // opacity on top of the window's, and ghostty already asks for 0.82.
     window-rule {
         match app-id=r#"^com\.mitchellh\.ghostty$"#
+
+        opacity 1.0
+
+        background-effect {
+            blur true
+        }
+    }
+
+    // Glass for layer-shell surfaces. This covers the bar, screen corners,
+    // Noctalia panels, and the fuzzel fallback launcher (namespace "launcher")
+    // without naming each one. Surfaces that already request blur themselves
+    // (Noctalia implements ext-background-effect) simply keep it.
+    //
+    // The background layer is deliberately excluded — there is nothing behind
+    // the wallpaper to blur. Click-shield surfaces are excluded too: they are
+    // full-screen invisible click catchers, so blurring behind one would blur
+    // the entire desktop.
+    layer-rule {
+        match layer="top"
+        exclude namespace="click-shield"
+
+        background-effect {
+            blur true
+        }
+    }
+
+    layer-rule {
+        match layer="overlay"
+        exclude namespace="click-shield"
 
         background-effect {
             blur true

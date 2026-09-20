@@ -3,7 +3,6 @@
 { pkgs, ... }:
 let
   tokens = import ../theme/tokens.nix;
-  c = tokens.colors;
   cn = tokens.colorsNoHash;
 in
 {
@@ -94,23 +93,6 @@ in
     border = {
       width = 1;
       radius = 12;
-    };
-  };
-
-  # Notifications — mako glass
-  services.mako.settings = {
-    background-color = "${c.background}d9";
-    text-color = "${c.foreground}";
-    border-color = "${c.border}99";
-    border-size = 1;
-    border-radius = 12;
-    default-timeout = 4000;
-    background-blur = true;
-    # Urgency variants — keep glass
-    "urgency=high" = {
-      background-color = "${c.surface}e6";
-      border-color = "${c.error}";
-      text-color = "${c.foreground}";
     };
   };
 }
