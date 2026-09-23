@@ -151,6 +151,12 @@
   programs.jq.enable = true;
   programs.lazygit.enable = true;
 
+  # ~/.local/bin first on PATH. `home.sessionPath` prepends, which is what
+  # `~/.local/bin` conventionally expects, and Home Manager exports it through
+  # hm-session-vars so fish picks it up too. (xdg.localBinInPath is the other
+  # option, but it appends and needs xdg.enable, which is off here.)
+  home.sessionPath = [ "$HOME/.local/bin" ];
+
   home.packages = with pkgs; [
     yq-go
     fish
