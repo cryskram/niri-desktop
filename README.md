@@ -125,8 +125,8 @@ Enable globally: `modules/direnv.nix` + `home/direnv.nix` (`nix-direnv`).
 WireGuard/OpenVPN via `modules/vpn.nix` — **never committed**.
 
 ```bash
-# WireGuard (detected: ~/Downloads/vageesh.gn-laptop.conf -> secrets/wg0.conf 600)
-cp ~/Downloads/vageesh.gn-laptop.conf ~/niri-desktop/secrets/wg0.conf
+# WireGuard (detected: <name>.conf -> secrets/wg0.conf 600)
+cp ~/Downloads/<name>.conf ~/niri-desktop/secrets/wg0.conf
 chmod 600 ~/niri-desktop/secrets/wg0.conf
 sudo nixos-rebuild switch --flake .#nixos --accept-flake-config
 
