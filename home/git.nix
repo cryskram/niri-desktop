@@ -1,4 +1,4 @@
-# Git — declarative, preserves existing ~/.gitconfig (cryskram)
+# Git — declarative; the repo is the only source of git config.
 # RICE §31 + DEV_ENVIRONMENT §9: reproducible Git + GitHub CLI
 { pkgs, ... }:
 {
@@ -26,7 +26,26 @@
 
   programs.gh = {
     enable = true;
-    gitCredentialHelper.enable = true;
+    # The credential helper is set explicitly below rather than through
+    # gitCredentialHelper, which pins "${pkgs.gh}/bin/gh". A store path goes
+    # stale as soon as gh is updated and the old path is collected, and git then
+    # fails every fetch with "No such file or directory" — which is exactly what
+    # happened with gh-2.99.0. "!gh ..." resolves gh from PATH, so it always
+    # follows the current package.
+    gitCredentialHelper.enable = false;
+  };
+
+  programs.git.settings.credential = {
+    # The leading "" clears any inherited helper list, so a stale entry from
+    # another gitconfig cannot survive and get used first.
+    "https://github.com".helper = [
+      ""
+      "!gh auth git-credential"
+    ];
+    "https://gist.github.com".helper = [
+      ""
+      "!gh auth git-credential"
+    ];
   };
 
   home.packages = with pkgs; [
