@@ -2,14 +2,15 @@
 {
   home.packages = with pkgs; [
     wl-mirror
-    # get-sts — sanitized for GitHub (no account/MFA hardcoded). Real values in ~/.config/aws-sts.env (gitignored)
-    # Create ~/.config/aws-sts.env from ~/.config/aws-sts.env.example and fill:
-    #   AWS_ACCOUNT_ID=313208865236
-    #   AWS_MFA_USER=vageesh.gn
-    #   AWS_PROFILE=vageesh.gn
-    #   AWS_CODEARTIFACT_DOMAIN=ppipl
-    #   AWS_CODEARTIFACT_DOMAIN_OWNER=313208865236
-    #   AWS_REGION=ap-south-1
+    # get-sts — sanitized for GitHub (no account/MFA/domain hardcoded).
+    # Create ~/.config/aws-sts.env from the example template and fill in:
+    #   AWS_ACCOUNT_ID=<12-digit account id>
+    #   AWS_MFA_USER=<iam user owning the MFA device>
+    #   AWS_PROFILE=<profile holding the long-term IAM user key>
+    #   AWS_CODEARTIFACT_DOMAIN=<codeartifact domain>
+    #   AWS_CODEARTIFACT_DOMAIN_OWNER=<account id owning the domain>
+    #   AWS_REGION=<region>
+    # Optional: AWS_STS_TARGET_PROFILE=<profile for session creds, default: default>
     (writeShellScriptBin "get-sts" ''
       set -euo pipefail
       if [[ -z "''${1:-}" ]]; then echo "Usage: get-sts <MFA_CODE>"; exit 1; fi
@@ -18,23 +19,66 @@
       if [[ -f "$HOME/.config/aws-sts.env" ]]; then set -a; source "$HOME/.config/aws-sts.env"; set +a; fi
       : "''${AWS_ACCOUNT_ID:?Set AWS_ACCOUNT_ID in ~/.config/aws-sts.env}"
       : "''${AWS_MFA_USER:?Set AWS_MFA_USER in ~/.config/aws-sts.env}"
+
+      # SOURCE holds the long-term IAM user key that owns the MFA device.
+      # TARGET receives the temporary session credentials.
+      #
+      # These must never be the same profile. `source` above exports
+      # AWS_PROFILE (set -a), and `aws configure set` writes to whatever
+      # profile is active, so an unqualified write lands straight back in the
+      # profile we just read from. That replaces the long-term key with a
+      # session key, and the next run fails with:
+      #   Cannot call GetSessionToken with session credentials
+      # Unsetting the variables and passing --profile explicitly on every call
+      # keeps the two apart, which is what makes this script repeatable.
+      # AWS_PROFILE is required rather than defaulted: a default of "default"
+      # would collide with TARGET_PROFILE and reintroduce the bug.
       : "''${AWS_PROFILE:?Set AWS_PROFILE in ~/.config/aws-sts.env}"
+      : "''${AWS_CODEARTIFACT_DOMAIN:?Set AWS_CODEARTIFACT_DOMAIN in ~/.config/aws-sts.env}"
+      SOURCE_PROFILE="$AWS_PROFILE"
+      TARGET_PROFILE="''${AWS_STS_TARGET_PROFILE:-default}"
+      unset AWS_PROFILE
+      # An inherited session token would override the profile entirely.
+      unset AWS_SESSION_TOKEN
+
       MFA_DEVICE="arn:aws:iam::''${AWS_ACCOUNT_ID}:mfa/''${AWS_MFA_USER}"
-      PROFILE="''${AWS_PROFILE}"
-      DOMAIN="''${AWS_CODEARTIFACT_DOMAIN:-ppipl}"
+      DOMAIN="$AWS_CODEARTIFACT_DOMAIN"
       DOMAIN_OWNER="''${AWS_CODEARTIFACT_DOMAIN_OWNER:-$AWS_ACCOUNT_ID}"
       REGION="''${AWS_REGION:-ap-south-1}"
       DURATION=129600
-      echo "→ STS for $PROFILE ..."
-      CREDS=$(aws sts get-session-token --duration-seconds $DURATION --serial-number "$MFA_DEVICE" --token-code "$MFA_TOKEN" --profile "$PROFILE" --output json)
+
+      # Fail early and clearly instead of letting STS return a cryptic error.
+      # AKIA = long-term IAM user key, ASIA = temporary session key.
+      SRC_KEY=$(aws configure get aws_access_key_id --profile "$SOURCE_PROFILE" 2>/dev/null || true)
+      SRC_TOKEN=$(aws configure get aws_session_token --profile "$SOURCE_PROFILE" 2>/dev/null || true)
+      if [[ -z "$SRC_KEY" ]]; then
+        echo "✗ Profile '$SOURCE_PROFILE' has no access key." >&2
+        echo "  Add a long-term IAM user key (AWS console > IAM > Security credentials):" >&2
+        echo "    aws configure set aws_access_key_id <KEY>    --profile $SOURCE_PROFILE" >&2
+        echo "    aws configure set aws_secret_access_key <SECRET> --profile $SOURCE_PROFILE" >&2
+        exit 1
+      fi
+      if [[ "$SRC_KEY" == ASIA* || -n "$SRC_TOKEN" ]]; then
+        echo "✗ Profile '$SOURCE_PROFILE' holds temporary session credentials, not a long-term key." >&2
+        echo "  GetSessionToken can only be called with a long-term IAM user key." >&2
+        echo "  Replace them with a long-term key: delete the aws_session_token line" >&2
+        echo "  from [$SOURCE_PROFILE] in ~/.aws/credentials, then:" >&2
+        echo "    aws configure set aws_access_key_id <KEY>       --profile $SOURCE_PROFILE" >&2
+        echo "    aws configure set aws_secret_access_key <SECRET> --profile $SOURCE_PROFILE" >&2
+        exit 1
+      fi
+
+      echo "→ STS for $SOURCE_PROFILE → $TARGET_PROFILE ..."
+      CREDS=$(aws sts get-session-token --duration-seconds $DURATION --serial-number "$MFA_DEVICE" --token-code "$MFA_TOKEN" --profile "$SOURCE_PROFILE" --output json)
       AK=$(echo "$CREDS" | jq -r '.Credentials.AccessKeyId')
       SK=$(echo "$CREDS" | jq -r '.Credentials.SecretAccessKey')
       ST=$(echo "$CREDS" | jq -r '.Credentials.SessionToken')
-      aws configure set aws_access_key_id "$AK"
-      aws configure set aws_secret_access_key "$SK"
-      aws configure set aws_session_token "$ST"
-      echo "✅ STS credentials updated (36h)"
-      if TOKEN=$(aws codeartifact get-authorization-token --domain "$DOMAIN" --domain-owner "$DOMAIN_OWNER" --region "$REGION" --query authorizationToken --output text 2>/dev/null); then
+      aws configure set aws_access_key_id "$AK" --profile "$TARGET_PROFILE"
+      aws configure set aws_secret_access_key "$SK" --profile "$TARGET_PROFILE"
+      aws configure set aws_session_token "$ST" --profile "$TARGET_PROFILE"
+      aws configure set region "$REGION" --profile "$TARGET_PROFILE"
+      echo "✅ STS credentials updated in [$TARGET_PROFILE] (36h)"
+      if TOKEN=$(aws codeartifact get-authorization-token --profile "$TARGET_PROFILE" --domain "$DOMAIN" --domain-owner "$DOMAIN_OWNER" --region "$REGION" --query authorizationToken --output text 2>/dev/null); then
         export CODEARTIFACT_AUTH_TOKEN="$TOKEN"
         export ENVIRONMENT=development
         echo "✅ CodeArtifact token: ''${TOKEN:0:12}..."
