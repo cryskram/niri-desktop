@@ -33,6 +33,13 @@
     # happened with gh-2.99.0. "!gh ..." resolves gh from PATH, so it always
     # follows the current package.
     gitCredentialHelper.enable = false;
+
+    # Home Manager owns ~/.config/gh/config.yml as a read-only store symlink, so
+    # `gh config set` cannot write to it and prints
+    # "open ~/.config/gh/config.yml: read-only file system". Set gh options here
+    # instead. https is also the module default; stating it explicitly so the
+    # read-only conflict reads as intentional rather than a surprise.
+    settings.git_protocol = "https";
   };
 
   programs.git.settings.credential = {
