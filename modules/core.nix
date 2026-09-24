@@ -9,6 +9,11 @@
   spicetify-nix,
   ...
 }:
+let
+  # Third-party pi extensions, pinned in pi/packages.nix. Hoisted so both the
+  # extensions list and the skills list below can reference them.
+  piPackages = import ../pi/packages.nix { inherit pkgs; };
+in
 {
   nix.settings = {
     experimental-features = [
@@ -63,8 +68,13 @@
     # skill by its own folder name instead of the hashed store root. Company
     # skills stay outside the repo (~/Projects/TAP) and are wired via extraArgs
     # strings (bypasses flake path copy).
+    #
+    # pi-btw's bundled skill is listed explicitly: pi only reads a package's
+    # skills manifest for npm:/git: sources, so passing the extension as a local
+    # store path would load the extension but silently drop the skill.
     skills = [
       ../pi/skills
+      "${piPackages.pi-btw}/skills/btw"
     ];
 
     # Global operating rules appended to pi's system prompt (safety, secrets,
@@ -100,8 +110,9 @@
 
     extensions =
       let
-        inherit (import ../pi/packages.nix { inherit pkgs; })
+        inherit (piPackages)
           mcp-adapter
+          pi-btw
           rpiv-ask-user-question
           rpiv-todo
           zentui
@@ -110,6 +121,7 @@
       [
         # Third-party extensions, pinned in pi/packages.nix.
         "${mcp-adapter}"
+        "${pi-btw}"
         "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
         "${rpiv-todo}/${rpiv-todo.extensionPath}"
         "${zentui}"

@@ -171,6 +171,19 @@ in
     subdir = "packages/rpiv-todo";
   };
 
+  # /btw — parallel side conversation in a real pi sub-session, usable while
+  # the main agent is still running. Imports only pi's bundled modules.
+  pi-btw = plain {
+    pname = "pi-btw";
+    version = "0.6.1";
+    src = pkgs.fetchFromGitHub {
+      owner = "dbachelder";
+      repo = "pi-btw";
+      tag = "v0.6.1";
+      hash = "sha256-/kvyhDRZe2C7uCs8gElBI4s2duYBKgYOVwrjNOnsif8=";
+    };
+  };
+
   # Starship-style statusline + opencode-style TUI (owns the footer).
   zentui = plain {
     pname = "pi-zentui";
