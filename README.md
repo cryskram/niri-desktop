@@ -156,6 +156,60 @@ opencode --version  # 1.18.25
 
 Known fix: `gcc`/`clang` both provide `bin/c++` → `lib.hiPrio gcc` / `lib.lowPrio clang`; `corepack` bundled in `nodejs_24`.
 
+## Updating inputs
+
+Never run bare `nix flake update` — it bumps every input at once, and two of them can cost an hour of local compilation. Update one input at a time and preview the price first.
+
+```bash
+cd ~/niri-desktop
+git status --short                   # must be clean
+git tag pre-update-$(date +%Y%m%d)   # cheap rollback point
+
+nix flake update <one-input>         # e.g. nixpkgs, noctalia, home-manager
+
+# what will actually compile locally? (nix flake check does NOT tell you)
+nix build --dry-run --no-link '.#nixosConfigurations."nixos".config.system.build.toplevel' 2>&1 \
+  | grep -oE '[a-z0-9]{32}-[^ ]+\.drv' | sed 's|^[a-z0-9]*-||; s|\.drv$||' | sort -u
+
+nix flake check
+sudo nixos-rebuild switch --flake .#nixos --accept-flake-config
+```
+
+`nix flake check` validates evaluation only — it says nothing about build cost. The dry-run list is what tells you what will compile.
+
+### Cost per input
+
+| Input | Cost when updated | Why |
+|---|---|---|
+| `noctalia` | **always** a source build (~10–20 min) | the upstream flake publishes no binary cache |
+| `nixpkgs` | kernel modules + **VirtualBox** (~30–60 min) when its version moves | `extensionPack` is a build input, so the unfree result is never on `cache.nixos.org` |
+| `nixpkgs-unstable` | usually cached | Hydra builds unstable |
+| `pi` | cached | `pi.cachix.org` is in this flake's `nixConfig` |
+| `home-manager`, `catppuccin`, `spicetify-nix` | seconds | config only |
+
+Rule of thumb: `nixpkgs` and `noctalia` are the two that can cost an hour; everything else is cheap. A reasonable cadence is `nixpkgs` + `home-manager` + `nixpkgs-unstable` every few weeks, and `noctalia` only when you want the new version.
+
+### If a pi extension hash mismatches
+
+A `nixpkgs` bump of `nodejs`/`npm` changes what the pi extension fixed-output derivations produce:
+
+```
+error: hash mismatch in fixed-output derivation '...-pi-mcp-adapter-node-modules-2.34.0.drv'
+         specified: sha256-...
+            got:    sha256-...
+```
+
+That is not a breakage — the build is reporting the new hash. Set that extension's `npmHash = pkgs.lib.fakeHash;` in `pi/packages.nix`, build it, then paste the reported value:
+
+```bash
+nix build --no-link --impure --expr '
+  let pkgs = (builtins.getFlake (toString ./.)).inputs.nixpkgs.legacyPackages.x86_64-linux;
+      ext = import ./pi/packages.nix { inherit pkgs; };
+  in ext.mcp-adapter'   # or ext.rpiv-todo / ext.rpiv-ask-user-question
+```
+
+See [Rollback & tags](#rollback--tags) for backing out of an update.
+
 ## Screenshots
 
 > Placeholders — replace with actual captures before publishing.
