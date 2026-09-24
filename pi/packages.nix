@@ -143,11 +143,16 @@ in
       hash = "sha256-YpiJROIG0/U81wAoImjktbg/d5wGnc6o130IlOrTyEE=";
     };
     npmHash = "sha256-xrr7EUMsOEta1wH8IWrep8R2lRLDlKo1pcAiqfO6nlE=";
+    # --omit=dev only. Do NOT add --legacy-peer-deps here: it suppresses peer
+    # resolution, and @modelcontextprotocol/ext-apps declares
+    # @modelcontextprotocol/sdk as a required (non-optional) peer that its
+    # runtime dist/src/app.js actually imports. Skipping it drops sdk, express
+    # and hono, and ext-apps then fails with "Cannot find module".
+    # The @earendil-works/* peers need no suppression either: their lockfile
+    # entries are local file: links, so npm ci skips them on its own and pi
+    # supplies them through its bundled virtual modules.
     npmFlags = [
       "--omit=dev"
-      # pi supplies @earendil-works/* through its bundled virtual modules;
-      # do not pull them from the registry.
-      "--legacy-peer-deps"
     ];
   };
 
