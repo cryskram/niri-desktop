@@ -182,12 +182,12 @@ sudo nixos-rebuild switch --flake .#nixos --accept-flake-config
 | Input | Cost when updated | Why |
 |---|---|---|
 | `noctalia` | **always** a source build (~10–20 min) | the upstream flake publishes no binary cache |
-| `nixpkgs` | kernel modules + **VirtualBox** (~30–60 min) when its version moves | `extensionPack` is a build input, so the unfree result is never on `cache.nixos.org` |
+| `nixpkgs` | kernel modules (~10 min) when its version moves | |
 | `nixpkgs-unstable` | usually cached | Hydra builds unstable |
 | `pi` | cached | `pi.cachix.org` is in this flake's `nixConfig` |
 | `home-manager`, `catppuccin`, `spicetify-nix` | seconds | config only |
 
-Rule of thumb: `nixpkgs` and `noctalia` are the two that can cost an hour; everything else is cheap. A reasonable cadence is `nixpkgs` + `home-manager` + `nixpkgs-unstable` every few weeks, and `noctalia` only when you want the new version.
+Rule of thumb: `noctalia` is the one that can cost 20+ minutes; everything else is cheap — `nixpkgs` bumps mainly rebuild the kernel modules. A reasonable cadence is `nixpkgs` + `home-manager` + `nixpkgs-unstable` every few weeks, and `noctalia` only when you want the new version.
 
 ### If a pi extension hash mismatches
 
