@@ -1,7 +1,7 @@
 /**
  * pi-ui — useful dev widgets + click utility (replaces duplicate fleet hint).
  *
- * Powerline footer (pi-powerline-footer) already shows: git +/*/?, thinking-level,
+ * Powerline footer (pi-powerline-footer) already shows: git status (+, *, ?), thinking-level,
  * context gauge, tokens, model. So this widget does NOT duplicate those.
  *
  * What this widget DOES (aboveEditor, not below — powerline owns below):
@@ -110,14 +110,8 @@ export default function piUiExtension(pi: ExtensionAPI) {
   pi.registerCommand("devkit", {
     description: "Dev utility palette — Nix checks, dry-build, git, fleet, vpn (SelectList overlay)",
     handler: async (_args, ctx) => {
-      // Import pi-tui lazily (pi bundles it, no extra npm)
-      const tuiMod = await import("@earendil-works/pi-tui").catch(() => null as any);
-      if (!tuiMod) {
-        ctx.ui.notify("pi-tui not available — run: nix flake check | nixos-rebuild dry-build --flake .#nixos | git status", "warning");
-        return;
-      }
-      const { SelectList } = tuiMod as any;
-
+      // pi-tui is bundled with pi; keep handle for output overlay (select itself is built-in)
+      const tuiMod: any = await import("@earendil-works/pi-tui").catch(() => null);
       type Item = { value: string; label: string; description: string; action: () => Promise<void> };
       const runBash = async (cmd: string, label: string) => {
         ctx.ui.notify(`Running: ${cmd}`, "info");
@@ -133,6 +127,7 @@ export default function piUiExtension(pi: ExtensionAPI) {
           // Also show in a follow-up overlay with full output? For now notify is enough (widget stays).
           // For longer output, open a read-only overlay:
           if (out.length > 400) {
+            if (!tuiMod) return;
             await ctx.ui.custom<string | null>((tui: any, theme: any, _kb: any, done: any) => {
               const lines = out.split("\n").slice(0, 60);
               const content = lines.join("\n");
@@ -167,33 +162,10 @@ export default function piUiExtension(pi: ExtensionAPI) {
         { value: "devenv", label: "devenv / direnv", description: "devenv test or direnv status", action: () => runBash("if [ -f devenv.nix ]; then devenv test 2>&1 | tail -n 40; else direnv status 2>&1 | head -n 40; fi", "devenv") },
       ];
 
-      const picked: string | null = await ctx.ui.custom<string | null>((tui: any, theme: any, _kb: any, done: any) => {
-        const list = new SelectList({
-          items: items.map((it) => ({ value: it.value, label: it.label, description: it.description })),
-          theme,
-          // Use tui.requestRender on change
-          onSelect: (v: string) => done(v),
-          onCancel: () => done(null),
-        } as any);
-        // Render via container border
-        const { Container, DynamicBorder, Text } = tuiMod as any;
-        const container: any = new Container();
-        const border: any = new DynamicBorder((s: string) => theme.fg("accent", s));
-        const title: any = new Text(theme.fg("accent", " DevKit — pick a dev action (↑↓ Enter, Esc cancel) ") + theme.fg("dim", " — Nerd Font icons if available"), 0, 0);
-        container.addChild(border);
-        container.addChild(title);
-        container.addChild(list);
-        // Footer hint
-        container.addChild(new Text(theme.fg("dim", " Powerline footer below stays live · Widget aboveEditor · /pi-ui to hide hint"), 0, 0));
-        return {
-          render: (w: number) => container.render(w),
-          handleInput: (data: string) => {
-            (list as any).handleInput?.(data);
-            tui.requestRender();
-          },
-          invalidate: () => (list as any).invalidate?.(),
-        };
-      }, { overlay: true, overlayOptions: { width: "65%", height: "55%", border: true, anchor: "center" } } as any);
+      // Use built-in select (no DynamicBorder needed — avoids pi-tui vs pi-coding-agent import split)
+      const options = items.map((it) => `${it.label} — ${it.description}`);
+      const choiceLabel = await ctx.ui.select("DevKit — pick a dev action", options);
+      const picked = items.find((it) => `${it.label} — ${it.description}` === choiceLabel)?.value ?? null;
 
       if (!picked) return;
       const hit = items.find((i) => i.value === picked);
