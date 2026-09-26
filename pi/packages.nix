@@ -195,4 +195,42 @@ in
       hash = "sha256-Puk0I1xyl6pDzitjCAiG4anWmeCGyONYr9C68+5xC+0=";
     };
   };
+
+  # pi-subagents — async child agents (scout/researcher/oracle/worker/reviewer).
+  # Generic for any project: no niri-desktop specific code, works in any cwd.
+  pi-subagents = withDeps {
+    pname = "pi-subagents";
+    version = "0.71.0";
+    src = pkgs.fetchFromGitHub {
+      owner = "nicobailon";
+      repo = "pi-subagents";
+      tag = "v0.71.0";
+      hash = "sha256-KUnrfinRPiEPPdj0pd06MWnYncQmjiQvGySmGqdvwEg=";
+    };
+    npmHash = "sha256-hriNyUN6UDHXc5JdrTULFcQ9kHlt5OXppYflYbkOpkk=";
+    npmFlags = [
+      "--omit=dev"
+    ];
+  };
+
+  # pi-web-access — web search / fetch / source_check for researcher + evidence-auditor.
+  # Coexists with MCP parallel-search (mcp-oauth) — different tool names, no clash:
+  #   pi-web-access: web_search, fetch_content, source_check, get_search_content
+  #   MCP parallel-search: parallel-search.* via mcp-adapter (OAuth, directTools)
+  # pi-web-access fallback chain defaults to Exa MCP (zero-config) -> Brave -> Parallel API etc.,
+  # and only uses OpenAI Hosted Search when active model is openai/openai-codex, so deepseek/muse untouched.
+  pi-web-access = withDeps {
+    pname = "pi-web-access";
+    version = "0.31.0";
+    src = pkgs.fetchFromGitHub {
+      owner = "nicobailon";
+      repo = "pi-web-access";
+      tag = "v0.31.0";
+      hash = "sha256-ykR2slh8MkxxbP660h0rvk2Y7SaKv+Cw/lJC21JqGW8=";
+    };
+    npmHash = "sha256-myr93/Xichm+8/9GtL87tQNZuHCKHH9R592JEFmhiZg=";
+    npmFlags = [
+      "--omit=dev"
+    ];
+  };
 }

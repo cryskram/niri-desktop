@@ -61,6 +61,25 @@ in
       defaultModel = "muse-spark-1.2-contributor";
       defaultThinkingLevel = "medium";
       theme = "catppuccin-macchiato";
+      # Generic subagent defaults — works in any project (cwd).
+      # All children inherit a cheap capable model; no deepseek-pro per user preference.
+      subagents = {
+        defaultModel = "deepseek-v4-flash";
+        # Ensure researcher/evidence-auditor have web tools even as foreground children
+        # (background children already inherit ambient extensions). Works for any cwd.
+        defaultSubagentOnlyExtensions = [ "${piPackages.pi-web-access}" ];
+        agentOverrides = {
+          # Second-opinion oracle stays on flash/muse only (never pro)
+          oracle = {
+            model = "muse-spark-1.2-contributor";
+            thinking = "high";
+          };
+          reviewer.thinking = "high";
+          worker.thinking = "high";
+          scout.thinking = "low";
+          researcher.thinking = "medium";
+        };
+      };
     };
 
     # Repo-owned skills (tracked via the flake). The parent dir is passed (like
@@ -116,6 +135,8 @@ in
           rpiv-ask-user-question
           rpiv-todo
           zentui
+          pi-subagents
+          pi-web-access
           ;
       in
       [
@@ -125,6 +146,8 @@ in
         "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
         "${rpiv-todo}/${rpiv-todo.extensionPath}"
         "${zentui}"
+        "${pi-subagents}"
+        "${pi-web-access}"
         ../pi/extensions/safety.ts
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
         # Configured via xdg.configFile."querion/config.json" (home-manager block below).
