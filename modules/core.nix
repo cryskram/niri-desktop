@@ -134,7 +134,7 @@ in
           pi-btw
           rpiv-ask-user-question
           rpiv-todo
-          pi-powerline-footer
+          zentui
           pi-subagents
           pi-web-access
           ;
@@ -145,10 +145,9 @@ in
         "${pi-btw}"
         "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
         "${rpiv-todo}/${rpiv-todo.extensionPath}"
-        "${pi-powerline-footer}"
+        "${zentui}"
         "${pi-subagents}"
         "${pi-web-access}"
-        ../pi/extensions/pi-ui.ts
         ../pi/extensions/safety.ts
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
         # Configured via xdg.configFile."querion/config.json" (home-manager block below).
@@ -227,13 +226,6 @@ in
       };
     };
 
-    # Pi UI — powerline footer (replaces zentui) + custom pi-ui widget.
-    # zentui removed per user request — footer was not useful. Powerline gives
-    # powerline row (above/below editor, Nerd Font auto-detect, 1s git cache,
-    # thinking-level rainbow, context 70%/90% gauge live during streaming).
-    # Custom widget pi-ui.ts owns belowEditor fleet hint + blue pulse working
-    # indicator, using theme fg(accent) so Tier 1 blue flows through. No clash
-    # with mcp-adapter statuses (powerline shows extensionStatuses left/right).
   };
 
   environment.sessionVariables = {

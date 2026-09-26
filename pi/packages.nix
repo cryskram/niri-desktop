@@ -184,19 +184,15 @@ in
     };
   };
 
-  # pi-powerline-footer — powerline status bar (replaces zentui for footer usefulness).
-  # Chosen over zentui starship: async git (+/*/? counts, 1s TTL), live thinking-level
-  # indicator (rainbow for high/xhigh/max), context gauge (70% yellow / 90% red live during
-  # streaming), Nerd Font auto-detect, narrower useful segments on 1920x1080.
-  # zentui editor/working-line features kept via pi-ui widget instead.
-  pi-powerline-footer = plain {
-    pname = "pi-powerline-footer";
-    version = "0.18.0";
+  # Starship-style statusline + opencode-style TUI (owns the footer).
+  zentui = plain {
+    pname = "pi-zentui";
+    version = "0.24.0";
     src = pkgs.fetchFromGitHub {
-      owner = "nicobailon";
-      repo = "pi-powerline-footer";
-      tag = "v0.18.0";
-      hash = "sha256-yjUUL1Wdp88tjnV9plIVLkK9jg4EdvIz3UuPzxpZENU=";
+      owner = "lmilojevicc";
+      repo = "pi-zentui";
+      tag = "v0.24.0";
+      hash = "sha256-Puk0I1xyl6pDzitjCAiG4anWmeCGyONYr9C68+5xC+0=";
     };
   };
 
