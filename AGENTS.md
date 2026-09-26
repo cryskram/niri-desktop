@@ -181,9 +181,17 @@ Pi customization lives in `modules/core.nix` (`programs.pi.coding-agent`):
 
 * prompt templates → `pi/prompts/*.md` (`promptTemplates`)
 * skills → `pi/skills/` (`skills`); company skills stay outside the repo (TAP) via `extraArgs`
-* extension → `pi/extensions/safety.ts` (`extensions`)
+* extensions → `pi/packages.nix` + `pi/extensions/*.ts` (`extensions`):
+  * `mcp-adapter` — MCP gateway (parallel-search `mcp-oauth`, deepwiki, chrome-devtools)
+  * `pi-btw` — `/btw` parallel side sessions
+  * `rpiv-ask-user-question` / `rpiv-todo` — structured questions + todo overlay
+  * `zentui` — footer/status TUI
+  * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; defaultModel `deepseek-v4-flash`, oracle `muse-spark` — never `deepseek-pro`)
+  * `pi-web-access` — `web_search`/`fetch_content`/`source_check` for researcher/evidence-auditor; coexists with MCP parallel-search (different tool namespaces: Exa MCP zero-config fallback chain; only uses OpenAI Hosted Search when active model is `openai`/`openai-codex`)
+  * local: `pi/extensions/safety.ts` (destructive-command gate) + `querion-sync.ts` (`/sync`)
 * global rules → `pi/rules.md` (`rules`)
 * theme → `pi/themes/catppuccin-macchiato.json` (`themes`)
+* model defaults → `settings.subagents.defaultModel` + `agentOverrides` (generic, project `.pi/settings.json` can override per-repo)
 
 To add Pi functionality, extend these mechanisms. Do not build a parallel
 configuration mechanism. Validate with:

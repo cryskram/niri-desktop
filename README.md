@@ -40,7 +40,7 @@ hardware-configuration.nix — generated, don't edit casually
 modules/                 — core.nix (flake wiring, pi, HM), theme/shell/niri/sddm/docker/direnv/vpn.nix
 home/                    — niri.nix, noctalia.nix, theme.nix, shell.nix, git.nix, development.nix, ...
 theme/                   — tokens.nix + noctalia-macchiato.json (Noctalia palette)
-pi/                      — pi prompts, skills, extension, rules, theme
+pi/                      — pi prompts, skills, extensions (mcp-adapter, pi-btw, rpiv-todo/ask-user-question, zentui, pi-subagents, pi-web-access, safety/querion), rules, theme
 dev/                     — personal devenv definitions (shared/, templates/, company/)
 secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
 ```
@@ -150,8 +150,9 @@ sudo nixos-rebuild switch --flake .#nixos --accept-flake-config
 
 devenv --version; direnv version; docker --version; docker compose version
 go version; node --version; python --version; rustc --version; java --version
-pi --version  # 0.84.4 — keep pi.nix overlay, don't imperatively upgrade
+pi --version  # 0.87.1 — keep pi.nix overlay, don't imperatively upgrade
 opencode --version  # 1.18.25
+pi --list           # should show mcp-adapter, pi-btw, rpiv-todo, rpiv-ask-user-question, zentui, pi-subagents, pi-web-access
 ```
 
 Known fix: `gcc`/`clang` both provide `bin/c++` → `lib.hiPrio gcc` / `lib.lowPrio clang`; `corepack` bundled in `nodejs_24`.
@@ -194,7 +195,7 @@ Rule of thumb: `noctalia` is the one that can cost 20+ minutes; everything else 
 A `nixpkgs` bump of `nodejs`/`npm` changes what the pi extension fixed-output derivations produce:
 
 ```
-error: hash mismatch in fixed-output derivation '...-pi-mcp-adapter-node-modules-2.34.0.drv'
+error: hash mismatch in fixed-output derivation '...-pi-web-access-node-modules-0.31.0.drv'
          specified: sha256-...
             got:    sha256-...
 ```
@@ -205,8 +206,10 @@ That is not a breakage — the build is reporting the new hash. Set that extensi
 nix build --no-link --impure --expr '
   let pkgs = (builtins.getFlake (toString ./.)).inputs.nixpkgs.legacyPackages.x86_64-linux;
       ext = import ./pi/packages.nix { inherit pkgs; };
-  in ext.mcp-adapter'   # or ext.rpiv-todo / ext.rpiv-ask-user-question
+  in ext.pi-web-access'   # or ext.mcp-adapter / ext.pi-subagents / ext.rpiv-todo
 ```
+
+Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: `deepseek-v4-flash` for children, oracle `muse-spark` (never `deepseek-pro`). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`); it coexists with MCP `parallel-search` (`mcp-oauth` via `mcp-adapter`) on different tool namespaces.
 
 See [Rollback & tags](#rollback--tags) for backing out of an update.
 
