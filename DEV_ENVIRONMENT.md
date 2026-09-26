@@ -94,7 +94,7 @@ These are machine-level tools and applications.
   * `mcp-adapter` — MCP gateway (`parallel-search` via `mcp-oauth`, `deepwiki`, `chrome-devtools`)
   * `pi-web-access` — `web_search`/`fetch_content`/`source_check` for web research (zero-config Exa MCP fallback; only uses OpenAI Hosted Search when active model is `openai`/`openai-codex`)
   * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; default `deepseek-v4-flash`, oracle `muse-spark` never `pro`)
-  * `pi-btw` (`/btw`), `rpiv-ask-user-question`, `rpiv-todo`, `zentui`
+  * `pi-btw` (`/btw`), `rpiv-ask-user-question`, `rpiv-todo`, `pi-powerline-footer` (powerline footer), `pi-ui` (custom widget)
   * local `safety.ts` (destructive-command gate) + `querion-sync.ts` (`/sync`)
 * opencode (via `nixpkgs-unstable`)
 * devenv + direnv

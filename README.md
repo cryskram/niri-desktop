@@ -40,7 +40,7 @@ hardware-configuration.nix — generated, don't edit casually
 modules/                 — core.nix (flake wiring, pi, HM), theme/shell/niri/sddm/docker/direnv/vpn.nix
 home/                    — niri.nix, noctalia.nix, theme.nix, shell.nix, git.nix, development.nix, ...
 theme/                   — tokens.nix + noctalia-macchiato.json (Noctalia palette)
-pi/                      — pi prompts, skills, extensions (mcp-adapter, pi-btw, rpiv-todo/ask-user-question, zentui, pi-subagents, pi-web-access, safety/querion), rules, theme
+pi/                      — pi prompts, skills, extensions (mcp-adapter, pi-btw, rpiv-todo/ask-user-question, pi-powerline-footer, pi-subagents, pi-web-access, pi-ui, safety/querion), rules, theme
 dev/                     — personal devenv definitions (shared/, templates/, company/)
 secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
 ```
@@ -152,7 +152,7 @@ devenv --version; direnv version; docker --version; docker compose version
 go version; node --version; python --version; rustc --version; java --version
 pi --version  # 0.87.1 — keep pi.nix overlay, don't imperatively upgrade
 opencode --version  # 1.18.25
-pi --list           # should show mcp-adapter, pi-btw, rpiv-todo, rpiv-ask-user-question, zentui, pi-subagents, pi-web-access
+pi --list           # should show mcp-adapter, pi-btw, rpiv-todo, rpiv-ask-user-question, pi-powerline-footer, pi-subagents, pi-web-access, pi-ui
 ```
 
 Known fix: `gcc`/`clang` both provide `bin/c++` → `lib.hiPrio gcc` / `lib.lowPrio clang`; `corepack` bundled in `nodejs_24`.

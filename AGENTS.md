@@ -185,9 +185,10 @@ Pi customization lives in `modules/core.nix` (`programs.pi.coding-agent`):
   * `mcp-adapter` — MCP gateway (parallel-search `mcp-oauth`, deepwiki, chrome-devtools)
   * `pi-btw` — `/btw` parallel side sessions
   * `rpiv-ask-user-question` / `rpiv-todo` — structured questions + todo overlay
-  * `zentui` — footer/status TUI
+  * `pi-powerline-footer` — powerline footer (git +/*/? counts 1s TTL, thinking-level rainbow, context 70%/90% gauge live, Nerd Font)
   * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; defaultModel `deepseek-v4-flash`, oracle `muse-spark` — never `deepseek-pro`)
   * `pi-web-access` — `web_search`/`fetch_content`/`source_check` for researcher/evidence-auditor; coexists with MCP parallel-search (different tool namespaces: Exa MCP zero-config fallback chain; only uses OpenAI Hosted Search when active model is `openai`/`openai-codex`)
+  * `pi-ui` — custom widget (fleet hint belowEditor, blue pulse `●/◆` working indicator, `/pi-ui` toggle) + zentui replaced
   * local: `pi/extensions/safety.ts` (destructive-command gate) + `querion-sync.ts` (`/sync`)
 * global rules → `pi/rules.md` (`rules`)
 * theme → `pi/themes/catppuccin-macchiato.json` (`themes`)

@@ -733,7 +733,7 @@ Authentication secrets remain outside Git.
 
 Pi prompt templates, skills, extensions, rules and themes are declarative via the
 `pi/` directory and `modules/core.nix`:
-* extensions (generic, any cwd): `mcp-adapter` (MCP), `pi-web-access` (web_search/fetch/source_check, zero-config Exa MCP), `pi-subagents` (scout/researcher/evidence-auditor/oracle/worker/reviewer — default `deepseek-v4-flash`, oracle `muse-spark` never `pro`), `pi-btw`/`rpiv-*`/`zentui`, plus local `safety`+`querion-sync`
+* extensions (generic, any cwd): `mcp-adapter` (MCP), `pi-web-access` (web_search/fetch/source_check, zero-config Exa MCP), `pi-subagents` (scout/researcher/evidence-auditor/oracle/worker/reviewer — default `deepseek-v4-flash`, oracle `muse-spark` never `pro`), `pi-powerline-footer` (powerline git/thinking/context), `pi-btw`/`rpiv-*`/`pi-ui` widget, plus local `safety`+`querion-sync`
 * `pi-web-access` coexists with MCP `parallel-search` (different tool namespaces)
 
 ---
