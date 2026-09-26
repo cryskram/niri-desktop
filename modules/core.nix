@@ -148,6 +148,7 @@ in
         "${zentui}"
         "${pi-subagents}"
         "${pi-web-access}"
+        ../pi/extensions/pi-ui.ts
         ../pi/extensions/safety.ts
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
         # Configured via xdg.configFile."querion/config.json" (home-manager block below).
@@ -222,6 +223,159 @@ in
         deepwiki = {
           url = "https://mcp.deepwiki.com/mcp";
           protocolVersion = "auto";
+        };
+      };
+    };
+
+    # Zentui — declarative TUI for Pi (Tier 2, generic any cwd).
+    # Kept declarative so fresh checkout reproduces the exact Pi footer/editor.
+    # Chips: cwd + gitBranch/status + runtime + modelInfo + context gauge + tokens
+    # coexist with pi-web-access + mcp-adapter statuses (shown left by default).
+    home.file.".pi/agent/zentui.json".text = builtins.toJSON {
+      components = {
+        footer = {
+          codexQuota = false;
+          style = "starship";
+          colorSource = "theme";
+          modelLabel = "id";
+          styles.starship = {
+            format = "$cwd on $git_branch$git_status using $runtime $fill $modelInfo $context $wrap_sep $tokens";
+            responsive = true;
+            compactFormat = "$cwd$wrap(in $session_name)$wrap(on $git_branch) $git_status$wrap(using $runtime) $fill $modelInfo $context $wrap_sep $tokens";
+            compactMaxLines = 3;
+            separator = "pipe";
+            contextStyle = "text+gauge";
+            contextThresholds = {
+              warning = 70;
+              error = 90;
+            };
+            pathDisplay = {
+              mode = "basename";
+              depth = 0;
+            };
+            segments = {
+              cwd = true;
+              sessionName = false;
+              gitBranch = true;
+              gitStatus = true;
+              gitCounts = false;
+              gitCommit = false;
+              gitMetrics = true;
+              runtime = true;
+              modelInfo = true;
+              context = true;
+              tokens = true;
+              cost = false;
+              sessionDuration = false;
+              username = false;
+              time = false;
+              os = false;
+              packageVersion = false;
+            };
+            gitBranch.maxLength = "full";
+            gitCommit = {
+              hashLength = 7;
+              onlyDetached = true;
+              showTag = true;
+            };
+            gitMetrics = {
+              onlyNonzero = true;
+              ignoreSubmodules = false;
+            };
+            extensionStatuses = {
+              defaultPlacement = "left";
+              placements.mcp = "right";
+              colorModes.mcp = "original";
+            };
+          };
+        };
+        editor = {
+          enabled = true;
+          style = "minimalist";
+          codexQuota = false;
+          colorSource = "theme";
+          borderColorMode = "adaptive";
+          modelLabel = "id";
+          viewportIndicators = true;
+          styles = {
+            opencode.metadataFormat = "$model  $provider(  $thinking)(  $codex_quota)";
+            "opencode-copy-friendly".metadataFormat = "$model  $provider(  $thinking)(  $codex_quota)";
+            "accent-rail" = {
+              rail = "▎";
+              asciiRail = "|";
+              transparent = false;
+            };
+            minimalist = {
+              pathDisplay = "compact";
+              contextFormat = "percent-total";
+              contextGauge = true;
+              showSessionName = false;
+              showTimer = false;
+              showCost = true;
+              showGit = false;
+              contextThresholds = {
+                warning = 70;
+                error = 90;
+              };
+            };
+          };
+        };
+        userMessages = {
+          enabled = true;
+          style = "framed";
+          colorSource = "theme";
+          styles = {
+            framed = {};
+            "framed-copy-friendly" = {};
+            compact = {};
+            labeled = {};
+          };
+        };
+        selectorBorders = {
+          enabled = true;
+          style = "zentui";
+          colorSource = "theme";
+        };
+        thinkingSteps = {
+          enabled = true;
+          mode = "tree";
+        };
+        workingLine = {
+          enabled = true;
+          turnSummary = true;
+          spinner = "pulse";
+          spinnerIntervalMs = 100;
+          animateSpinnerColor = false;
+          textIntervalMs = 60;
+          textAnimation = "classic";
+          colorSource = "theme";
+          messages = {
+            custom = true;
+            values = [
+              "Sautéing…"
+              "Cooking…"
+              "Ionizing…"
+              "Zigzagging…"
+              "Razzle-dazzling…"
+              "Photosynthesizing…"
+              "Nucleating…"
+              "Brewing…"
+              "Combobulating…"
+              "Boogieing…"
+              "Befuddling…"
+              "Alchemizing…"
+              "Conjuring…"
+              "Baking…"
+              "Simmering…"
+              "Blanching…"
+            ];
+          };
+          segments = {
+            tool = true;
+            elapsed = true;
+            thought = true;
+            tokens = true;
+          };
         };
       };
     };
