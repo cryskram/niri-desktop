@@ -83,6 +83,14 @@
         export ENVIRONMENT=development
         echo "✅ CodeArtifact token: ''${TOKEN:0:12}..."
         echo "   export CODEARTIFACT_AUTH_TOKEN=$TOKEN"
+        # Also configure npm via login so `npm install` works without manual export.
+        # Project .npmrc uses env var, but login writes to ~/.npmrc
+        # as a fallback that works even when the env var is not exported (verified).
+        if aws codeartifact login --tool npm --domain "$DOMAIN" --domain-owner "$DOMAIN_OWNER" --repository npm-store --region "$REGION" --profile "$TARGET_PROFILE" >/dev/null 2>&1; then
+          echo "✅ npm configured via codeartifact login (~/.npmrc, 12h)"
+        else
+          echo "⚠ CodeArtifact login failed (token still available via env export)"
+        fi
       else
         echo "⚠ STS ok, CodeArtifact failed (check aws config)"
       fi
