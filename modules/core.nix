@@ -62,26 +62,26 @@ in
       defaultThinkingLevel = "medium";
       theme = "catppuccin-macchiato";
       # Generic subagent defaults — works in any project (cwd).
-      # Two tiers, both proven on this machine: fast capable (kimi-k2.6, which
-      # was the working main default before muse-spark) for workers/scouts, and
-      # the strong muse-spark for reviews/oracle/researcher.
-      # deepseek-v4-flash is deliberately NOT used here: it emits tool calls as
-      # plain DSML/XML text instead of structured calls (22 such leaks in one
-      # session; deepseek-v4.1-flash leaks the same way), so a tool-driven child
-      # spends its turn printing a call that pi then renders instead of
-      # executing — which is exactly the "subagent takes forever" behaviour.
+      # All children use muse-spark-1.2-contributor, the same model as the main
+      # session — proven tool-reliable on this machine and not billed as a
+      # premium tier. deepseek-v4-flash is deliberately NOT used: it emits tool
+      # calls as plain DSML/XML text instead of structured calls (22 such leaks
+      # in one session; deepseek-v4.1-flash leaks the same way), so a
+      # tool-driven child spends its turn printing a call that pi then renders
+      # instead of executing — which is exactly the "subagent takes forever"
+      # behaviour.
       subagents = {
-        defaultModel = "kimi-k2.6";
+        defaultModel = "muse-spark-1.2-contributor";
         # Ensure researcher/evidence-auditor have web tools even as foreground children
         # (background children already inherit ambient extensions). Works for any cwd.
         defaultSubagentOnlyExtensions = [ "${piPackages.pi-web-access}" ];
         agentOverrides = {
-          # Second-opinion oracle stays on the strong tier.
+          # Second-opinion oracle, reviews and research all stay on the
+          # default muse model; only the budgets differ.
           oracle = {
             model = "muse-spark-1.2-contributor";
             thinking = "high";
           };
-          # Reviews and research get the strong model; implementation stays fast.
           reviewer = {
             model = "muse-spark-1.2-contributor";
             thinking = "high";
