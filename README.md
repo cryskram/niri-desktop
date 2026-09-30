@@ -190,7 +190,41 @@ sudo nixos-rebuild switch --flake .#nixos --accept-flake-config
 
 Rule of thumb: `noctalia` is the one that can cost 20+ minutes; everything else is cheap — `nixpkgs` bumps mainly rebuild the kernel modules. A reasonable cadence is `nixpkgs` + `home-manager` + `nixpkgs-unstable` every few weeks, and `noctalia` only when you want the new version.
 
+### Updating pi extensions
+
+The third-party pi extensions (`pi-mcp-adapter`, `pi-subagents`, `pi-btw`, `pi-zentui`, `pi-web-access`, the two `rpiv` extensions) are pinned inside [`pi/packages.nix`](pi/packages.nix), **not** flake inputs — `nix flake update` never touches them.
+
+```bash
+cd ~/niri-desktop
+scripts/update-pi-extensions.py                       # report which are outdated
+scripts/update-pi-extensions.py --update-all         # bump every outdated pin
+scripts/update-pi-extensions.py --update pi-subagents # just one
+```
+
+The script checks GitHub for the latest tag of each extension, then rewrites `pi/packages.nix`:
+
+* `version` / `tag` and the `fetchFromGitHub` source hash (`nix flake prefetch`)
+* the npm `node_modules` hash by setting `npmHash = pkgs.lib.fakeHash`, building, and capturing the `got:` hash from nix's error channel — no manual copy/paste
+
+It ends with `nix flake check`. Review the diff (`git diff pi/packages.nix`) and activate with `sudo nixos-rebuild switch --flake .#nixos --accept-flake-config`. Extensions are also exposed as flake packages, so a single one can be rebuilt (or its pin verified) with `nix build '.#pi-subagents'`.
+
 ### If a pi extension hash mismatches
+
+A `nixpkgs` bump of `nodejs`/`npm` changes what the pi extension fixed-output derivations produce:
+
+```
+error: hash mismatch in fixed-output derivation '...-pi-web-access-node-modules-0.31.0.drv'
+         specified: sha256-...
+            got:    sha256-...
+```
+
+That is not a breakage — the build is reporting the new hash. Either let `scripts/update-pi-extensions.py` re-capture it, or do it by hand: set that extension's `npmHash = pkgs.lib.fakeHash;` in `pi/packages.nix`, build the extension, then paste the reported value:
+
+```bash
+nix build --no-link '.#pi-web-access'   # or .#mcp-adapter / .#pi-subagents / .#rpiv-todo
+```
+
+Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: all children run `muse-spark-1.2-contributor` (same model as the main session — deepseek is excluded because it leaks DSML tool calls as text). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`); it coexists with MCP `parallel-search` (`mcp-oauth` via `mcp-adapter`) on different tool namespaces.
 
 A `nixpkgs` bump of `nodejs`/`npm` changes what the pi extension fixed-output derivations produce:
 

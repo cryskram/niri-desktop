@@ -57,6 +57,14 @@
       system = "x86_64-linux";
     in
     {
+      # Third-party pi extensions, pinned in pi/packages.nix. Exposed so you can
+      # rebuild one directly (nix build .#pi-mcp-adapter) and so the extension
+      # updater (scripts/update-pi-extensions.py) can capture npm hashes via
+      # the standard nix build error channel.
+      packages.${system} = import ./pi/packages.nix {
+        pkgs = nixpkgs.legacyPackages.${system};
+      };
+
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt;
 
       checks.${system} = {
