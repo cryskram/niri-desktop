@@ -114,12 +114,12 @@ let
     }:
     withDeps {
       inherit pname npmHash subdir;
-      version = "2.10.1";
+      version = "2.11.0";
       src = pkgs.fetchFromGitHub {
         owner = "juicesharp";
         repo = "rpiv-mono";
-        tag = "v2.10.1";
-        hash = "sha256-kgULSuw55OIqoF36kPyl69PCoDyajducrq3jeENnVKM=";
+        tag = "v2.11.0";
+        hash = "sha256-lXSj7i0bKuOKdajoJqLukCqNMi6398IxRFgFbXHgUUA=";
       };
       npmFlags = [
         "--omit=dev"
@@ -135,14 +135,14 @@ in
   # Runtime deps: @modelcontextprotocol/*, ajv, zod, undici, open, smol-toml, …
   mcp-adapter = withDeps {
     pname = "pi-mcp-adapter";
-    version = "2.34.0";
+    version = "3.3.0";
     src = pkgs.fetchFromGitHub {
       owner = "nicobailon";
       repo = "pi-mcp-adapter";
-      tag = "v2.34.0";
-      hash = "sha256-YpiJROIG0/U81wAoImjktbg/d5wGnc6o130IlOrTyEE=";
+      tag = "v3.3.0";
+      hash = "sha256-eM6LKBmnOC5e2z21nan28XOFuUF7sO8OhqvQMkHe/U8=";
     };
-    npmHash = "sha256-xrr7EUMsOEta1wH8IWrep8R2lRLDlKo1pcAiqfO6nlE=";
+    npmHash = "sha256-Q+ylIJr2bOMu9nzIIemKdQ9/OuxHXdjLErpNLrvuLEk=";
     # --omit=dev only. Do NOT add --legacy-peer-deps here: it suppresses peer
     # resolution, and @modelcontextprotocol/ext-apps declares
     # @modelcontextprotocol/sdk as a required (non-optional) peer that its
@@ -159,7 +159,7 @@ in
   # Structured questionnaires the model can put to you.
   rpiv-ask-user-question = rpivExtension {
     pname = "rpiv-ask-user-question";
-    npmHash = "sha256-JY4Y6vjY9g0haoEQNz1Zk6L0FJHoy+We7/93X/uxs58=";
+    npmHash = "sha256-9l+4i3+y2mpYwRhRSwSnNeqV2v34gtZCxDakWbIMa/4=";
     subdir = "packages/rpiv-ask-user-question";
   };
 
@@ -167,7 +167,7 @@ in
   # and conversation compaction.
   rpiv-todo = rpivExtension {
     pname = "rpiv-todo";
-    npmHash = "sha256-GpCwN6upmIYw6hzFR1Vlpmt6GYow2j9crCZVwJviaas=";
+    npmHash = "sha256-qm2Q3Kt6OjYtC0R6jFUNrakfUrhLLw39psUCJq+o9Ho=";
     subdir = "packages/rpiv-todo";
   };
 
@@ -187,12 +187,12 @@ in
   # Starship-style statusline + opencode-style TUI (owns the footer).
   zentui = plain {
     pname = "pi-zentui";
-    version = "0.24.0";
+    version = "0.27.1";
     src = pkgs.fetchFromGitHub {
       owner = "lmilojevicc";
       repo = "pi-zentui";
-      tag = "v0.24.0";
-      hash = "sha256-Puk0I1xyl6pDzitjCAiG4anWmeCGyONYr9C68+5xC+0=";
+      tag = "v0.27.1";
+      hash = "sha256-GsWcaPxJnsBO67cGzV4lXy+Z6cSeNUtmrjNED0w+KfQ=";
     };
   };
 
@@ -200,14 +200,14 @@ in
   # Generic for any project: no niri-desktop specific code, works in any cwd.
   pi-subagents = withDeps {
     pname = "pi-subagents";
-    version = "0.71.0";
+    version = "0.73.1";
     src = pkgs.fetchFromGitHub {
       owner = "nicobailon";
       repo = "pi-subagents";
-      tag = "v0.71.0";
-      hash = "sha256-KUnrfinRPiEPPdj0pd06MWnYncQmjiQvGySmGqdvwEg=";
+      tag = "v0.73.1";
+      hash = "sha256-EqWfWHlyXkhWNgov4gQnpnX/Gnz4QjjBBAPcx8Xrvjo=";
     };
-    npmHash = "sha256-hriNyUN6UDHXc5JdrTULFcQ9kHlt5OXppYflYbkOpkk=";
+    npmHash = "sha256-DZDCLk076bdn/sSSrA8i43h0wKyVbCm6pIoIH8QI9q8=";
     npmFlags = [
       "--omit=dev"
     ];
@@ -221,14 +221,14 @@ in
   # and only uses OpenAI Hosted Search when active model is openai/openai-codex, so deepseek/muse untouched.
   pi-web-access = withDeps {
     pname = "pi-web-access";
-    version = "0.31.0";
+    version = "0.33.0";
     src = pkgs.fetchFromGitHub {
       owner = "nicobailon";
       repo = "pi-web-access";
-      tag = "v0.31.0";
-      hash = "sha256-ykR2slh8MkxxbP660h0rvk2Y7SaKv+Cw/lJC21JqGW8=";
+      tag = "v0.33.0";
+      hash = "sha256-culvDJyexdP3eS6w3nfSBbWQ7atWD1iLH0PS+CpUA8k=";
     };
-    npmHash = "sha256-myr93/Xichm+8/9GtL87tQNZuHCKHH9R592JEFmhiZg=";
+    npmHash = "sha256-R+NGjAxFDwiSvcg5iSJtCFWSF24SRWH9j1duQLYJyYQ=";
     npmFlags = [
       "--omit=dev"
     ];

@@ -199,6 +199,10 @@ cd ~/niri-desktop
 scripts/update-pi-extensions.py                       # report which are outdated
 scripts/update-pi-extensions.py --update-all         # bump every outdated pin
 scripts/update-pi-extensions.py --update pi-subagents # just one
+scripts/update-pi-extensions.py --rehash             # re-capture npm hashes
+                                                     # (after a nixpkgs bump
+                                                     #  changed node_modules)
+scripts/update-pi-extensions.py --check              # build every extension
 ```
 
 The script checks GitHub for the latest tag of each extension, then rewrites `pi/packages.nix`:
