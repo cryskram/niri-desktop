@@ -17,7 +17,11 @@
       delta = {
         line-numbers = true;
         navigate = true;
-        syntax-theme = "catppuccin-macchiato";
+        # Delta hands the name to bat, which matches the exact display name
+        # ("Catppuccin Macchiato"); the kebab form makes bat fall back with
+        # "[bat warning]: Unknown theme 'catppuccin-macchiato'" and deltas
+        # render uncolored.
+        syntax-theme = "Catppuccin Macchiato";
         # Keep paging inside terminal apps (pi, tmux-like panes, herdr).
         paging = "never";
       };
