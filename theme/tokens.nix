@@ -32,6 +32,34 @@ rec {
 
     # Effects
     shadow = "#181926"; # crust
+
+    # Cursor + selection — Macchiato rosewater cursor, surface2 selection
+    # (matches catppuccin's official terminal ports).
+    cursor = "#f4dbd6"; # rosewater
+    selectionBg = "#5b6078"; # surface2
+    selectionFg = "#cad3f5"; # foreground
+
+    # Full 16-slot ANSI terminal palette (0-7 dim, 8-15 bright). Brights use
+    # the standard catppuccin mapping: 9-14 repeat 1-6, 8 = surface2,
+    # 15 = subtext1.
+    ansi = [
+      "#494d64" # 0  black    (surface1)
+      "#ed8796" # 1  red
+      "#a6da95" # 2  green
+      "#eed49f" # 3  yellow
+      "#8aadf4" # 4  blue
+      "#f5bde6" # 5  pink
+      "#8bd5ca" # 6  teal
+      "#a5adcb" # 7  white    (subtext0)
+      "#5b6078" # 8  br-black (surface2)
+      "#ed8796" # 9  br-red
+      "#a6da95" # 10 br-green
+      "#eed49f" # 11 br-yellow
+      "#8aadf4" # 12 br-blue
+      "#f5bde6" # 13 br-pink
+      "#8bd5ca" # 14 br-teal
+      "#b8c0e0" # 15 br-white (subtext1)
+    ];
   };
 
   fonts = {

@@ -11,6 +11,24 @@
       init.defaultBranch = "main";
       pull.rebase = false;
       core.editor = "nvim";
+      # delta renders diffs in Catppuccin Macchiato (syntax-theme below).
+      core.pager = "delta";
+      interactive.diffFilter = "delta --color-only";
+      delta = {
+        line-numbers = true;
+        navigate = true;
+        syntax-theme = "catppuccin-macchiato";
+        # Keep paging inside terminal apps (pi, tmux-like panes, herdr).
+        paging = "never";
+      };
+      pager = {
+        diff = "delta";
+        log = "delta";
+        reflog = "delta";
+        show = "delta";
+        blame = "delta";
+      };
+      merge.conflictstyle = "zdiff3";
       alias = {
         st = "status -sb";
         co = "checkout";
@@ -57,5 +75,7 @@
 
   home.packages = with pkgs; [
     git-lfs
+    # Diff/merge pager — colored Macchiato diffs (wired via core.pager above).
+    delta
   ];
 }

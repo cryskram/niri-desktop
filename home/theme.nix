@@ -47,6 +47,10 @@ in
   };
 
   # Terminal — ghostty Macchiato glass (more blur)
+  # The full palette is declared here from the central tokens (RICE §4) rather
+  # than left to ghostty's bundled theme file: colors track the repo's single
+  # source of truth, and the explicit values override the bundled "Catppuccin
+  # Macchiato" theme where the flavor diverges from the desktop tokens.
   programs.ghostty.settings = {
     font-family = tokens.fonts.mono;
     font-size = 11;
@@ -55,7 +59,12 @@ in
     # flavor's base. Ghostty applies explicit colors over theme colors, so the
     # Macchiato palette/accent set is kept and only the base is darkened.
     background = tokens.colors.background-darkest;
+    foreground = tokens.colors.foreground;
+    cursor-color = tokens.colors.cursor;
     cursor-text = tokens.colors.background-darkest;
+    selection-background = tokens.colors.selectionBg;
+    selection-foreground = tokens.colors.selectionFg;
+    palette = builtins.genList (i: "${toString i}=${builtins.elemAt tokens.colors.ansi i}") 16;
     background-opacity = 0.82;
     # Canonical ghostty name for the blur intensity. Ghostty itself can only
     # apply this on macOS and KDE Plasma, so under niri it is inert: the blur

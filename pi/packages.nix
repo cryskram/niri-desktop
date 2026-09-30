@@ -221,14 +221,14 @@ in
   # and only uses OpenAI Hosted Search when active model is openai/openai-codex, so deepseek/muse untouched.
   pi-web-access = withDeps {
     pname = "pi-web-access";
-    version = "0.33.0";
+    version = "0.34.0";
     src = pkgs.fetchFromGitHub {
       owner = "nicobailon";
       repo = "pi-web-access";
-      tag = "v0.33.0";
-      hash = "sha256-culvDJyexdP3eS6w3nfSBbWQ7atWD1iLH0PS+CpUA8k=";
+      tag = "v0.34.0";
+      hash = "sha256-KYcScVwKKuY393nzHtZBUVvQzBYaVm3JmBxVRuJY8PI=";
     };
-    npmHash = "sha256-R+NGjAxFDwiSvcg5iSJtCFWSF24SRWH9j1duQLYJyYQ=";
+    npmHash = "sha256-UN1aKEWbyGntuJmFTdDRMhlm4z6itwm8qiKe9WVhx84=";
     npmFlags = [
       "--omit=dev"
     ];
