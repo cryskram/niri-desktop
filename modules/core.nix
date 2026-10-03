@@ -145,7 +145,6 @@ in
     extensions =
       let
         inherit (piPackages)
-          mcp-adapter
           pi-btw
           rpiv-ask-user-question
           rpiv-todo
@@ -156,7 +155,6 @@ in
       in
       [
         # Third-party extensions, pinned in pi/packages.nix.
-        "${mcp-adapter}"
         "${pi-btw}"
         "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
         "${rpiv-todo}/${rpiv-todo.extensionPath}"
@@ -209,9 +207,10 @@ in
       tokenFile = "/home/vageesh/niri-desktop/secrets/querion-token";
     };
 
-    # MCP servers for the pi-mcp-adapter extension. Previously an imperative
-    # ~/.config/mcp/mcp.json; the adapter reads this path as its "shared-global
-    # standard MCP" source. No secrets here.
+    # MCP servers — native pi (0.99+) reads ~/.pi/agent/mcp.json directly.
+    # Previously via pi-mcp-adapter at ~/.config/mcp/mcp.json; migrated to
+    # native. No secrets here. `pi mcp list` / `pi mcp login <server>` manages
+    # OAuth; /mcp inside pi does the same interactively.
     #
     # parallel-search uses /mcp-oauth, not /mcp: /mcp serves anonymous traffic
     # and publishes no OAuth metadata (/.well-known/oauth-protected-resource
@@ -220,7 +219,7 @@ in
     # the metadata document, so OAuth sign-in works.
     # deepwiki is a public service with no auth and no OAuth metadata, so it is
     # left anonymous and must not be authenticated.
-    xdg.configFile."mcp/mcp.json".text = builtins.toJSON {
+    home.file.".pi/agent/mcp.json".text = builtins.toJSON {
       mcpServers = {
         chrome-devtools = {
           command = "npx";
@@ -231,12 +230,9 @@ in
         };
         parallel-search = {
           url = "https://search.parallel.ai/mcp-oauth";
-          protocolVersion = "auto";
-          directTools = true;
         };
         deepwiki = {
           url = "https://mcp.deepwiki.com/mcp";
-          protocolVersion = "auto";
         };
         # Dummy MCP — learning harness for pi on NixOS (pure Nix derivation).
         # Source: pi/mcp-servers/dummy/server.mjs (3 tools: echo/add/now + resource dummy://info).
@@ -251,6 +247,14 @@ in
         };
       };
     };
+
+    # One-time cleanup of the old adapter path. Home Manager leaves unmanaged
+    # files in place, so without this ~/.config/mcp/mcp.json (and its .backup)
+    # would linger as an orphan after the migration to ~/.pi/agent/mcp.json.
+    home.activation.cleanupMcpAdapter = ''
+      rm -f "$HOME/.config/mcp/mcp.json" "$HOME/.config/mcp/mcp.json.backup"
+      rmdir --ignore-fail-on-non-empty "$HOME/.config/mcp" 2>/dev/null || true
+    '';
 
   };
 

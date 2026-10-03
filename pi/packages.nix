@@ -131,31 +131,6 @@ let
     };
 in
 {
-  # MCP (Model Context Protocol) servers for pi.
-  # Runtime deps: @modelcontextprotocol/*, ajv, zod, undici, open, smol-toml, …
-  mcp-adapter = withDeps {
-    pname = "pi-mcp-adapter";
-    version = "3.3.0";
-    src = pkgs.fetchFromGitHub {
-      owner = "nicobailon";
-      repo = "pi-mcp-adapter";
-      tag = "v3.3.0";
-      hash = "sha256-eM6LKBmnOC5e2z21nan28XOFuUF7sO8OhqvQMkHe/U8=";
-    };
-    npmHash = "sha256-Q+ylIJr2bOMu9nzIIemKdQ9/OuxHXdjLErpNLrvuLEk=";
-    # --omit=dev only. Do NOT add --legacy-peer-deps here: it suppresses peer
-    # resolution, and @modelcontextprotocol/ext-apps declares
-    # @modelcontextprotocol/sdk as a required (non-optional) peer that its
-    # runtime dist/src/app.js actually imports. Skipping it drops sdk, express
-    # and hono, and ext-apps then fails with "Cannot find module".
-    # The @earendil-works/* peers need no suppression either: their lockfile
-    # entries are local file: links, so npm ci skips them on its own and pi
-    # supplies them through its bundled virtual modules.
-    npmFlags = [
-      "--omit=dev"
-    ];
-  };
-
   # Structured questionnaires the model can put to you.
   rpiv-ask-user-question = rpivExtension {
     pname = "rpiv-ask-user-question";
@@ -214,9 +189,9 @@ in
   };
 
   # pi-web-access — web search / fetch / source_check for researcher + evidence-auditor.
-  # Coexists with MCP parallel-search (mcp-oauth) — different tool names, no clash:
+  # Coexists with native MCP parallel-search — different tool names, no clash:
   #   pi-web-access: web_search, fetch_content, source_check, get_search_content
-  #   MCP parallel-search: parallel-search.* via mcp-adapter (OAuth, directTools)
+  #   native MCP: parallel-search.* via pi mcp (OAuth, exposure direct)
   # pi-web-access fallback chain defaults to Exa MCP (zero-config) -> Brave -> Parallel API etc.,
   # and only uses OpenAI Hosted Search when active model is openai/openai-codex, so deepseek/muse untouched.
   pi-web-access = withDeps {

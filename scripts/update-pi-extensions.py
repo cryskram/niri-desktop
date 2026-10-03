@@ -45,11 +45,6 @@ FAKE_HASH = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 
 # pname (attr used for `nix build .#<name>`) -> upstream repo + pin shape.
 EXTENSIONS = [
-    {
-        "name": "mcp-adapter",
-        "repo": ("nicobailon", "pi-mcp-adapter"),
-        "deps": True,
-    },
     # rpiv-mono monorepo: one shared version/tag/src for both extensions,
     # but each extension has its own npmHash.
     {
@@ -188,7 +183,6 @@ def find_block(text, anchor):
 
 def regions_of(text):
     anchors = {
-        "mcp-adapter": "mcp-adapter = withDeps {",
         "rpiv": "rpivExtension =",
         "pi-btw": "pi-btw = plain {",
         "zentui": "zentui = plain {",
