@@ -238,6 +238,17 @@ in
           url = "https://mcp.deepwiki.com/mcp";
           protocolVersion = "auto";
         };
+        # Dummy MCP — learning harness for pi on NixOS (pure Nix derivation).
+        # Source: pi/mcp-servers/dummy/server.mjs (3 tools: echo/add/now + resource dummy://info).
+        # Built via pi/packages.nix#dummy-mcp (withDeps pattern, pinned npmHash) so the
+        # build is pure and immune to ~/.npmrc/CodeArtifact. pi lazy-loads it only
+        # when you call `mcp({ search: "dummy" })` / `mcp({ tool: "dummy_echo" })`.
+        # For quick local iteration without a rebuild you can temporarily point this at
+        # "/home/vageesh/niri-desktop/pi/mcp-servers/dummy/server.mjs" with `command = "node"`.
+        dummy = {
+          command = "${pkgs.nodejs}/bin/node";
+          args = [ "${piPackages.dummy-mcp}/server.mjs" ];
+        };
       };
     };
 

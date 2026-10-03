@@ -233,4 +233,18 @@ in
       "--omit=dev"
     ];
   };
+
+  # Dummy MCP — local learning harness (stdio). Pinned like other extensions so
+  # the build is pure and no ~/.npmrc/CodeArtifact leak affects it.
+  # To update deps: edit pi/mcp-servers/dummy/package.json, run
+  #   npm install --registry https://registry.npmjs.org
+  # in that dir, then `nix build .#dummy-mcp` with a fake hash to capture the
+  # correct `npmHash` from the error, same workflow as scripts/update-pi-extensions.py.
+  dummy-mcp = withDeps {
+    pname = "dummy-mcp";
+    version = "0.1.0";
+    src = ./mcp-servers/dummy;
+    npmHash = "sha256-/NdLtFU/HtPauma49vg9QQv+CaXUJQiR4bj5toyw4O8=";
+    npmFlags = [ "--omit=dev" ];
+  };
 }

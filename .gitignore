@@ -60,5 +60,8 @@ Thumbs.db
 tmp/
 temp/
 
+# Dummy MCP — local deps, never committed (rebuilt via `npm install --registry https://registry.npmjs.org` in pi/mcp-servers/dummy)
+pi/mcp-servers/dummy/node_modules/
+
 # Logs
 *.log
