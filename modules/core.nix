@@ -208,32 +208,11 @@ in
     };
 
     # MCP servers — native pi (0.99+) reads ~/.pi/agent/mcp.json directly.
-    # Previously via pi-mcp-adapter at ~/.config/mcp/mcp.json; migrated to
-    # native. No secrets here. `pi mcp list` / `pi mcp login <server>` manages
-    # OAuth; /mcp inside pi does the same interactively.
-    #
-    # parallel-search uses /mcp-oauth, not /mcp: /mcp serves anonymous traffic
-    # and publishes no OAuth metadata (/.well-known/oauth-protected-resource
-    # returns 404), so Dynamic Client Registration fails there with
-    # "HTTP 404: Not found". /mcp-oauth returns 401 anonymously and advertises
-    # the metadata document, so OAuth sign-in works.
-    # deepwiki is a public service with no auth and no OAuth metadata, so it is
-    # left anonymous and must not be authenticated.
+    # pi-web-access already provides web_search/fetch/source_check, so the
+    # parallel-search/deepwiki/chrome-devtools MCPs are redundant. Only the
+    # local dummy harness is kept for pi MCP learning.
     home.file.".pi/agent/mcp.json".text = builtins.toJSON {
       mcpServers = {
-        chrome-devtools = {
-          command = "npx";
-          args = [
-            "-y"
-            "chrome-devtools-mcp@1.6.0"
-          ];
-        };
-        parallel-search = {
-          url = "https://search.parallel.ai/mcp-oauth";
-        };
-        deepwiki = {
-          url = "https://mcp.deepwiki.com/mcp";
-        };
         # Dummy MCP — learning harness for pi on NixOS (pure Nix derivation).
         # Source: pi/mcp-servers/dummy/server.mjs (3 tools: echo/add/now + resource dummy://info).
         # Built via pi/packages.nix#dummy-mcp (withDeps pattern, pinned npmHash) so the
