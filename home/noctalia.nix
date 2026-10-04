@@ -89,10 +89,24 @@
             "bluetooth"
             "volume"
             "battery"
+            "local/opencode-quota:quota"
             "control-center"
             "session"
           ];
         };
+      };
+
+      # Plugins — local path source for opencode quota (real pill in the bar)
+      plugins = {
+        enabled = [ "local/opencode-quota" ];
+        source = [
+          {
+            name = "local";
+            kind = "path";
+            location = "/home/vageesh/niri-desktop/noctalia-plugins";
+            enabled = true;
+          }
+        ];
       };
 
       # Per-pill Macchiato colors — Catppuccin pastels on mantle/base
@@ -155,6 +169,10 @@
         "control-center" = {
           capsule_fill = "#c6a0f6";
           capsule_foreground = "#24273a";
+        };
+        "local/opencode-quota:quota" = {
+          capsule_fill = "#363a4f";
+          capsule_foreground = "#cad3f5";
         };
         session = {
           capsule_fill = "#ed8796";

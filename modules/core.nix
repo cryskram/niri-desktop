@@ -191,6 +191,7 @@ in
       ../home/spicetify.nix
       ../home/neovim.nix
       ../home/zed.nix
+      ../home/opencode-quota-fetch.nix
     ];
 
     home.stateVersion = "26.05";

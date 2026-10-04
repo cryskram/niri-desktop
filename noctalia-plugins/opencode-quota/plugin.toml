@@ -1,0 +1,15 @@
+id = "local/opencode-quota"
+name = "OpenCode Quota"
+version = "1.0.0"
+plugin_api = 32
+author = "local"
+description = "Topbar pill showing opencode-go rolling/weekly/monthly quota"
+icon = "cloud"
+
+[[widget]]
+id = "quota"
+entry = "quota.luau"
+
+[[service]]
+id = "fetcher"
+entry = "fetcher.luau"
