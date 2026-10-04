@@ -100,21 +100,54 @@
     '')
     (writeShellScriptBin "vpn-toggle" ''
       set -euo pipefail
-      # Toggle VPN — matches Noctalia (NetworkManager wg0), fallback to wg-quick if present
-      CONN="wg0"
-      SVC="wg-quick-wg0"
-      # Prefer NM if connection exists (what Noctalia toggles)
+      # Toggle VPN — supports both company (wg0) and proton
+      # Usage: vpn-toggle [wg0|proton] — no arg shows chooser via fuzzel
+      choose_vpn() {
+        local opts="wg0 (company)"
+        if nmcli connection show proton >/dev/null 2>&1 || systemctl cat wg-quick-proton >/dev/null 2>&1 || [ -f "$HOME/niri-desktop/secrets/proton.conf" ]; then
+          opts="$opts\nproton (Proton VPN)"
+        fi
+        # also offer GUI if available
+        if command -v proton-vpn >/dev/null 2>&1; then
+          opts="$opts\nproton-gui (Proton VPN app)"
+        fi
+        printf "%b" "$opts" | ${pkgs.fuzzel}/bin/fuzzel --dmenu --prompt "VPN: " 2>/dev/null | cut -d' ' -f1 || echo "wg0"
+      }
+      TARGET="''${1:-}"
+      if [ -z "$TARGET" ]; then
+        TARGET=$(choose_vpn)
+      fi
+      case "$TARGET" in
+        proton-gui)
+          if pgrep -x proton-vpn >/dev/null 2>&1; then
+            notify-send "VPN" "Proton VPN GUI already running" 2>/dev/null || true
+          else
+            proton-vpn 2>/dev/null & disown
+            notify-send "VPN" "Proton VPN GUI launched" 2>/dev/null || true
+          fi
+          exit 0
+          ;;
+        proton)
+          CONN="proton"
+          SVC="wg-quick-proton"
+          ;;
+        *)
+          CONN="wg0"
+          SVC="wg-quick-wg0"
+          ;;
+      esac
+      # Prefer NM if connection exists (what Noctalia/Waybar toggles)
       if nmcli connection show "$CONN" >/dev/null 2>&1; then
         if nmcli -t -f TYPE,STATE device status 2>/dev/null | grep -q "^wireguard:connected"; then
           echo "Stopping NM $CONN..."
           nmcli connection down "$CONN" 2>&1 || true
-          notify-send "VPN" "VPN disconnected" 2>/dev/null || true
+          notify-send "VPN" "$CONN disconnected" 2>/dev/null || true
         else
           echo "Starting NM $CONN..."
           if nmcli connection up "$CONN" 2>&1; then
-            notify-send "VPN" "VPN connected" 2>/dev/null || true
+            notify-send "VPN" "$CONN connected" 2>/dev/null || true
           else
-            notify-send "VPN" "VPN failed — check nmcli" 2>/dev/null || true
+            notify-send "VPN" "$CONN failed — check nmcli" 2>/dev/null || true
           fi
         fi
         exit 0
@@ -123,30 +156,43 @@
       if systemctl is-active --quiet "$SVC" 2>/dev/null; then
         echo "Stopping $SVC..."
         sudo systemctl stop "$SVC" 2>&1 || true
-        notify-send "VPN" "VPN disconnected" 2>/dev/null || true
+        notify-send "VPN" "$CONN disconnected" 2>/dev/null || true
       else
         echo "Starting $SVC..."
         if ! sudo systemctl start "$SVC" 2>&1; then
-          notify-send "VPN" "VPN failed — run: journalctl -u $SVC" 2>/dev/null || true
+          notify-send "VPN" "$CONN failed — run: journalctl -u $SVC" 2>/dev/null || true
           exit 0
         fi
         sleep 0.5
         if systemctl is-active --quiet "$SVC" 2>/dev/null; then
-          notify-send "VPN" "VPN connected" 2>/dev/null || true
+          notify-send "VPN" "$CONN connected" 2>/dev/null || true
         else
-          notify-send "VPN" "VPN failed — check journalctl -u $SVC" 2>/dev/null || true
+          notify-send "VPN" "$CONN failed — check journalctl -u $SVC" 2>/dev/null || true
         fi
       fi
     '')
     (writeShellScriptBin "vpn-status" ''
       set -euo pipefail
-      CONN="wg0"
-      SVC="wg-quick-wg0"
-      if nmcli connection show "$CONN" >/dev/null 2>&1; then
-        if nmcli -t -f TYPE,STATE device status 2>/dev/null | grep -q "^wireguard:connected"; then echo "up"; else echo "down"; fi
-      else
-        if systemctl is-active --quiet "$SVC" 2>/dev/null; then echo "up"; else echo "down"; fi
+      # Show status for both VPNs, or specific one if arg given
+      if [ -n "''${1:-}" ]; then
+        CONN="$1"
+        SVC="wg-quick-$1"
+        if nmcli connection show "$CONN" >/dev/null 2>&1; then
+          if nmcli -t -f TYPE,STATE device status 2>/dev/null | grep -q "^wireguard:connected"; then echo "up"; else echo "down"; fi
+        else
+          if systemctl is-active --quiet "$SVC" 2>/dev/null; then echo "up"; else echo "down"; fi
+        fi
+        exit 0
       fi
+      for CONN in wg0 proton; do
+        SVC="wg-quick-$CONN"
+        if nmcli connection show "$CONN" >/dev/null 2>&1; then
+          if nmcli -t -f TYPE,STATE device status 2>/dev/null | grep -q "^wireguard:connected"; then ST="up"; else ST="down"; fi
+        else
+          if systemctl is-active --quiet "$SVC" 2>/dev/null; then ST="up"; else ST="down"; fi
+        fi
+        echo "$CONN: $ST"
+      done
     '')
     (writeShellScriptBin "niri-display-toggle" ''
       set -euo pipefail
