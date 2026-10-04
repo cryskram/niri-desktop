@@ -192,7 +192,6 @@ in
       ../home/spicetify.nix
       ../home/neovim.nix
       ../home/zed.nix
-      ../home/herdr.nix
       ../home/opencode-quota-fetch.nix
     ];
 
