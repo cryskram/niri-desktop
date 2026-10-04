@@ -25,7 +25,6 @@ local function render()
   local w = quota.weekly or 0
   local mo = quota.monthly or 0
   local graphVals = stats.graph or {}
-  -- ensure graph has at least 7 points for the week
   if #graphVals == 0 then
     graphVals = {0.1, 0.3, 0.2, 0.5, 0.4, 0.6, mo / 100}
   end
@@ -36,7 +35,6 @@ local function render()
       ui.button({ glyph = "x", variant = "ghost", onClick = function() panel.close() end }),
     }),
     ui.separator({}),
-    -- Quota bars
     ui.column({ gap = 10 }, {
       ui.column({ gap = 4 }, {
         ui.row({ justify = "space_between", align = "center" }, {
@@ -64,7 +62,6 @@ local function render()
       }),
     }),
     ui.separator({}),
-    -- Models used
     ui.column({ gap = 6 }, {
       ui.label({ text = "Models", fontSize = 13, fontWeight = "bold", color = "primary" }),
       ui.row({ gap = 6, align = "center" }, {
@@ -77,7 +74,6 @@ local function render()
       ui.label({ text = "from opencode stats — top 3 this week", color = "#a5adcb", fontSize = 9 }),
     }),
     ui.separator({}),
-    -- Usage graph (last 7 days)
     ui.column({ gap = 6 }, {
       ui.label({ text = "Usage (7d)", fontSize = 13, fontWeight = "bold", color = "primary" }),
       ui.graph({ values = graphVals, color = "#c6a0f6", fillOpacity = 0.2, height = 60 }),
@@ -88,7 +84,6 @@ local function render()
     }),
     ui.row({ gap = 8, justify = "center" }, {
       ui.button({ text = "Refresh", glyph = "refresh", variant = "secondary", onClick = function()
-        -- trigger fetcher service to refresh
         noctalia.state.set("quota_refresh", os.time())
       end}),
       ui.button({ text = "Open opencode.ai", variant = "ghost", onClick = function()
@@ -107,7 +102,6 @@ noctalia.state.watch("opencode_stats", function(v)
 end)
 
 function onOpen()
-  -- pull latest
   local q = noctalia.state.get("quota")
   if q then quota = q end
   local s = noctalia.state.get("opencode_stats")
