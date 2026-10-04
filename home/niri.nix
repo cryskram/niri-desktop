@@ -119,16 +119,6 @@ in
         }
     }
 
-    // OpenCode quota widget — glass pill + popup (quickshell/opencode-quota).
-    // PanelWindow namespace is "opencode-quota" (WlrLayershell.namespace).
-    layer-rule {
-        match namespace=r#"^opencode-quota$"#
-
-        background-effect {
-            blur true
-        }
-    }
-
     // Multi-monitor — HDMI-A-1 Samsung 2560x1440 (auto-right of eDP by default, RICE §28)
     output "HDMI-A-1" {
         mode "2560x1440@59.951"
