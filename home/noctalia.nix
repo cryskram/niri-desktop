@@ -53,13 +53,13 @@
         default.enabled = false;
         main = {
           position = "left";
-          thickness = 42;
+          thickness = 48;
           background_opacity = 0.62;
           radius = 12;
           margin_ends = 8;
           margin_edge = 8;
           padding = 6;
-          widget_spacing = 6;
+          widget_spacing = 8;
           shadow = false;
           reserve_space = true;
           border_width = 0.0;
@@ -127,7 +127,7 @@
           capsule_fill = "#363a4f";
           capsule_foreground = "#cad3f5";
           format = "{:%a %d %b  %H:%M}";
-          vertical_format = "{:%H:%M\n%a %d}";
+          vertical_format = "{:%H:%M\n%a}";
           tooltip_format = "{:%A, %d %B %Y %H:%M}";
         };
         taskbar = {

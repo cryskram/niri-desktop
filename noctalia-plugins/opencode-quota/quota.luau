@@ -22,16 +22,25 @@ local function formatReset(iso)
 end
 
 local function render()
-  local container = barWidget.isVertical() and ui.column or ui.row
+  local isVert = barWidget.isVertical()
   local r = quota.rolling or 0
   local w = quota.weekly or 0
   local mo = quota.monthly or 0
 
-  barWidget.render(container({ gap = 4, align = "center" }, {
-    ui.glyph({ name = "cloud", size = 12, color = quotaColor(r) }),
-    ui.label({ text = tostring(r) .. "%", color = quotaColor(r), fontWeight = "bold", fontSize = 11 }),
-    ui.label({ text = "· " .. tostring(w) .. "% · " .. tostring(mo) .. "%", color = "#a5adcb", fontSize = 9 }),
-  }))
+  if isVert then
+    -- Vertical: compact single column, just rolling + tiny weekly/monthly below
+    barWidget.render(ui.column({ gap = 2, align = "center" }, {
+      ui.glyph({ name = "cloud", size = 14, color = quotaColor(r) }),
+      ui.label({ text = tostring(r) .. "%", color = quotaColor(r), fontWeight = "bold", fontSize = 11 }),
+      ui.label({ text = tostring(w) .. "·" .. tostring(mo), color = "#a5adcb", fontSize = 8 }),
+    }))
+  else
+    barWidget.render(ui.row({ gap = 4, align = "center" }, {
+      ui.glyph({ name = "cloud", size = 12, color = quotaColor(r) }),
+      ui.label({ text = tostring(r) .. "%", color = quotaColor(r), fontWeight = "bold", fontSize = 11 }),
+      ui.label({ text = "· " .. tostring(w) .. "% · " .. tostring(mo) .. "%", color = "#a5adcb", fontSize = 9 }),
+    }))
+  end
 end
 
 noctalia.state.watch("quota", function(value)
