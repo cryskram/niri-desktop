@@ -192,8 +192,8 @@
       notification = {
         enable_daemon = true;
         show_app_name = true;
-        background_opacity = 0.72;
-        scale = 1.0;
+        background_opacity = 0.78;
+        scale = 1.08;
       };
 
       # Lock screen (RICE §17) — elaborate: more blur + Macchiato tint
