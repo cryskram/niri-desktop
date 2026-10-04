@@ -33,11 +33,12 @@ ShellRoot {
     PanelWindow {
         id: panel
         WlrLayershell.namespace: "opencode-quota"
+        WlrLayershell.layer: WlrLayershell.Overlay
         anchors { top: true; right: true }
-        margins { top: 8; right: 140 }
+        margins { top: 8; right: 14 }
         exclusiveZone: 0
         color: "transparent"
-        implicitWidth: 110
+        implicitWidth: 360
         implicitHeight: popupVisible ? 38 + 160 : 38
 
         // Pill
