@@ -52,11 +52,11 @@
         order = [ "main" ];
         default.enabled = false;
         main = {
-          position = "left";
-          thickness = 48;
+          position = "top";
+          thickness = 38;
           background_opacity = 0.62;
           radius = 12;
-          margin_ends = 8;
+          margin_ends = 14;
           margin_edge = 8;
           padding = 6;
           widget_spacing = 8;
@@ -69,12 +69,9 @@
           capsule_radius = 12;
           capsule_opacity = 0.88;
           capsule_thickness = 0.8;
-          capsule_padding = 10;
+          capsule_padding = 12;
           # Horizontal top: start=left center middle end=right
           # Vertical left: start=top center=middle end=bottom (same arrays)
-          # Slim sidebar: 42px wide, not thick — keeps the glass pill look
-          # without eating screen. Widgets are balanced top/middle/bottom to
-          # avoid any single section feeling cranky or overcrowded.
           start = [
             "launcher"
             "workspaces"
