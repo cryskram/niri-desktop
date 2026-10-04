@@ -13,9 +13,18 @@ end
 
 local function formatReset(iso)
   if not iso or iso == "" then return "" end
+  -- UTC -> IST (UTC+5:30)
   local y, m, d, h, min = string.match(iso, "(%d+)-(%d+)-(%d+)T(%d+):(%d+)")
   if y and m and d then
-    return m .. "/" .. d .. " " .. h .. ":" .. min
+    y = tonumber(y); m = tonumber(m); d = tonumber(d); h = tonumber(h); min = tonumber(min)
+    min = min + 30; h = h + 5
+    if min >= 60 then min = min - 60; h = h + 1 end
+    if h >= 24 then h = h - 24; d = d + 1
+      local mdays = {31,28,31,30,31,30,31,31,30,31,30,31}
+      if (y % 4 == 0 and y % 100 ~= 0) or y % 400 == 0 then mdays[2] = 29 end
+      if d > mdays[m] then d = 1; m = m + 1; if m > 12 then m = 1; y = y + 1 end end
+    end
+    return string.format("%02d/%02d %02d:%02d IST", m, d, h, min)
   end
   return iso
 end
