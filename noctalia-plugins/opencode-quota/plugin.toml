@@ -13,3 +13,11 @@ entry = "quota.luau"
 [[service]]
 id = "fetcher"
 entry = "fetcher.luau"
+
+[[panel]]
+id = "details"
+entry = "panel.luau"
+width = 380
+height = 520
+placement = "floating"
+position = "center"

@@ -52,13 +52,7 @@ function update()
 end
 
 function onClick()
-  local r = quota.rolling or 0
-  local w = quota.weekly or 0
-  local mo = quota.monthly or 0
-  local msg = "Rolling: " .. tostring(r) .. "% (" .. formatReset(quota.rollingReset) .. ")\n"
-    .. "Weekly: " .. tostring(w) .. "% (" .. formatReset(quota.weeklyReset) .. ")\n"
-    .. "Monthly: " .. tostring(mo) .. "% (" .. formatReset(quota.monthlyReset) .. ")"
-  noctalia.notify("OpenCode Quota", msg)
+  noctalia.togglePanel("local/opencode-quota:details")
 end
 
 function onRightClick()

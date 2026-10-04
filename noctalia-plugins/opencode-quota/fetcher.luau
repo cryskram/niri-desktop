@@ -3,10 +3,24 @@
 -- Uses the opencode-go API key from ~/.pi/agent/auth.json (absolute path).
 
 local function fetchQuota()
-  -- Prefer the cached file written by the systemd timer (more reliable than
+  -- Prefer the cached files written by the systemd timer (more reliable than
   -- reading the auth key directly from the plugin sandbox). The timer runs
-  -- opencode-quota-fetch every 5m and writes ~/.cache/opencode-quota.json.
+  -- opencode-quota-fetch every 5m and writes ~/.cache/opencode-quota.json
+  -- and ~/.cache/opencode-stats.json.
   local cacheText = noctalia.readFile("/home/vageesh/.cache/opencode-quota.json")
+  local statsText = noctalia.readFile("/home/vageesh/.cache/opencode-stats.json")
+  if statsText then
+    -- crude parse for models/graph: just publish raw length as dummy graph
+    -- the panel will show a placeholder graph if parsing fails
+    local graph = {}
+    for p in string.gmatch(statsText, "(%d+)%%") do
+      table.insert(graph, (tonumber(p) or 0) / 100)
+      if #graph >= 7 then break end
+    end
+    if #graph > 0 then
+      noctalia.state.set("opencode_stats", { graph = graph })
+    end
+  end
   if cacheText then
     -- Try to parse the cached JSON
     local body = cacheText
