@@ -38,11 +38,11 @@
         };
       };
 
-      # Glass backdrop with blur — mission-control vibe (more blur)
+      # Backdrop — subtle, not blurry (wallpaper was looking dull at 0.85)
       backdrop = {
         enabled = true;
-        blur_intensity = 0.85;
-        tint_intensity = 0.25;
+        blur_intensity = 0.25;
+        tint_intensity = 0.10;
       };
 
       # Bar — TRUE ISLANDS: Macchiato glass (more transparent)
