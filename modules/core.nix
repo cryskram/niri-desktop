@@ -61,6 +61,7 @@ in
       defaultModel = "muse-spark-1.2-contributor";
       defaultThinkingLevel = "medium";
       theme = "catppuccin-macchiato";
+      defaultTools = [ "+codemode" ]; # keep read/bash/edit/write + codemode (JS orchestration, parallel calls, image models)
       # Generic subagent defaults — works in any project (cwd).
       # All children use muse-spark-1.2-contributor, the same model as the main
       # session — proven tool-reliable on this machine and not billed as a
