@@ -39,11 +39,6 @@
     red = "#ed8796"         # blocked/error — vivid but not harsh
     yellow = "#eed49f"      # working — warm, visible
     teal = "#8bd5ca"        # done alternative
-    pink = "#f5bde6"
-    mauve = "#c6a0f6"
     peach = "#f5a97f"
-    sky = "#91d7e3"
-    sapphire = "#7dc4e4"
-    lavender = "#b7bdf8"
   '';
 }
