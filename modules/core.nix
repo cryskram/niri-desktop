@@ -62,6 +62,18 @@ in
       defaultThinkingLevel = "medium";
       theme = "catppuccin-macchiato";
       defaultTools = [ "+codemode" ]; # keep read/bash/edit/write + codemode (JS orchestration, parallel calls, image models)
+
+      # Good development ergonomics — explicit declarative defaults (see pi docs: settings.md, sessions.md).
+      enableSkillCommands = true;
+      hideThinkingBlock = false;
+      showCacheMissNotices = false;
+      autocompleteMaxVisible = 7;
+      terminal.showTerminalProgress = true;
+      compaction = {
+        enabled = true;
+        reserveTokens = 16384;
+        keepRecentTokens = 20000;
+      };
       # Generic subagent defaults — works in any project (cwd).
       # All children use muse-spark-1.2-contributor, the same model as the main
       # session — proven tool-reliable on this machine and not billed as a
@@ -113,12 +125,12 @@ in
     ];
 
     # Global operating rules appended to pi's system prompt (safety, secrets,
-    # declarative-repo awareness). Enforced at the tool level by the extension below.
+    # declarative-repo awareness, learnings). Enforced at the tool level by the extension below.
     rules = ../pi/rules.md;
 
-    promptTemplates = [
-      ../pi/prompts
-    ];
+    # Prompt templates: intentionally empty — skills are the mechanism (see pi/skills/).
+    # Keep `pi/prompts/.gitkeep` so the directory tracks; add real templates deliberately.
+    promptTemplates = [ ];
 
     themes = [
       ../pi/themes/catppuccin-macchiato.json

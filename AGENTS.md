@@ -179,19 +179,19 @@ source of truth, and every change must reproduce on a fresh system.
 
 Pi customization lives in `modules/core.nix` (`programs.pi.coding-agent`):
 
-* prompt templates → `pi/prompts/*.md` (`promptTemplates`)
-* skills → `pi/skills/` (`skills`); company skills stay outside the repo (TAP) via `extraArgs`
+* skills → `pi/skills/` (`skills`); repo-owned: `repo-understanding` + `learnings` (durable journal `pi/skills/learnings/LEARNINGS.md` via `learnings` skill, read at session start, append on signal); company skills stay outside the repo (TAP `claude-plugins/...` via `extraArgs --skill`)
 * extensions → `pi/packages.nix` + `pi/extensions/*.ts` (`extensions`):
-  * `mcp-adapter` — MCP gateway (parallel-search `mcp-oauth`, deepwiki, chrome-devtools)
   * `pi-btw` — `/btw` parallel side sessions
   * `rpiv-ask-user-question` / `rpiv-todo` — structured questions + todo overlay
   * `zentui` — footer/status TUI
-  * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; defaultModel `deepseek-v4-flash`, oracle `muse-spark` — never `deepseek-pro`)
-  * `pi-web-access` — `web_search`/`fetch_content`/`source_check` for researcher/evidence-auditor; coexists with MCP parallel-search (different tool namespaces: Exa MCP zero-config fallback chain; only uses OpenAI Hosted Search when active model is `openai`/`openai-codex`)
+  * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; defaultModel `muse-spark-1.2-contributor`, all children muse — never `deepseek-*`)
+  * `pi-web-access` — `web_search`/`fetch_content`/`source_check` for researcher/evidence-auditor; coexists with native MCP parallel-search (different tool namespaces)
   * local: `pi/extensions/safety.ts` (destructive-command gate) + `querion-sync.ts` (`/sync`)
-* global rules → `pi/rules.md` (`rules`)
+* global rules → `pi/rules.md` (`rules`) — now includes mandatory `learnings` journal (`Memory`) + `pi/context.md` protocol
+* context → `pi/context.md` (runnable project context, <100 lines) + repo-root `context.md` symlink → `pi/context.md`; `AGENTS.md` is the formal operating manual, `context.md`/`learnings` is mutable memory
+* prompt templates → intentionally empty (`pi/prompts/.gitkeep`, `promptTemplates = [ ]`) — skills preferred over prompts (see pi docs: skills carry description + on-demand loading)
 * theme → `pi/themes/catppuccin-macchiato.json` (`themes`)
-* model defaults → `settings.subagents.defaultModel` + `agentOverrides` (generic, project `.pi/settings.json` can override per-repo)
+* settings → `defaultProvider`/`defaultModel`/`defaultThinkingLevel`/`theme`/`defaultTools` + ergonomic defaults (`enableSkillCommands`, `compaction`, `terminal.showTerminalProgress`, `autocompleteMaxVisible`) + `subagents.defaultModel`/`agentOverrides` (generic, project `.pi/settings.json` can override per-repo)
 
 To add Pi functionality, extend these mechanisms. Do not build a parallel
 configuration mechanism. Validate with:

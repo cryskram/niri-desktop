@@ -34,11 +34,18 @@ wg*.conf
 # Repo-owned pi skills are tracked; everything else under pi/skills/ stays ignored.
 pi/skills/*
 !pi/skills/repo-understanding/
-# pi/prompts + pi/themes + pi/extensions + pi/rules are safe to commit
-!pi/prompts/
-!pi/prompts/*.md
+!pi/skills/repo-understanding/**
+!pi/skills/learnings/
+!pi/skills/learnings/**
+# pi/rules, pi/context, pi/themes, pi/extensions are safe to commit
+!pi/rules.md
+!pi/context.md
 !pi/themes/
 !pi/themes/*.json
+# pi/prompts intentionally empty — skills preferred over prompt templates
+# keep the directory for future intentional templates; .gitkeep is tracked
+!pi/prompts/
+!pi/prompts/.gitkeep
 
 # Nix build outputs
 result
