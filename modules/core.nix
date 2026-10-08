@@ -161,7 +161,7 @@ in
           pi-btw
           rpiv-ask-user-question
           rpiv-todo
-          zentui
+          pi-powerline
           pi-subagents
           pi-web-access
           ;
@@ -171,7 +171,7 @@ in
         "${pi-btw}"
         "${rpiv-ask-user-question}/${rpiv-ask-user-question.extensionPath}"
         "${rpiv-todo}/${rpiv-todo.extensionPath}"
-        "${zentui}"
+        "${pi-powerline}"
         "${pi-subagents}"
         "${pi-web-access}"
         ../pi/extensions/safety.ts
