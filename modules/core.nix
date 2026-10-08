@@ -63,6 +63,14 @@ in
       theme = "catppuccin-macchiato";
       defaultTools = [ "+codemode" ]; # keep read/bash/edit/write + codemode (JS orchestration, parallel calls, image models)
 
+      # Powerline footer — declarative defaults (pi.dev/packages/pi-powerline-footer).
+      # Preset: default = model/thinking/path/git/context/tokens/cost; placement above = primary row above editor.
+      powerline = {
+        preset = "default";
+        placement = "above";
+      };
+      workingVibe = "star trek"; # themed "Working…" messages: "Engaging warp drive…"
+
       # Good development ergonomics — explicit declarative defaults (see pi docs: settings.md, sessions.md).
       enableSkillCommands = true;
       hideThinkingBlock = false;
