@@ -70,6 +70,7 @@ in
         placement = "above";
       };
       workingVibe = "star trek"; # themed "Working…" messages: "Engaging warp drive…"
+      workingVibeModel = "opencode-go/muse-spark-1.2-contributor:low"; # reuse same provider/model for vibe generation (was typo treak + missing model → Working… fallback)
 
       # Good development ergonomics — explicit declarative defaults (see pi docs: settings.md, sessions.md).
       enableSkillCommands = true;
