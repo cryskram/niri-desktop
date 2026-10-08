@@ -81,6 +81,14 @@ type Req = ModelRouteRequest<JevRouterState>;
 function routeTo(req: Req, ctx: ExtensionContext, id: TargetId, state?: JevRouterState): ModelRoute<JevRouterState> {
   const model = ctx.modelRegistry.find(PROVIDER, id);
   if (!model) throw new Error(`Model ${PROVIDER}/${id} not in catalog — check opencode-go auth / models-store.json`);
+  // Optimistic footer: show the dispatched model as soon as the prompt is
+  // sent, not just after the answer lands via `message_end`. Guarded so
+  // headless modes (print/rpc/json) never break routing.
+  try {
+    (ctx as unknown as { ui?: { setStatus?: (k: string, v: string | undefined) => void } }).ui?.setStatus?.(STATUS_KEY, SHORT[id] ?? id);
+  } catch {
+    // Footer bookkeeping must never fail the route.
+  }
   // pass through the user's thinking level; pi will clamp to the model's map
   return { model, thinkingLevel: req.thinkingLevel, state };
 }
