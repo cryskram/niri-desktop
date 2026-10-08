@@ -68,6 +68,18 @@ in
       powerline = {
         preset = "default";
         placement = "above";
+        # Live routed-model segment from pi/extensions/jev-router.ts, which
+        # publishes the dispatched physical model (muse-1.3, gpt-6-luna, …)
+        # under the `jev-route` status key on every assistant message.
+        # Footer then reads `Auto <Jev> → muse-1.3`.
+        customItems = [
+          {
+            id = "jev";
+            statusKey = "jev-route";
+            position = "right";
+            prefix = "→";
+          }
+        ];
       };
       workingVibe = "star trek"; # themed "Working…" messages: "Engaging warp drive…"
       workingVibeMode = "file"; # file mode = offline, no API cost/latency (generate mode hit 400/openai errors via opencode-go)

@@ -47,12 +47,24 @@ import type {
 
 const PROVIDER = "opencode-go" as const;
 
+/** Status key published for the powerline footer (`powerline.customItems`). */
+const STATUS_KEY = "jev-route";
+
 // Model IDs must match models-store.json exactly
 const MUSE = "muse-spark-1.3-contributor";
 const GPT6_LUNA = "gpt-6-luna";
 const DEEPSEEK = "deepseek-v4.1-flash";
 const GLM_FLASH = "glm-5.3-flash";
 const MIMO_FLASH = "mimo-v2.6-flash";
+
+/** Short footer labels — fits the powerline bar. */
+const SHORT: Record<string, string> = {
+  [MUSE]: "muse-1.3",
+  [GPT6_LUNA]: "gpt-6-luna",
+  [DEEPSEEK]: "deepseek-v4.1",
+  [GLM_FLASH]: "glm-5.3-flash",
+  [MIMO_FLASH]: "mimo-v2.6",
+};
 
 type TargetId = typeof MUSE | typeof GPT6_LUNA | typeof DEEPSEEK | typeof GLM_FLASH | typeof MIMO_FLASH;
 
@@ -188,7 +200,7 @@ export default function (pi: ExtensionAPI) {
   const def = {
     provider: "jev",
     id: "auto",
-    name: "Auto (Jev) — opencode-go cost aware",
+    name: "Auto <Jev>",
     thinkingLevels: ["low", "medium", "high", "xhigh", "max"] as const,
     contextWindow: 1_048_576, // min of the 5 (1M), shown before first response
     maxTokens: 131_072,
@@ -240,4 +252,29 @@ export default function (pi: ExtensionAPI) {
   // Virtual model provider can be any string; this makes discovery easier
   // if users filter by provider.
   pi.registerVirtualModel({ ...def, provider: PROVIDER });
+
+  // Publish the dispatched physical model for the footer. `message_end`
+  // carries the physical `provider`/`model` of the assistant message, so
+  // the bar shows what actually answered (e.g. `muse-1.3`). Cleared when
+  // the user leaves the router for a plain physical model.
+  pi.on("message_end", async (event, ctx) => {
+    try {
+      const msg = (event as { message?: { role?: string; provider?: string; model?: string } }).message;
+      if (!msg || msg.role !== "assistant" || !msg.model) return undefined;
+      const selected = (ctx as unknown as { model?: { provider?: string; id?: string } }).model;
+      const onRouter =
+        (selected?.provider === "jev" && selected?.id === "auto") ||
+        (selected?.provider === PROVIDER && selected?.id === "auto");
+      if (!onRouter) {
+        ctx.ui.setStatus(STATUS_KEY, undefined);
+        return undefined;
+      }
+      if (msg.provider !== PROVIDER) return undefined;
+      const label = SHORT[msg.model] ?? msg.model;
+      ctx.ui.setStatus(STATUS_KEY, label);
+    } catch {
+      // Never break the turn on footer bookkeeping.
+    }
+    return undefined;
+  });
 }
