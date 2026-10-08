@@ -57,9 +57,9 @@ in
     package = nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.pi-coding-agent;
 
     settings = {
-      defaultProvider = "opencode-go";
-      defaultModel = "muse-spark-1.2-contributor";
-      defaultThinkingLevel = "medium";
+      defaultProvider = "jev";
+      defaultModel = "auto";
+      defaultThinkingLevel = "high";
       theme = "catppuccin-macchiato";
       defaultTools = [ "+codemode" ]; # keep read/bash/edit/write + codemode (JS orchestration, parallel calls, image models)
 
@@ -96,37 +96,34 @@ in
         keepRecentTokens = 20000;
       };
       # Generic subagent defaults — works in any project (cwd).
-      # All children use muse-spark-1.2-contributor, the same model as the main
-      # session — proven tool-reliable on this machine and not billed as a
-      # premium tier. deepseek-v4-flash is deliberately NOT used: it emits tool
-      # calls as plain DSML/XML text instead of structured calls (22 such leaks
-      # in one session; deepseek-v4.1-flash leaks the same way), so a
-      # tool-driven child spends its turn printing a call that pi then renders
-      # instead of executing — which is exactly the "subagent takes forever"
-      # behaviour.
+      # All children use jev/auto (provider jev), same as main session — high thinking.
+      # deepseek-v4-flash is deliberately NOT used: it emits tool calls as plain
+      # DSML/XML text instead of structured calls (22 such leaks in one session;
+      # deepseek-v4.1-flash leaks the same way), so a tool-driven child spends its
+      # turn printing a call that pi then renders instead of executing — which is
+      # exactly the "subagent takes forever" behaviour.
       subagents = {
-        defaultModel = "muse-spark-1.2-contributor";
+        defaultModel = "auto";
         # Ensure researcher/evidence-auditor have web tools even as foreground children
         # (background children already inherit ambient extensions). Works for any cwd.
         defaultSubagentOnlyExtensions = [ "${piPackages.pi-web-access}" ];
         agentOverrides = {
-          # Second-opinion oracle, reviews and research all stay on the
-          # default muse model; only the budgets differ.
+          # Second-opinion oracle, reviews and research all stay on jev/auto; only budgets differ.
           oracle = {
-            model = "muse-spark-1.2-contributor";
+            model = "auto";
             thinking = "high";
           };
           reviewer = {
-            model = "muse-spark-1.2-contributor";
+            model = "auto";
             thinking = "high";
           };
           researcher = {
-            model = "muse-spark-1.2-contributor";
-            thinking = "medium";
+            model = "auto";
+            thinking = "high";
           };
-          # Workers/scouts: fast tier; medium thinking keeps multi-step tasks quick.
-          worker.thinking = "medium";
-          scout.thinking = "low";
+          # Workers/scouts: high thinking as requested for jev auto.
+          worker.thinking = "high";
+          scout.thinking = "high";
         };
       };
     };
