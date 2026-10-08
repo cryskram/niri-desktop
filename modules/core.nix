@@ -184,6 +184,7 @@ in
         "${pi-subagents}"
         "${pi-web-access}"
         ../pi/extensions/safety.ts
+        ../pi/extensions/jev-router.ts
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
         # Configured via xdg.configFile."querion/config.json" (home-manager block below).
         ../pi/extensions/querion-sync.ts
