@@ -114,12 +114,16 @@ let
     }:
     withDeps {
       inherit pname npmHash subdir;
-      version = "2.11.0";
+      # v2.12.0 moves typebox to peerDependencies:"*" — fixes pi's
+      # "Host-provided extension packages must be declared in
+      # peerDependencies with a '*' range" loader warning (v2.11.0 declared
+      # it as a regular dependency and tripped the stricter check).
+      version = "2.12.0";
       src = pkgs.fetchFromGitHub {
         owner = "juicesharp";
         repo = "rpiv-mono";
-        tag = "v2.11.0";
-        hash = "sha256-lXSj7i0bKuOKdajoJqLukCqNMi6398IxRFgFbXHgUUA=";
+        tag = "v2.12.0";
+        hash = "sha256-gvl2xi9BqNandBDCAdIVWTa9df3fb/+CiWGTZbaEz3g=";
       };
       npmFlags = [
         "--omit=dev"
@@ -134,7 +138,7 @@ in
   # Structured questionnaires the model can put to you.
   rpiv-ask-user-question = rpivExtension {
     pname = "rpiv-ask-user-question";
-    npmHash = "sha256-9l+4i3+y2mpYwRhRSwSnNeqV2v34gtZCxDakWbIMa/4=";
+    npmHash = "sha256-OazOvc2LVgOzUrX263ckaarDdIE35MLv+PZ1Ppyd9D0=";
     subdir = "packages/rpiv-ask-user-question";
   };
 
@@ -142,7 +146,7 @@ in
   # and conversation compaction.
   rpiv-todo = rpivExtension {
     pname = "rpiv-todo";
-    npmHash = "sha256-qm2Q3Kt6OjYtC0R6jFUNrakfUrhLLw39psUCJq+o9Ho=";
+    npmHash = "sha256-POakift3TdnTvbKG3maRiw3bNu2r8OMcpmjfMEkcfDk=";
     subdir = "packages/rpiv-todo";
   };
 
