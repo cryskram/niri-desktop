@@ -4,6 +4,14 @@ Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal.
 
 ---
 
+## 2026-10-09 — rpiv typebox loader warning → bump to 2.12.0 (gotcha) — `pi/ext`
+
+- What: pi's loader rejects host-bundled packages declared as `dependencies` ("must be in peerDependencies with a '*' range"); rpiv 2.11.0 had `typebox` as a dep, v2.12.0 moved it to peerDeps.
+- Why: An installed copy bypasses pi's loader → duplicate runtime modules; warning surfaces as `[Extension issues]` on startup.
+- How: `pi/packages.nix` bump `rpivExtension` tag + re-capture npmHash (fakeHash → build → got:). Also: renaming an extension (zentui → pi-powerline) must update `regions_of` anchors in `scripts/update-pi-extensions.py` or `--check` dies with "cannot find anchor".
+
+Source: user reported Extension issues after veridb/trusted-folder wiring; upstream v2.12.0 fixed it.
+
 ## 2026-10-09 — pi MCP paths: user `~/.pi/agent/mcp.json`, project `.pi/mcp.json` (gotcha) — `pi/mcp`
 
 - What: pi 0.99 reads user-level MCP servers from `~/.pi/agent/mcp.json` and project servers from `.pi/mcp.json` (`pi mcp add --local`); `~/.config/mcp/mcp.json` is the Claude Code convention, not pi's.
