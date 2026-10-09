@@ -4,6 +4,56 @@ Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal.
 
 ---
 
+## 2026-10-09 — pi MCP paths: user `~/.pi/agent/mcp.json`, project `.pi/mcp.json` (gotcha) — `pi/mcp`
+
+- What: pi 0.99 reads user-level MCP servers from `~/.pi/agent/mcp.json` and project servers from `.pi/mcp.json` (`pi mcp add --local`); `~/.config/mcp/mcp.json` is the Claude Code convention, not pi's.
+- Why: A veridb README pointed pi users at the wrong file; project config is also ignored until the project is trusted (`pi mcp list` says so).
+- How: Validate with `pi mcp list`; keep credential-bearing servers user-level, and note `.pi/` is gitignored in this repo so project entries stay local.
+
+Source: pi mcp.md docs + `pi mcp --help` output during veridb wiring.
+
+---
+
+## 2026-10-08 — Name the platform plan implementation v2 (preference) — `phoenix/docs`
+
+- What: The Phoenix Dev/QA platform plan should be titled and discoverable as “Implementation V2.”
+- Why: It is a versioned proposal alongside the current Compose-based implementation, not a generic implementation plan.
+- How: Use `docs/implementation-v2.md` and link it from the Phoenix documentation index.
+
+Source: user naming correction.
+
+## 2026-10-08 — Radar's MCP access must be RBAC-scoped (gotcha) — `phoenix/radar`
+
+- What: Skyhook Radar's MCP can expose write operations; MCP client confirmations do not replace Kubernetes RBAC.
+- Why: A shared in-cluster UI/MCP endpoint can otherwise inherit broad ServiceAccount access.
+- How: Start read-only, keep secrets/exec/Helm writes disabled for general users, and require OIDC/proxy auth if exposed.
+
+Source: `skyhook-io/radar` README and in-cluster/MCP documentation.
+
+## 2026-10-08 — Zot can persist registry blobs in Krutrim object storage (gotcha) — `phoenix/registry`
+
+- What: Zot supports S3-compatible remote storage, and Krutrim documents an S3-compatible object store; endpoint compatibility still needs a push/pull test.
+- Why: A registry can recover after VM loss without nightly image exports, but raw bucket-age deletion can remove blobs still referenced by image manifests.
+- How: Test Zot's S3 driver, then use Zot retention/GC and protect promoted image digests.
+
+Source: Zot storage/retention docs and Krutrim Object Storage docs.
+
+## 2026-10-08 — Phoenix should mirror production Kubernetes (decision) — `phoenix/k3s`
+
+- What: Dev and QA should use K3s/Helm/Traefik to match the company's AWS Kubernetes/ArgoCD production workflow; Compose is not the target runtime.
+- Why: Environment parity is a primary requirement, so Kubernetes familiarity and deployment behavior outweigh minimizing platform components.
+- How: Design the dev/QA promotion path around OCI image digests, Helm releases, and K3s while keeping Phoenix as the developer-facing CLI.
+
+Source: user correction — production parity is a project requirement.
+
+## 2026-10-08 — Phoenix needs immutable images for promotion (gotcha) — `phoenix/ci`
+
+- What: Phoenix currently builds on the target VM and does not push to its local registry; QA stacks also share VM-wide Kafka topics despite per-stack DB/Redis.
+- Why: Cross-VM promotions need image digests/manifests, and parallel QA stacks need topic isolation to avoid cross-test events.
+- How: In `~/Projects/TAP/phoenix`, add registry push-by-digest and release manifests; namespace Kafka topics or broker per QA stack.
+
+Source: inspected Phoenix README, `docs/operations.md`, `docs/architecture.md`, and `docs/backlog.md`.
+
 ## 2026-10-07 — This journal is the preference memory (decision) — `pi/skill`
 
 - What: `pi/skills/learnings/LEARNINGS.md` is the single append-only journal for preferences, decisions, and reusable gotchas across all pi agents/sessions.
