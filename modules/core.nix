@@ -257,6 +257,21 @@ in
           command = "${pkgs.nodejs}/bin/node";
           args = [ "${piPackages.dummy-mcp}/server.mjs" ];
         };
+        # VeriDB — policy-controlled database MCP for AI agents (PostgreSQL).
+        # Source: /home/vageesh/Projects/veridb. The binary is built with
+        # `make build` over there; this entry just execs it, so rebuild the
+        # binary after veridb updates. Credentials never land here: the server
+        # reads them itself from its own .env via -env-file, and the local
+        # config it points at (veridb.local.yaml) is gitignored upstream.
+        veridb = {
+          command = "/home/vageesh/Projects/veridb/bin/veridb";
+          args = [
+            "-config"
+            "/home/vageesh/Projects/veridb/configs/veridb.local.yaml"
+            "-env-file"
+            "/home/vageesh/Projects/veridb/.env"
+          ];
+        };
       };
     };
 
