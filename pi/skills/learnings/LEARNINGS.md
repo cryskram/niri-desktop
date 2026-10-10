@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-10 — Pi footer: zentui, not powerline (preference) — `pi/ui`
+
+- What: The Pi footer flipped zentui → pi-powerline (1aab21b) → zentui 0.30.0 (c68ba0f); current state is zentui with powerline's settings/vibes fully removed.
+- Why/Context: Powerline's vibe/queue/CD feature set didn't stick; zentui's opencode-style TUI footer is the wanted feel. Powerline-only config (`powerline.*`, `workingVibe*`, vibes file) must not be reintroduced without asking.
+- How: Edit `pi/packages.nix` zentui block + `modules/core.nix` extensions; keep `jev-router.ts` (routing is footer-agnostic, its `jev-route` status key is just ignored by zentui).
+
+Source: user instruction "revert back to zentui. remove powerline" after powerline era.
+
 ## 2026-10-10 — Sustain humor beyond a one-liner (preference) — `pi/tone`
 
 - What: Pi should carry its playful, funny voice through substantive responses instead of spending the whole humor budget on one opening line.
