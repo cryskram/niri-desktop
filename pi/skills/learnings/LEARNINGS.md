@@ -4,6 +4,14 @@ Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal.
 
 ---
 
+## 2026-10-10 — Proton VPN “won't launch” = tray-minimized + wrong binary name (gotcha) — `nix/vpn`
+
+- What: GUI binary is `protonvpn-app` (NOT `proton-vpn` — old script/docs used that name, so `vpn-toggle`'s proton-gui branch was dead code); and `~/.config/Proton/VPN/app-config.json` had `"start_app_minimized": true`, making the app destroy its window ~9ms after creating it — looks like it never opens.
+- Why/Context: app keeps running headless in tray; symptom is “I click it and nothing happens” even though `pgrep -f protonvpn-app-wrapped` finds it.
+- How/Apply: launch/kill via `protonvpn-app`; flip `start_app_minimized` to `false` (app rewrites this file on exit, so it can't live in the flake). Debug similar cases with `WAYLAND_DEBUG=1` + grep `xdg_toplevel.*destroy()` and `niri msg windows`.
+
+Source: live debug session 2026-10-10 — user asked “why isnt proton vpn launching?”.
+
 ## 2026-10-09 — rpiv typebox loader warning → bump to 2.12.0 (gotcha) — `pi/ext`
 
 - What: pi's loader rejects host-bundled packages declared as `dependencies` ("must be in peerDependencies with a '*' range"); rpiv 2.11.0 had `typebox` as a dep, v2.12.0 moved it to peerDeps.

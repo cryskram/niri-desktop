@@ -108,7 +108,7 @@
           opts="$opts\nproton (Proton VPN)"
         fi
         # also offer GUI if available
-        if command -v proton-vpn >/dev/null 2>&1; then
+        if command -v protonvpn-app >/dev/null 2>&1; then
           opts="$opts\nproton-gui (Proton VPN app)"
         fi
         printf "%b" "$opts" | ${pkgs.fuzzel}/bin/fuzzel --dmenu --prompt "VPN: " 2>/dev/null | cut -d' ' -f1 || echo "wg0"
@@ -119,10 +119,10 @@
       fi
       case "$TARGET" in
         proton-gui)
-          if pgrep -x proton-vpn >/dev/null 2>&1; then
+          if pgrep -f protonvpn-app-wrapped >/dev/null 2>&1; then
             notify-send "VPN" "Proton VPN GUI already running" 2>/dev/null || true
           else
-            proton-vpn 2>/dev/null & disown
+            protonvpn-app 2>/dev/null & disown
             notify-send "VPN" "Proton VPN GUI launched" 2>/dev/null || true
           fi
           exit 0

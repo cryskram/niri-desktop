@@ -8,7 +8,7 @@
 #   systemctl status wg-quick-wg0  /  systemctl status wg-quick-proton  /  systemctl status openvpn-company  /  nmcli connection show
 #
 # Proton VPN: two options —
-#   1) GUI app (proton-vpn): `proton-vpn` → login, pick server (easiest, dynamic)
+#   1) GUI app (proton-vpn): `protonvpn-app` → login, pick server (easiest, dynamic)
 #   2) WireGuard config: account.protonvpn.com → Downloads → WireGuard →
 #      download .conf for a server, save as `secrets/proton.conf` (600), rebuild,
 #      then `systemctl start wg-quick-proton` (static, fastest, no GUI)
@@ -115,7 +115,7 @@ in
     wireguard-tools
     openvpn
     networkmanager-openvpn
-    proton-vpn # Official GUI — `proton-vpn` → login, pick server (dynamic)
+    proton-vpn # Official GUI — binary is `protonvpn-app` → login, pick server (dynamic)
   ];
 
   # Helpful comment for `nixos-rebuild` evaluation when no file exists:
@@ -125,5 +125,5 @@ in
   #   sudo systemctl start wg-quick-proton   # Proton WireGuard
   #   sudo systemctl status wg-quick-proton  # check
   #   nmcli connection import type wireguard file secrets/proton.conf  # alternative via NM
-  # Or just run the GUI: `proton-vpn` → login → pick server (no file needed).
+  # Or just run the GUI: `protonvpn-app` → login → pick server (no file needed).
 }
