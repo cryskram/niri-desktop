@@ -1,6 +1,6 @@
 # Context — niri-desktop for Pi
 
-This is the runnable context for every pi session in this repo. Read it alongside `pi/skills/learnings/LEARNINGS.md` and `AGENTS.md`. It tells you what this repo is, how it is laid out, and how to work in it without re-discovery.
+This is the runnable context for every pi session in this repo. Read it alongside `AGENTS.md` and the shared brain map at `pi/brain/README.md`. The shared `learnings` skill owns durable preferences; this file describes only the repo's stack, layout, and working conventions.
 
 ## What this repo is
 
@@ -10,7 +10,7 @@ Reproducible NixOS desktop/workstation around **Niri** (scrollable tiling) + **N
 
 - **Nix:** `nixpkgs` `nixos-26.05`, `nixpkgs-unstable` (overlays `pi`, `opencode`, `herdr`), `home-manager` `release-26.05`, `pi` via `lukasl-dev/pi.nix`, `noctalia`, `catppuccin`, `spicetify-nix`.
 - **Compositor/shell:** Niri (config validated by `nix flake check`), Noctalia/QML islands, SDDM Astronaut, Catppuccin tokens (`theme/tokens.nix`).
-- **Pi:** Declarative via `modules/core.nix` (`programs.pi.coding-agent`): `pi/rules.md` → `--append-system-prompt`, `pi/skills/` → `--skill`, `pi/extensions/*.ts` → `--extension`, `pi/themes/` → `--theme`. Office skills live outside the repo (`~/Projects/TAP/...`) via `extraArgs --skill` — do not duplicate. Quick `pi --list` should show `mcp-adapter, pi-btw, rpiv-*, zentui, pi-subagents, pi-web-access`.
+- **Pi:** Declarative via `modules/core.nix` (`programs.pi.coding-agent`): `pi/brain/APPEND_SYSTEM.md` → `--append-system-prompt`, `pi/brain/AGENTS.md` → global Pi context at `~/.pi/agent/AGENTS.md`, `pi/brain/` → shared lookup path `~/.pi/agent/brain/`, `pi/skills/` → `--skill`, `pi/extensions/*.ts` → `--extension`, `pi/themes/` → `--theme`. Office skills live outside the repo (`~/Projects/TAP/...`) via `extraArgs --skill` — do not duplicate. Quick `pi --list` should show `mcp-adapter, pi-btw, rpiv-*, zentui, pi-subagents, pi-web-access`.
 - **Dev:** `devenv` + `direnv` + Docker; language toolchains (Go/Java/Node/Python/Rust) and apps (Ghostty, Chrome, Slack, etc.) via `home/development.nix` + `applications.nix`.
 
 ## Layout (where things live)
@@ -20,7 +20,7 @@ flake.nix / configuration.nix / hardware-configuration.nix
 modules/{core,theme,shell,niri,sddm,docker,direnv,vpn}.nix   # system
 home/{niri,shell,development,git,direnv,...}.nix              # HM user
 theme/tokens.nix + noctalia-macchiato.json                    # tokens
-pi/rules.md, pi/context.md, pi/skills/, pi/extensions/, pi/themes/  # pi declarative
+pi/brain/{AGENTS,APPEND_SYSTEM,README}.md, pi/context.md, pi/skills/, pi/extensions/, pi/themes/  # Pi declarative
 dev/{shared,templates,company}/                               # personal devenvs (company stays detached)
 ```
 
@@ -35,8 +35,9 @@ dev/{shared,templates,company}/                               # personal devenvs
 
 ## Pi conventions
 
-- **Memory**: `pi/skills/learnings/` is the journal (`SKILL.md` = instructions, `LEARNINGS.md` = data). Read at start, append on signal — `pi/rules.md` § Memory enforces it.
-- **Discovery**: Prefer `repo-understanding` for unfamiliar areas before coding; use `learnings` for preferences. Prompt templates (`pi/prompts/`) are intentionally empty — skills are the mechanism.
+- **Memory**: `pi/skills/learnings/` is the shared journal (`SKILL.md` = instructions, `LEARNINGS.md` = data). Read at start, append on signal — `pi/brain/APPEND_SYSTEM.md` + global `AGENTS.md` enforce the protocol.
+- **Delegation**: `modules/core.nix` explicitly enables inherited global context and skills for every built-in Pi subagent; the pi-subagents defaults otherwise omit them.
+- **Discovery**: Prefer `repo-understanding` for unfamiliar areas before coding; use `learnings` for preferences. `vageesh` is an evidence-only skill scaffold. Prompt templates (`pi/prompts/`) are intentionally empty — skills are the mechanism.
 - **Extensions**: `safety.ts` (destructive-command gate) + `querion-sync.ts` (`/sync`) are local; third-party are pinned in `pi/packages.nix` (withDeps pattern). Update via `scripts/update-pi-extensions.py`.
 - **MCP**: `dummy` harness via `pi/mcp-servers/dummy` (pure derivation, pinned npmHash). `pi-web-access` gives `web_search/fetch/source_check` to subagents; parallel-search via MCP is separate namespace.
 

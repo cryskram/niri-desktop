@@ -15,7 +15,7 @@ One journal, many sessions. This skill owns `LEARNINGS.md` in this same director
 - **After you discover something reusable**: A pitfall, a non-obvious command, a module pattern that works (or doesn't), a quirk of Niri/Noctalia/pi.nix — distill it and append.
 - **End of session / before handoff**: If anything new was learned, append before closing.
 
-Do not treat this as optional. `pi/rules.md` requires it. If unsure whether something is worth remembering, remember it — 2-4 lines is cheap, re-learning is expensive.
+Do not treat this as optional. The global Pi brain (`pi/brain/APPEND_SYSTEM.md` and `pi/brain/AGENTS.md`) requires it. If unsure whether something is worth remembering, remember it — 2-4 lines is cheap, re-learning is expensive.
 
 ## The file
 
@@ -51,7 +51,7 @@ Tags: short scopes like `nix/flake`, `pi/skill`, `git/commit`, `shell/fish`, `de
 ## Write protocol
 
 1. Ensure `LEARNINGS.md` still reads coherently — check last entry's date/title to avoid duplicates.
-2. Use `edit` to append ONE entry at the top (just under the header), preserving reverse chronological order. Never rewrite history, only append.
+2. A coordinating/main agent uses `edit` to append ONE entry at the top (just under the header), preserving reverse chronological order. A delegated child reports a concise candidate to its parent instead of editing the shared journal directly, unless explicitly assigned ownership.
 3. Keep edits atomic and precise — one `edit` with `oldText` = header block → new entry inserted. Do not reformat the whole file.
 4. If the learning corrects a prior entry, add a new entry that says `Supersedes: YYYY-MM-DD — Title` and keep both. Single source of truth means history is visible.
 

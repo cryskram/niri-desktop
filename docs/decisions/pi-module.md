@@ -34,8 +34,9 @@ until the next rebuild). Three "proper" alternatives were investigated on
 ## Alternatives Considered
 1. **Stay on `lukasl-dev/pi.nix` (chosen)** — the only option that is
    both declarative and compatible with stable pins today. One block in
-   `modules/core.nix`, all current wiring (`pi/rules.md`, `pi/skills/`,
-   `pi/prompts/`, `pi/themes/`, `pi/packages.nix` extensions, subagent
+   `modules/core.nix`, all current wiring (`pi/brain/APPEND_SYSTEM.md`,
+   `pi/brain/AGENTS.md`, `pi/skills/`, `pi/prompts/`, `pi/themes/`,
+   `pi/packages.nix` extensions, subagent
    defaults, MCP `mcp.json`, Querion config) keeps working unchanged.
 2. **Bump HM to master and migrate now** — full-desktop churn for one
    module; HM master + `nixos-26.05` mismatch risk. Not worth it.
@@ -73,7 +74,7 @@ first landed on `master` ~June 2026, after the 26.05 branch-off) and
   |---|---|
   | `enable` | `enable` |
   | `package` (unstable `pi-coding-agent`) | `package` (same expression; HM default `pkgs.pi-coding-agent` also fine once 26.05+ carries it) |
-  | `rules = ../pi/rules.md` | `appendSystem = ../pi/rules.md` (same semantics: appended, not replacing; filename stays `rules.md`, content lands in `APPEND_SYSTEM.md`) |
+  | `rules = ../pi/brain/APPEND_SYSTEM.md` | `appendSystem = ../pi/brain/APPEND_SYSTEM.md` (same semantics: appended, not replacing; content lands in the agent directory's `APPEND_SYSTEM.md`) |
   | `settings = { … }` (provider/model/thinking/theme/tools/subagents) | `settings = { … }` (identical dict) |
   | `skills` + `extraArgs --skill` (incl. absolute `~/Projects/TAP/…` paths) | `settings.skills = [ … ]` (settings resource arrays accept absolute and store paths; keep `extraArgs` TAP skills here) and/or `home.file.".pi/agent/skills/…"` symlinks (agent dir auto-discovery) |
   | `extensions` (store paths + `pi/extensions/*.ts`) | `settings.extensions = [ … ]` and/or `home.file.".pi/agent/extensions/…"` |

@@ -13,6 +13,14 @@ let
   # Third-party pi extensions, pinned in pi/packages.nix. Hoisted so both the
   # extensions list and the skills list below can reference them.
   piPackages = import ../pi/packages.nix { inherit pkgs; };
+
+  # pi-subagents excludes global context and skills by default. Opt every built-in
+  # role into the same instructions, memory skill, and project context as the parent.
+  sharedSubagentContext = {
+    inheritProjectContext = true;
+    inheritGlobalContext = true;
+    inheritSkills = true;
+  };
 in
 {
   nix.settings = {
@@ -108,31 +116,38 @@ in
         # (background children already inherit ambient extensions). Works for any cwd.
         defaultSubagentOnlyExtensions = [ "${piPackages.pi-web-access}" ];
         agentOverrides = {
-          # Second-opinion oracle, reviews and research all stay on jev/auto; only budgets differ.
-          oracle = {
+          # Second-opinion oracle, reviews and research stay on jev/auto; only budgets differ.
+          oracle = sharedSubagentContext // {
             model = "auto";
             thinking = "high";
           };
-          reviewer = {
+          reviewer = sharedSubagentContext // {
             model = "auto";
             thinking = "high";
           };
-          researcher = {
+          researcher = sharedSubagentContext // {
             model = "auto";
             thinking = "high";
           };
+          evidence-auditor = sharedSubagentContext;
+          delegate = sharedSubagentContext;
           # Workers/scouts: high thinking as requested for jev auto.
-          worker.thinking = "high";
-          scout.thinking = "high";
+          worker = sharedSubagentContext // {
+            thinking = "high";
+          };
+          scout = sharedSubagentContext // {
+            thinking = "high";
+          };
         };
       };
     };
 
     # Repo-owned skills (tracked via the flake). The parent dir is passed (like
     # promptTemplates) so pi discovers pi/skills/<name>/SKILL.md and labels the
-    # skill by its own folder name instead of the hashed store root. Company
-    # skills stay outside the repo (~/Projects/TAP) and are wired via extraArgs
-    # strings (bypasses flake path copy).
+    # skill by its own folder name instead of the hashed store root. This includes
+    # the shared learnings journal and the Vageesh skill scaffold. Company skills
+    # stay outside the repo (~/Projects/TAP) and are wired via extraArgs strings
+    # (bypasses flake path copy).
     #
     # pi-btw's bundled skill is listed explicitly: pi only reads a package's
     # skills manifest for npm:/git: sources, so passing the extension as a local
@@ -142,9 +157,9 @@ in
       "${piPackages.pi-btw}/skills/btw"
     ];
 
-    # Global operating rules appended to pi's system prompt (safety, secrets,
-    # declarative-repo awareness, learnings). Enforced at the tool level by the extension below.
-    rules = ../pi/rules.md;
+    # Compact global Pi bootstrap, appended to the built-in system prompt.
+    # The layered cross-project contract is also linked as user-level AGENTS.md below.
+    rules = ../pi/brain/APPEND_SYSTEM.md;
 
     # Prompt templates: intentionally empty — skills are the mechanism (see pi/skills/).
     # Keep `pi/prompts/.gitkeep` so the directory tracks; add real templates deliberately.
@@ -227,6 +242,12 @@ in
     ];
 
     home.stateVersion = "26.05";
+
+    # Pi discovers this user-level context file across working directories.
+    # Expose the whole canonical brain beside it for global/child-agent lookup;
+    # never hand-edit these generated ~/.pi links.
+    home.file.".pi/agent/AGENTS.md".source = ../pi/brain/AGENTS.md;
+    home.file.".pi/agent/brain".source = ../pi/brain;
 
     xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
       "$schema" = "https://opencode.ai/config.json";

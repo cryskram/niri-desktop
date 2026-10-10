@@ -179,16 +179,16 @@ source of truth, and every change must reproduce on a fresh system.
 
 Pi customization lives in `modules/core.nix` (`programs.pi.coding-agent`):
 
-* skills → `pi/skills/` (`skills`); repo-owned: `repo-understanding` + `learnings` (durable journal `pi/skills/learnings/LEARNINGS.md` via `learnings` skill, read at session start, append on signal); company skills stay outside the repo (TAP `claude-plugins/...` via `extraArgs --skill`)
+* skills → `pi/skills/` (`skills`); repo-owned: `repo-understanding`, `learnings` (shared journal `pi/skills/learnings/LEARNINGS.md`), and the evidence-only `vageesh` scaffold; company skills stay outside the repo (TAP `claude-plugins/...` via `extraArgs --skill`)
 * extensions → `pi/packages.nix` + `pi/extensions/*.ts` (`extensions`):
   * `pi-btw` — `/btw` parallel side sessions
   * `rpiv-ask-user-question` / `rpiv-todo` — structured questions + todo overlay
   * `zentui` — footer/status TUI
-  * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; defaultModel `muse-spark-1.2-contributor`, all children muse — never `deepseek-*`)
+  * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; default model `auto` via jev; all built-ins explicitly inherit shared global/project context and skills; avoid `deepseek-*` because it leaks tool calls as text)
   * `pi-web-access` — `web_search`/`fetch_content`/`source_check` for researcher/evidence-auditor; coexists with native MCP parallel-search (different tool namespaces)
   * local: `pi/extensions/safety.ts` (destructive-command gate) + `querion-sync.ts` (`/sync`)
-* global rules → `pi/rules.md` (`rules`) — now includes mandatory `learnings` journal (`Memory`) + `pi/context.md` protocol
-* context → `pi/context.md` (runnable project context, <100 lines) + repo-root `context.md` symlink → `pi/context.md`; `AGENTS.md` is the formal operating manual, `context.md`/`learnings` is mutable memory
+* shared Pi brain → `pi/brain/README.md` documents ownership; `pi/brain/AGENTS.md` is installed as user-level `~/.pi/agent/AGENTS.md`; `pi/brain/APPEND_SYSTEM.md` is passed through `rules` as `--append-system-prompt` (never replace Pi's built-in prompt with `SYSTEM.md`)
+* context → `pi/context.md` (runnable project context, <100 lines) + repo-root `context.md` symlink → `pi/context.md`; repository-root `AGENTS.md` is the niri-desktop-specific operating manual; shared preferences and discoveries live in the `learnings` journal
 * prompt templates → intentionally empty (`pi/prompts/.gitkeep`, `promptTemplates = [ ]`) — skills preferred over prompts (see pi docs: skills carry description + on-demand loading)
 * theme → `pi/themes/catppuccin-macchiato.json` (`themes`)
 * settings → `defaultProvider`/`defaultModel`/`defaultThinkingLevel`/`theme`/`defaultTools` + ergonomic defaults (`enableSkillCommands`, `compaction`, `terminal.showTerminalProgress`, `autocompleteMaxVisible`) + `subagents.defaultModel`/`agentOverrides` (generic, project `.pi/settings.json` can override per-repo)

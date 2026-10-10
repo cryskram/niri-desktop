@@ -37,8 +37,11 @@ pi/skills/*
 !pi/skills/repo-understanding/**
 !pi/skills/learnings/
 !pi/skills/learnings/**
-# pi/rules, pi/context, pi/themes, pi/extensions are safe to commit
-!pi/rules.md
+!pi/skills/vageesh/
+!pi/skills/vageesh/**
+# pi brain, context, themes, and extensions are safe to commit
+!pi/brain/
+!pi/brain/**
 !pi/context.md
 !pi/themes/
 !pi/themes/*.json

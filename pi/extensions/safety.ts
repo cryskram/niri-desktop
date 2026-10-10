@@ -5,7 +5,7 @@
  * the user to confirm. In non-interactive mode the command is blocked. Ordinary
  * commands are never prompted.
  *
- * Paired with pi/rules.md, which documents the same policy for the model.
+ * Paired with pi/brain/APPEND_SYSTEM.md, which documents the same policy for the model.
  */
 
 import { isToolCallEventType, type ExtensionAPI } from "@earendil-works/pi-coding-agent";

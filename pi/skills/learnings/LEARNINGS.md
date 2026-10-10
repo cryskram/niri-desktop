@@ -2,6 +2,46 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-10 — Sustain humor beyond a one-liner (preference) — `pi/tone`
+
+- What: Pi should carry its playful, funny voice through substantive responses instead of spending the whole humor budget on one opening line.
+- Why/Context: User says Pi remains too restrained despite explicitly requesting humor.
+- How/Apply: Weave several relevant comic beats through relaxed explanations; ease off for serious, stressed, or tiny exchanges.
+
+Source: User correction — asked to increase Pi's humor.
+
+## 2026-10-10 — Git flakes exclude untracked source files (gotcha) — `nix/flake`
+
+- What: Flake evaluations cannot import newly created Git source paths until Git tracks them, even when they exist on disk.
+- Why/Context: The first `nix flake check` rejected the new `pi/brain/AGENTS.md` as untracked.
+- How/Apply: Stage new source files normally, or use `git add -N -- <paths>` for evaluation without staging their contents.
+
+Source: Initial shared-brain validation failed on an untracked Nix path; passed after intent-to-add.
+
+## 2026-10-10 — Pi subagent model docs drifted from config (gotcha) — `pi/subagents`
+
+- What: The root agent manual claimed subagents used `muse-spark-1.2-contributor`, but `modules/core.nix` configures `auto` through jev.
+- Why/Context: Stale guidance can override the actual declarative model routing in future sessions.
+- How/Apply: Treat `modules/core.nix` as authoritative for live Pi defaults and keep the model summary in `AGENTS.md` aligned.
+
+Source: Compared repository instructions with current `modules/core.nix` during shared-brain setup.
+
+## 2026-10-10 — pi-subagents omit global context by default (gotcha) — `pi/subagents`
+
+- What: Built-in Pi subagents exclude global `AGENTS.md` and discovered skills unless `inheritGlobalContext` and `inheritSkills` are enabled.
+- Why/Context: A shared brain is not automatic in pi-subagents 0.73.1 even though repository instructions are inherited.
+- How/Apply: Explicitly enable project context, global context, and skills in `modules/core.nix` overrides for every built-in role.
+
+Source: pi-subagents 0.73.1 `docs/agents.md` — default inheritance behavior.
+
+## 2026-10-10 — Layered Pi brain, Pi-wide only (decision) — `pi/brain`
+
+- What: Keep one canonical layered brain shared by Pi sessions and delegated agents; prepare the Vageesh skill as an evidence-only scaffold.
+- Why/Context: User chose Pi-only scope and layered docs; other agent products and inferred twin traits are out of scope.
+- How/Apply: Maintain global operating guidance, Pi append instructions, project `AGENTS.md`, and durable learnings as distinct sources.
+
+Source: User choices during shared-agent-brain setup.
+
 ---
 
 ## 2026-10-10 — Proton VPN “won't launch” = tray-minimized + wrong binary name (gotcha) — `nix/vpn`
