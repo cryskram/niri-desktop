@@ -59,8 +59,8 @@ EXTENSIONS = [
         "deps": False,
     },
     {
-        "name": "pi-powerline",
-        "repo": ("nicobailon", "pi-powerline-footer"),
+        "name": "zentui",
+        "repo": ("lmilojevicc", "pi-zentui"),
         "deps": False,
     },
     {
@@ -185,7 +185,7 @@ def regions_of(text):
     anchors = {
         "rpiv": "rpivExtension =",
         "pi-btw": "pi-btw = plain {",
-        "pi-powerline": "pi-powerline = plain {",
+        "zentui": "zentui = plain {",
         "pi-subagents": "pi-subagents = withDeps {",
         "pi-web-access": "pi-web-access = withDeps {",
         "rpiv-ask-user-question": "rpiv-ask-user-question = rpivExtension {",

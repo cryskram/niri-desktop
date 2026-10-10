@@ -164,18 +164,19 @@ in
   };
 
   # Starship-style statusline + opencode-style TUI (owns the footer).
-  # Powerline footer — replaces zentui. Shows git branch, model, tokens,
-  # context %, cost, and thinking level with powerline segments. Catppuccin
-  # Macchiato palette, Nerd Font aware. Configure via `pi --powerline` or
-  # `~/.pi/agent/settings.json` → `powerline`.
-  pi-powerline = plain {
-    pname = "pi-powerline";
-    version = "0.19.1";
+  # zentui — replaces pi-powerline-footer. No npm deps (plain, ships TS source
+  # pi loads directly; peers satisfied by host). Configure via `/zentui` at
+  # runtime → ~/.pi/agent/zentui.json (components/styles/modelLabel).
+  # NOTE: its footer defaults to `starship` mode — harmless now that
+  # pi-powerline is gone; use `/zentui` to switch footer style if needed.
+  zentui = plain {
+    pname = "pi-zentui";
+    version = "0.30.0";
     src = pkgs.fetchFromGitHub {
-      owner = "nicobailon";
-      repo = "pi-powerline-footer";
-      tag = "v0.19.1";
-      hash = "sha256-KgRDsu5qCHeWbJvCZgCFWU0yVxv7J5fd3IpKvFV7Pco=";
+      owner = "lmilojevicc";
+      repo = "pi-zentui";
+      tag = "v0.30.0";
+      hash = "sha256-b2E3rcsn9J/WUT+k1PiYr7qXWzsYWFjtw2luTNhTdkM=";
     };
   };
 

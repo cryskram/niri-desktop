@@ -47,7 +47,8 @@ import type {
 
 const PROVIDER = "opencode-go" as const;
 
-/** Status key published for the powerline footer (`powerline.customItems`). */
+/** Status key published for the footer (consumed by whatever UI shows
+ * extension statuses — powerline customItems when that footer is active). */
 const STATUS_KEY = "jev-route";
 
 // Model IDs must match models-store.json exactly
@@ -57,7 +58,7 @@ const DEEPSEEK = "deepseek-v4.1-flash";
 const GLM_FLASH = "glm-5.3-flash";
 const MIMO_FLASH = "mimo-v2.6-flash";
 
-/** Short footer labels — fits the powerline bar. */
+/** Short footer labels — one glance per routed model. */
 const SHORT: Record<string, string> = {
   [MUSE]: "muse-1.3",
   [GPT6_LUNA]: "gpt-6-luna",
