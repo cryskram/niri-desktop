@@ -47,17 +47,32 @@ in
     ];
   };
 
+  # Coding-agent CLIs that live on nixpkgs-unstable, exposed through one imported
+  # instance. `import` (not `.legacyPackages`) is deliberate: legacyPackages carries
+  # nixpkgs' own default config, which refuses unfree packages — that broke evaluation
+  # for claude-code (unfree) even though the system sets allowUnfree. `config =
+  # prev.config` mirrors the system nixpkgs config (allowUnfree, …).
   nixpkgs.overlays = [
-    (final: prev: {
-      opencode = nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.opencode;
+    (final: prev:
+      let
+        unstable = import nixpkgs-unstable {
+          system = prev.stdenv.hostPlatform.system;
+          config = prev.config;
+        };
+      in
+      {
+        opencode = unstable.opencode;
+        pi-coding-agent = unstable.pi-coding-agent;
 
-      pi-coding-agent =
-        nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.pi-coding-agent;
+        # herdr — agent multiplexer / terminal workspace for coding agents.
+        herdr = unstable.herdr;
 
-      # herdr — agent multiplexer / terminal workspace for coding agents.
-      # Only in nixpkgs-unstable so far, exposed via the overlay like pi/opencode.
-      herdr = nixpkgs-unstable.legacyPackages.${prev.stdenv.hostPlatform.system}.herdr;
-    })
+        # claude-code — Anthropic's agentic coding CLI (unfree; releases far more
+        # often than stable follows: 2.1.292 on unstable vs 2.1.223 in stable 26.05).
+        # nixpkgs wraps its runtime deps (ripgrep, bubblewrap, socat); the former
+        # claude-code-bin attribute was merged into it upstream.
+        claude-code = unstable.claude-code;
+      })
   ];
 
   programs.pi.coding-agent = {
