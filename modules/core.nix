@@ -188,9 +188,13 @@ in
         "${pi-web-access}"
         ../pi/extensions/safety.ts
         ../pi/extensions/jev-router.ts
-        # Publishes configured MCP servers (mcp.json user+project) as the `mcp`
-        # status key for zentui's Extension statuses (/zentui extensions).
-        ../pi/extensions/mcp-status.ts
+        # MCP panel (/mcpx) + live `mcp` status key for zentui's Extension statuses
+        # (/zentui extensions): enabled servers as `● name(count)`, refreshed on
+        # a 2s poll so a disabled server disappears without waiting for the next prompt.
+        # Pass the directory (not index.ts): Nix copies a single file path alone
+        # into the store, dropping the sibling panel.ts/state.ts imports. A
+        # directory copies whole, and pi resolves <dir>/index.ts itself.
+        ../pi/extensions/mcp-panel
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
         # Configured via xdg.configFile."querion/config.json" (home-manager block below).
         ../pi/extensions/querion-sync.ts
