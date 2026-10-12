@@ -209,7 +209,7 @@ export function snapshotTools(getAll: () => ToolInfo[], servers: McpServerEntry[
 	return byServer;
 }
 
-/** `● dummy(3)·○ veridb` — enabled servers only; disabled ones disappear (footer contract). */
+/** `● dummy(3) · ○ veridb` — enabled servers only; disabled ones disappear (footer contract). */
 export function footerStatus(servers: McpServerEntry[], getAll: () => ToolInfo[]): string | undefined {
 	const parts: string[] = [];
 	for (const entry of servers) {
@@ -217,7 +217,7 @@ export function footerStatus(servers: McpServerEntry[], getAll: () => ToolInfo[]
 		const live = serverTools(getAll, entry.name);
 		parts.push(live.length > 0 ? `● ${entry.name}(${live.length})` : `○ ${entry.name}`);
 	}
-	return parts.length > 0 ? parts.join("·") : undefined;
+	return parts.length > 0 ? parts.join(" · ") : undefined;
 }
 
 /** Plain-text status for non-TUI modes (`/mcpx` outside the interactive TUI). */

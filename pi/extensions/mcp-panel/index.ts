@@ -3,7 +3,7 @@
  *
  * Footer: publishes the `mcp` status key for zentui's Extension statuses
  * (`/zentui extensions` places it; configured right/zentui in zentui.json).
- * Format is `●dummy(3)·○veridb`: ● connected with tool count, ○ configured but
+ * Format is `● dummy(3) · ○ veridb`: ● connected with tool count, ○ configured but
  * not connected, disabled servers hidden entirely. Unlike the old mcp-status.ts
  * (agent_start only, all configured names), this refreshes from a 2s poll plus
  * session/turn/tool events, so a server disabled via /mcp disappears within
