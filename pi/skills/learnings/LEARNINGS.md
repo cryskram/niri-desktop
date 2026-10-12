@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-13 — Querion auto-sync: agent_end, quiet, per-session guard (decision) — `pi/ext`
+
+- What: `/sync` auto-runs on pi's `agent_end` (per prompt completion, not per-turn `turn_end`); fire-and-forget with per-session in-flight+trailing flags, status-key flash only, failures silent.
+- Why/Context: A slow first upload must never block the next prompt; quiet failures keep a dead server from nagging mid-flow. Off via `/sync auto off`, `QUERION_AUTOSYNC=0`, or config `autoSync:false`.
+- How/Apply: `~/Projects/querion/pi/querion-sync.ts` is upstream, vendored to `~/niri-desktop/pi/extensions/`; verify with a mock `pi.on`/`registerCommand` harness before claiming it works.
+
+Source: user request for sync-on-completion + faster uploads; validated against pi 1.0.4 extension types.
+
 ## 2026-10-13 — dummy MCP harness removed; MCP surface is now veridb only (decision) — `pi/mcp`
 
 - What: Deleted the learning harness everywhere — `mcpServers.dummy` in `modules/core.nix`, the `dummy-mcp` derivation in `pi/packages.nix`, and the whole `pi/mcp-servers/` tree (its `node_modules` is untracked, so `git rm -r` leaves it behind and the dir still needs an `rm -r`).
