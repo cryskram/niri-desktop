@@ -2,6 +2,110 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-12 — Pi wrapper failed loading MCP panel in benchmark (gotcha) — `pi/mcp`
+
+- What: A benchmark launch through the Nix `pi` wrapper exited before a model request because `mcp-panel/index.ts` could not import `./panel.ts`.
+- Why/Context: This is separate from Relith/model behavior; the targeted replay worked with the raw Pi binary and built-in MCP only.
+- How: Repair the wrapper's MCP-panel package before relying on normal launches; the raw binary was only a local test workaround.
+
+Source: Querion/Relith Task 3 replay on 2026-10-12.
+
+## 2026-10-12 — Control allowlists must omit Relith tool names (gotcha) — `relith/pi`
+
+- What: A disabled Relith project entry did not reliably prevent tool calls when `mcp__relith__*` names remained in the control `--tools` list.
+- Why/Context: The Pi runtime can retain system/global tool declarations independently of a project `enabled:false` override.
+- How: Use a root-confined read-only workspace MCP in both arms; control allowlists only workspace tools, while treatment adds Relith tools, then inspect JSONL calls.
+
+Source: post-FTS Task 3 replay; control Relith calls invalidated that pair.
+
+## 2026-10-12 — Home-Manager Pi wrapper failed MCP panel load (gotcha) — `pi/mcp`
+
+- What: A benchmark launch through the Nix `pi` wrapper exited before a model call because its `mcp-panel` extension entrypoint could not import `./panel.ts`.
+- Why/Context: The failed startup isn't an API/model failure; later isolated testing used the raw Pi binary with built-in MCP only.
+- How: Fix the Nix extension package before relying on the wrapper again; use the raw binary only as a temporary, explicitly reported test workaround.
+
+Source: Querion cross-project Task 3 retry on 2026-10-12.
+
+## 2026-10-12 — Omit Relith names from the disabled control allowlist (gotcha) — `pi/mcp`
+
+- What: A control with `relith.enabled=false` still emitted Relith tool calls when its `--tools` allowlist explicitly included `mcp__relith__*` names.
+- Why/Context: Server toggles alone are not a reliable per-run tool boundary in every Pi launch context.
+- How: Control allowlists should contain only the rooted workspace tools; treatment adds Relith tool names, then verify JSONL call events.
+
+Source: Task 3 provenance replay in the Querion/Relith benchmark.
+
+## 2026-10-12 — `/mcpx` now owns the MCP footer + panel (decision) — `pi/mcp`
+
+- What: `pi/extensions/mcp-panel/` (index/panel/state.ts) serves the footer `mcp` key (`● dummy(3)·○ veridb`, disabled hidden, 2s poll + events) and the `/mcpx` adapter-style panel; `mcp-status.ts` removed from `core.nix`.
+- Why/Context: builtin MCP is `replaceable` — any extension registering `/mcp` unloads it (resource-loader `omitReplacedExtensions`), so the panel observes native state (config + `pi.getAllTools()` namespaces) and applies toggles via config write + `ctx.reload()` (reload re-emits `session_start`).
+- How/Apply: edit `pi/extensions/mcp-panel/*.ts`, keep strict `tsc --noEmit` clean; a read-only global mcp.json (HM store symlink) falls back to a project override automatically.
+
+Source: footer staleness report + "recreate the pi-mcp-adapter UI" request; verified with pty-driven TUI tests (panel keys, toggle→reload→footer update).
+
+## 2026-10-11 — Make Relith search ergonomic before claiming token savings (gotcha) — `relith/search`
+
+- What: Cross-repo tests exposed case-sensitive repo filters, lowercase `and` being parsed as FTS syntax, and unbounded trace graph edges bloating responses.
+- Why/Context: These failures increase retries and context size, obscuring any actual retrieval benefit.
+- How: Resolve unique repo names case-insensitively, reserve uppercase boolean words for explicit FTS, and cap trace edges relative to `max_results`.
+
+Source: Querion/VeriDB retrieval optimization (`7df9c12`).
+
+## 2026-10-11 — pi `/mcp` cannot save global toggles (gotcha) — `pi/mcp` + `nix/home-manager`
+
+- What: `~/.pi/agent/mcp.json` is a home-manager `home.file` symlink into `/nix/store` (ro), so `/mcp` Disable/Exposure on a global server fails with EACCES ("Could not update …"); same for `pi mcp add/remove`.
+- Why/Context: pi saves to the file that defines the server — any store-symlinked config path is unwritable, so global state must change in `modules/core.nix`.
+- How/Apply: Per-project `/mcp` → "Disable in this project" (writes `<cwd>/.pi/mcp.json`), one-run `pi --no-mcp` / `--exclude-tools 'mcp__X__*'`, or edit core.nix + rebuild.
+
+Source: user report 2026-10-11; write test on the symlink + `dist/extensions/mcp/config.js` save path.
+
+## 2026-10-11 — Restrict tools to isolate cross-repo Relith tests (workflow) — `relith/pi`
+
+- What: Identical Querion excerpts plus an allowlist containing only direct Relith search/read tools produced a clean control/treatment pair; treatment called Relith, while the disabled control had no callable tools.
+- Why/Context: `enabled: false` and prompt instructions alone do not stop a shell-capable agent from launching the local MCP binary.
+- How: For retrieval-isolation tests, omit shell/filesystem/codemode tools and provide the same current-repo excerpts to both arms.
+
+Source: Querion/VeriDB restricted-tool pair; protocol recorded in `docs/pi-evaluation.md`.
+
+## 2026-10-11 — Disabled MCP is not a filesystem sandbox (gotcha) — `relith/pi`
+
+- What: A Pi control with Relith disabled used Bash to launch the local `relithmcp` binary through hand-built stdio JSON-RPC, bypassing the tool gate.
+- Why/Context: An MCP toggle prevents normal tool registration, but not direct access to local binaries or indexed sibling repositories.
+- How: Isolate the control filesystem and audit tool arguments/results before scoring with/without runs.
+
+Source: Querion/VeriDB cross-project pilot; protocol guard added to `docs/pi-evaluation.md`.
+
+## 2026-10-10 — Direct MCP exposure still may not be used (gotcha) — `relith/pi`
+
+- What: In a three-task Pi pilot, six directly exposed Relith tools still received zero calls; both arms scored 18/18 on the answer rubric.
+- Why/Context: Tool availability is not tool adoption, and token deltas without retrieval are not a Relith efficacy result.
+- How: Track actual MCP invocations and treat direct-schema overhead separately from retrieval quality/cost.
+
+Source: matched direct-exposure benchmark, `docs/pi-evaluation.md`.
+
+## 2026-10-10 — Relith pilot: availability is not usage (gotcha) — `relith/pi`
+
+- What: Pi's first deferred-MCP pilot invoked no Relith tools across three code tasks; it also exposed an `IndexFile` metadata fast path that could override a changed-content hash when mtime/size matched.
+- Why/Context: MCP connectivity alone does not prove retrieval benefit, and event-driven indexing must trust content hashes over metadata.
+- How: Expose a small core tool set directly and count actual MCP calls; event-triggered indexing bypasses the mtime fast path.
+
+Source: v0.8 Pi pilot and regression fix (`3187c8c`).
+
+## 2026-10-10 — Relith v0.8 builds trust before semantic search (decision) — `relith/roadmap`
+
+- What: v0.8 prioritizes index correctness, explicit shared notes, and a Pi with/without Relith usage comparison; v0.9 starts semantic retrieval.
+- Why/Context: User selected the phased scope and asked for regular focused commits.
+- How: Compare matched Pi tasks, model/settings, quality, flow, and token usage before claiming a win.
+
+Source: User direction during Relith implementation planning.
+
+## 2026-10-10 — Relith's north star is shared agent context (decision) — `relith/product`
+
+- What: Relith's stated purpose is to give different coding agents a common context space, implemented in Go.
+- Why/Context: This is the product lens for deciding whether future scope/features belong.
+- How: Distinguish shared indexed code context from durable cross-session/agent memory.
+
+Source: User clarification during Relith product review.
+
 ## 2026-10-10 — Pi footer: zentui, not powerline (preference) — `pi/ui`
 
 - What: The Pi footer flipped zentui → pi-powerline (1aab21b) → zentui 0.30.0 (c68ba0f); current state is zentui with powerline's settings/vibes fully removed.
@@ -165,3 +269,11 @@ Source: `home/shell.nix`.
 - How: `git status`, `git diff`, secrets scan, then propose; wait for explicit confirmation before commit/push.
 
 Source: `AGENTS.md` §12 + repo history.
+
+## 2026-10-09 — Nebula webhook fan-out options, no nebula code change (decision) — `phoenix/fleet`
+
+- What: To deliver one inbound webhook (e.g. Cashfree `notify_url` on s1-nebula) to s2/s3 nebulas without editing nebula: Traefik cannot fan-out (1 request → 1 backend). Options ranked: (1) nginx `mirror` tee in front — one stable URL registered with the gateway, proxies to s1-nebula, fire-and-forget mirrors to `https://s2/s3-nebula...` (`mirror_request_body on`; stock nginx module); (2) check gateway dashboard for native multi-URL webhooks first; (3) goreplay for shadow-traffic testing (not delivery). Code ways when infra stops sufficing: forward-after-process via `PEER_NEBULAS` env (~20 lines), or publish raw webhooks to a kafka topic all stacks consume.
+- Why: Vageesh wants s1-nebula as the single registered URL with infra-only distribution until worst case; gotchas carried forward: handlers must be idempotent (gateway retries × mirrors multiply), secrets must match across stacks for signature verify, mirrors don't help s1 availability.
+- How: Tee container + Traefik route; mirrors to public `https://sX-nebula...` URLs avoid docker-network juggling.
+
+Source: user instruction 2026-10-09 — "remember these options".
