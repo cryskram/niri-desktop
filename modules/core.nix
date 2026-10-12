@@ -264,21 +264,11 @@ in
 
     # MCP servers — native pi (0.99+) reads ~/.pi/agent/mcp.json directly.
     # pi-web-access already provides web_search/fetch/source_check, so the
-    # parallel-search/deepwiki/chrome-devtools MCPs are redundant. Only the
-    # local dummy harness is kept for pi MCP learning.
+    # parallel-search/deepwiki/chrome-devtools MCPs are redundant. The local
+    # dummy harness that once lived here has been removed now that the MCP
+    # wiring is understood; add servers as their own entries below.
     home.file.".pi/agent/mcp.json".text = builtins.toJSON {
       mcpServers = {
-        # Dummy MCP — learning harness for pi on NixOS (pure Nix derivation).
-        # Source: pi/mcp-servers/dummy/server.mjs (3 tools: echo/add/now + resource dummy://info).
-        # Built via pi/packages.nix#dummy-mcp (withDeps pattern, pinned npmHash) so the
-        # build is pure and immune to ~/.npmrc/CodeArtifact. pi lazy-loads it only
-        # when you call `mcp({ search: "dummy" })` / `mcp({ tool: "dummy_echo" })`.
-        # For quick local iteration without a rebuild you can temporarily point this at
-        # "/home/vageesh/niri-desktop/pi/mcp-servers/dummy/server.mjs" with `command = "node"`.
-        dummy = {
-          command = "${pkgs.nodejs}/bin/node";
-          args = [ "${piPackages.dummy-mcp}/server.mjs" ];
-        };
         # VeriDB — policy-controlled database MCP for AI agents (PostgreSQL).
         # Source: /home/vageesh/Projects/veridb. The binary is built with
         # `make build` over there; this entry just execs it, so rebuild the

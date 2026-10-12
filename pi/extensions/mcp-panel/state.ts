@@ -209,7 +209,7 @@ export function snapshotTools(getAll: () => ToolInfo[], servers: McpServerEntry[
 	return byServer;
 }
 
-/** `● dummy(3) · ○ veridb` — enabled servers only; disabled ones disappear (footer contract). */
+/** `● veridb(9) · ○ other` — enabled servers only; disabled ones disappear (footer contract). */
 export function footerStatus(servers: McpServerEntry[], getAll: () => ToolInfo[]): string | undefined {
 	const parts: string[] = [];
 	for (const entry of servers) {

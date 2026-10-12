@@ -80,7 +80,7 @@ first landed on `master` ~June 2026, after the 26.05 branch-off) and
   | `extensions` (store paths + `pi/extensions/*.ts`) | `settings.extensions = [ … ]` and/or `home.file.".pi/agent/extensions/…"` |
   | `promptTemplates = [ ../pi/prompts ]` | `settings.prompts` and/or `home.file.".pi/agent/prompts"` |
   | `themes = [ ../pi/themes/….json ]` | `settings.themes` and/or `home.file.".pi/agent/themes"` |
-  | (unused: `models`, `jail`, `environment`) | `models`, `keybindings` (new capability — consider managing `keybindings.json` instead of leaving it imperative), `extraPackages` (e.g. `nodejs` for the dummy MCP instead of absolute `${pkgs.nodejs}/bin/node`), `configDir` (leave default) |
+  | (unused: `models`, `jail`, `environment`) | `models`, `keybindings` (new capability — consider managing `keybindings.json` instead of leaving it imperative), `extraPackages` (e.g. `nodejs`, instead of absolute `${pkgs.nodejs}/bin/node` paths), `configDir` (leave default) |
 - Untouched: `pi/packages.nix` (pure `pkgs`-only, no pi.nix
   dependency), `home.file.".pi/agent/mcp.json"`, Querion
   `xdg.configFile`, `AGENTS.md`/`README.md` references to update

@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-13 — dummy MCP harness removed; MCP surface is now veridb only (decision) — `pi/mcp`
+
+- What: Deleted the learning harness everywhere — `mcpServers.dummy` in `modules/core.nix`, the `dummy-mcp` derivation in `pi/packages.nix`, and the whole `pi/mcp-servers/` tree (its `node_modules` is untracked, so `git rm -r` leaves it behind and the dir still needs an `rm -r`).
+- Why/Context: It existed to learn how pi MCP works; that purpose is served and the one-liner scaffold only added noise to `mcp.json` and the footer.
+- How/Apply: `~/.pi/agent/mcp.json` now declares just `veridb` (absolute binary path, creds in veridb's own `.env`). `~/.pi/agent/mcp-cache.json` still lists stale servers (chrome-devtools, parallel-search, deepwiki, dummy) — it is derived state pi ignores/regenerates, not config; only `pi mcp list` reports truth.
+
+Source: user request "remove dummy mcp from this entire setup".
+
 ## 2026-10-12 — Committing a cobra fish completion shim is safe (gotcha) — `shell/fish`
 
 - What: `phoenix completion fish` (singular — cobra) emits a ~235-line dynamic shim that calls `phoenix __complete` at completion time and caches per completion; it embeds no command/flag names.

@@ -39,7 +39,7 @@ dev/{shared,templates,company}/                               # personal devenvs
 - **Delegation**: `modules/core.nix` explicitly enables inherited global context and skills for every built-in Pi subagent; the pi-subagents defaults otherwise omit them.
 - **Discovery**: Prefer `repo-understanding` for unfamiliar areas before coding; use `learnings` for preferences. `vageesh` is an evidence-only skill scaffold. Prompt templates (`pi/prompts/`) are intentionally empty — skills are the mechanism.
 - **Extensions**: `safety.ts` (destructive-command gate) + `querion-sync.ts` (`/sync`) are local; third-party are pinned in `pi/packages.nix` (withDeps pattern). Update via `scripts/update-pi-extensions.py`.
-- **MCP**: `dummy` harness via `pi/mcp-servers/dummy` (pure derivation, pinned npmHash). `pi-web-access` gives `web_search/fetch/source_check` to subagents; parallel-search via MCP is separate namespace.
+- **MCP**: native pi reads `~/.pi/agent/mcp.json` (declared in `modules/core.nix`); currently `veridb` — a policy-controlled Postgres MCP whose binary is built in `~/Projects/veridb` and whose creds stay in its own `.env`. `pi mcp list` shows live state + tool counts; `pi/extensions/mcp-panel` renders the footer status and `/mcpx` panel. `pi-web-access` gives `web_search/fetch/source_check` to subagents; parallel-search via MCP is a separate namespace.
 
 ## Quick commands
 
