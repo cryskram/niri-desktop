@@ -2,6 +2,22 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-12 — Committing a cobra fish completion shim is safe (gotcha) — `shell/fish`
+
+- What: `phoenix completion fish` (singular — cobra) emits a ~235-line dynamic shim that calls `phoenix __complete` at completion time and caches per completion; it embeds no command/flag names.
+- Why/Context: That makes it safe to commit in this public repo (no internal CLI surface leaks) and it does not go stale as the CLI grows — only cobra's template changes force a regen.
+- How/Apply: `phoenix completion fish > home/fish/completions/phoenix.fish`, wired via `xdg.configFile."fish/completions/phoenix.fish".source` in `home/shell.nix`. Verify live with `fish -c 'source <file>; complete -C "phoenix "'`.
+
+Source: user request to wire up phoenix completions; verified the shim delegates rather than hardcodes.
+
+## 2026-10-12 — New files need `git add` before `nix flake check` (gotcha) — `nix/flake`
+
+- What: A flake only sees git-tracked files: `nix flake check` fails with "path … is not tracked by Git" until the new file is `git add`ed.
+- Why/Context: Bit the phoenix completion file — the path existed on disk but was invisible to evaluation.
+- How/Apply: `git add <newfile>` before any eval/check of a fresh path (already the repo convention for new modules).
+
+Source: flake check error during the phoenix completions wiring.
+
 ## 2026-10-12 — Unstable overlay must `import` (not `.legacyPackages`) for unfree (gotcha) — `nix/flake`
 
 - What: `nixpkgs-unstable.legacyPackages.${system}.pkg` carries nixpkgs' own default config, so an unfree package (`claude-code`) fails evaluation with "Refusing to evaluate package … because it has an unfree license" even though `configuration.nix` sets `allowUnfree = true`.
