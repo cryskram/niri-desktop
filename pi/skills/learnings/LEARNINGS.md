@@ -2,6 +2,22 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-12 — Unstable overlay must `import` (not `.legacyPackages`) for unfree (gotcha) — `nix/flake`
+
+- What: `nixpkgs-unstable.legacyPackages.${system}.pkg` carries nixpkgs' own default config, so an unfree package (`claude-code`) fails evaluation with "Refusing to evaluate package … because it has an unfree license" even though `configuration.nix` sets `allowUnfree = true`.
+- Why/Context: The refusal happens in the *unstable* instance during HM's man-db/manpage evaluation, so a bare `nix flake check` fails for a package that looks correctly allowed.
+- How/Apply: `modules/core.nix` overlay now does `import nixpkgs-unstable { system = prev.stdenv.hostPlatform.system; config = prev.config; }` once and picks `opencode/pi-coding-agent/herdr/claude-code` from it — identical derivations for the free ones, unfree works.
+
+Source: claude-code install (unfree) broke `nix flake check`; fixed in the same commit.
+
+## 2026-10-12 — claude-code is installed by HM's `programs.claude-code` (decision) — `dev/claude`
+
+- What: `home/development.nix` sets `programs.claude-code.enable = true` (Home Manager 26.05 ships the module); the overlay provides 2.1.292 from unstable instead of stable 26.05's 2.1.223.
+- Why/Context: The module installs the package *and* can own `~/.claude` declaratively (settings, context, skills, agents, commands, rules, hooks, lspServers, mcpServers, plugins, marketplaces).
+- How/Apply: `settings` is deliberately unset so `~/.claude` stays writable for `claude /login` and manual tuning; adding any managed option makes those files read-only store symlinks, so only put things in git that should be frozen.
+
+Source: user request "install claude-code on this machine".
+
 ## 2026-10-12 — Pi wrapper failed loading MCP panel in benchmark (gotcha) — `pi/mcp`
 
 - What: A benchmark launch through the Nix `pi` wrapper exited before a model request because `mcp-panel/index.ts` could not import `./panel.ts`.

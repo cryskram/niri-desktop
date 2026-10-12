@@ -8,7 +8,7 @@ Reproducible NixOS desktop/workstation around **Niri** (scrollable tiling) + **N
 
 ## Stack & pins
 
-- **Nix:** `nixpkgs` `nixos-26.05`, `nixpkgs-unstable` (overlays `pi`, `opencode`, `herdr`), `home-manager` `release-26.05`, `pi` via `lukasl-dev/pi.nix`, `noctalia`, `catppuccin`, `spicetify-nix`.
+- **Nix:** `nixpkgs` `nixos-26.05`, `nixpkgs-unstable` (one imported instance; overlays `pi-coding-agent`, `opencode`, `herdr`, `claude-code`), `home-manager` `release-26.05`, `pi` via `lukasl-dev/pi.nix`, `noctalia`, `catppuccin`, `spicetify-nix`. The unstable overlay is `import nixpkgs-unstable { config = prev.config; }` — `.legacyPackages` carries nixpkgs' defaults and refuses unfree packages (`claude-code`).
 - **Compositor/shell:** Niri (config validated by `nix flake check`), Noctalia/QML islands, SDDM Astronaut, Catppuccin tokens (`theme/tokens.nix`).
 - **Pi:** Declarative via `modules/core.nix` (`programs.pi.coding-agent`): `pi/brain/APPEND_SYSTEM.md` → `--append-system-prompt`, `pi/brain/AGENTS.md` → global Pi context at `~/.pi/agent/AGENTS.md`, `pi/brain/` → shared lookup path `~/.pi/agent/brain/`, `pi/skills/` → `--skill`, `pi/extensions/*.ts` → `--extension`, `pi/themes/` → `--theme`. Office skills live outside the repo (`~/Projects/TAP/...`) via `extraArgs --skill` — do not duplicate. Quick `pi --list` should show `mcp-adapter, pi-btw, rpiv-*, zentui, pi-subagents, pi-web-access`.
 - **Dev:** `devenv` + `direnv` + Docker; language toolchains (Go/Java/Node/Python/Rust) and apps (Ghostty, Chrome, Slack, etc.) via `home/development.nix` + `applications.nix`.
