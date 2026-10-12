@@ -2,24 +2,22 @@
  * Jev router — opencode-go cost & intelligence aware
  *
  * Virtual model `jev/auto` (also `opencode-go/auto` alias) that routes each
- * request to one of 5 opencode-go models using the TypeSafe Jev classifier:
+ * request to one of 4 opencode-go models using the TypeSafe Jev classifier:
  *
  *   muse-spark-1.3-contributor | gpt-6-luna | deepseek-v4.1-flash
- *   | glm-5.3-flash | mimo-v2.6-flash
+ *   | glm-5.3-flash
  *
  * Costs (per 1M, from opencode.ai/docs/go + pi models-store.json):
  *   muse-spark-1.3-contributor  $0.10 in / $0.20 out / $0.002 cached  (cheapest, 226k req/mo, 1M ctx, 131k out)
- *   mimo-v2.6-flash             $0.14 in / $0.28 out / $0.0028 cached (fast trivial, 150k req/mo)
  *   glm-5.3-flash               $0.15 in / $0.50 out / $0.03 cached   (balanced flash)
- *   deepseek-v4.1-flash         $0.15 in / $0.60 out / $0.003 cached  (384k maxTokens — longest output)
+ *   deepseek-v4.1-flash         $0.15 in / $0.60 out / $0.003 cached  (384k maxTokens — longest output; also serves trivial)
  *   gpt-6-luna                  $0.10 in / $0.50 out / $0.01 cached   (≤272k; $0.20/$0.75 above, 21k req/mo, 1M ctx)
  *
  * Intelligence / task affinity (observed):
  *   muse-spark-1.3  — best agentic tool use, strong coding, cheapest. Default workhorse.
  *   gpt-6-luna      — highest reasoning for complex / cross-cutting / hard debug.
- *   deepseek-v4.1   — best for bulk generation / 384k output / math heavy.
+ *   deepseek-v4.1   — bulk generation / 384k output / math heavy + trivial Q&A.
  *   glm-5.3-flash   — balanced flash, vision-capable, good for mixed media.
- *   mimo-v2.6-flash — fastest/cheapest for trivial Q&A, summarization.
  *
  * Routing:
  *   - Jev classifies `complexity` (trivial/standard/complex) and `task_kind`
@@ -56,7 +54,6 @@ const MUSE = "muse-spark-1.3-contributor";
 const GPT6_LUNA = "gpt-6-luna";
 const DEEPSEEK = "deepseek-v4.1-flash";
 const GLM_FLASH = "glm-5.3-flash";
-const MIMO_FLASH = "mimo-v2.6-flash";
 
 /** Short footer labels — one glance per routed model. */
 const SHORT: Record<string, string> = {
@@ -64,10 +61,13 @@ const SHORT: Record<string, string> = {
   [GPT6_LUNA]: "gpt-6-luna",
   [DEEPSEEK]: "deepseek-v4.1",
   [GLM_FLASH]: "glm-5.3-flash",
-  [MIMO_FLASH]: "mimo-v2.6",
 };
 
-type TargetId = typeof MUSE | typeof GPT6_LUNA | typeof DEEPSEEK | typeof GLM_FLASH | typeof MIMO_FLASH;
+// Back-compat: old branches may persist a mimo target in router state.
+// Resolve it to deepseek so resumed sessions keep routing cleanly.
+const LEGACY_MIMO = "mimo-v2.6-flash";
+
+type TargetId = typeof MUSE | typeof GPT6_LUNA | typeof DEEPSEEK | typeof GLM_FLASH;
 
 interface JevRouterState {
   target: TargetId;
@@ -122,9 +122,11 @@ function pickTarget(complexity: string, taskKind: string, probs: Record<string, 
     return DEEPSEEK;
   }
 
-  // Trivial / chat / summarization → mimo (fastest, $0.14/$0.28, 150k req/mo)
+  // Trivial / chat / summarization → deepseek ($0.15/$0.60, 130k req/mo).
+  // Outputs here are short, so the higher per-token output price barely
+  // registers in absolute cost, and 1M context keeps cache hits cheap.
   if (comp === "trivial" || task.includes("chat") || task.includes("trivial")) {
-    return MIMO_FLASH;
+    return DEEPSEEK;
   }
 
   // Complex / architectural / hard debug → gpt-6-luna (higher intelligence, $0.10/$0.50 ± tier)
@@ -221,15 +223,22 @@ export default function (pi: ExtensionAPI) {
       // to preserve prompt cache / thinking signatures
       const sticky = req.failed ?? req.previous;
       if (req.reason !== "user" && sticky) {
-        const id = sticky.model.id as TargetId;
-        const known: TargetId[] = [MUSE, GPT6_LUNA, DEEPSEEK, GLM_FLASH, MIMO_FLASH];
+        const rawId = sticky.model.id as string;
+        // Migrate legacy mimo sticky/state targets to deepseek.
+        const id = (rawId === LEGACY_MIMO ? DEEPSEEK : rawId) as TargetId;
+        const known: TargetId[] = [MUSE, GPT6_LUNA, DEEPSEEK, GLM_FLASH];
         if (sticky.model.provider === PROVIDER && known.includes(id)) {
           return routeTo(req, ctx, id, req.state);
         }
       }
 
       // already classified this branch → reuse (no extra Jev cost/latency)
+      // Migrate legacy mimo state targets to deepseek.
       if (req.state?.target) {
+        if ((req.state.target as string) === LEGACY_MIMO) {
+          const migrated: JevRouterState = { ...req.state, target: DEEPSEEK };
+          return routeTo(req, ctx, DEEPSEEK, migrated);
+        }
         // Optional: after first successful edit, could stay on same model;
         // we keep the original classification to avoid cache miss churn.
         // If you want the Luna promotion pattern (plan → implement), uncomment:
