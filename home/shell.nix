@@ -151,6 +151,18 @@
   programs.jq.enable = true;
   programs.lazygit.enable = true;
 
+  # Custom fish completions pinned in the repo. Phoenix (company CLI) lives at
+  # ~/.local/bin/phoenix — a locally built binary, not a Nix package — so its fish
+  # completion script is generated once and committed here:
+  #   phoenix completion fish > home/fish/completions/phoenix.fish
+  #
+  # The script is cobra's dynamic shim: it shells out to `phoenix __complete` at
+  # completion time (result cached per completion), so it embeds no command names
+  # — nothing internal lands in this public repo — and it does not go stale as the
+  # CLI grows. Regenerate only if cobra's script template changes.
+  # Fish loads everything under ~/.config/fish/completions/ at startup.
+  xdg.configFile."fish/completions/phoenix.fish".source = ./fish/completions/phoenix.fish;
+
   # ~/.local/bin first on PATH. `home.sessionPath` prepends, which is what
   # `~/.local/bin` conventionally expects, and Home Manager exports it through
   # hm-session-vars so fish picks it up too. (xdg.localBinInPath is the other
