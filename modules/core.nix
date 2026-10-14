@@ -262,6 +262,11 @@ in
       tokenFile = "/home/vageesh/niri-desktop/secrets/querion-token";
     };
 
+    # rpiv-todo overlay collapse shortcut (extension reads, never writes, this file).
+    xdg.configFile."rpiv-todo/config.json".text = builtins.toJSON {
+      collapseKey = "alt+t";
+    };
+
     # MCP servers — native pi (0.99+) reads ~/.pi/agent/mcp.json directly.
     # pi-web-access already provides web_search/fetch/source_check, so the
     # parallel-search/deepwiki/chrome-devtools MCPs are redundant. The local
