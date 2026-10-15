@@ -118,12 +118,12 @@ let
       # "Host-provided extension packages must be declared in
       # peerDependencies with a '*' range" loader warning (v2.11.0 declared
       # it as a regular dependency and tripped the stricter check).
-      version = "2.12.0";
+      version = "2.13.8";
       src = pkgs.fetchFromGitHub {
         owner = "juicesharp";
         repo = "rpiv-mono";
-        tag = "v2.12.0";
-        hash = "sha256-gvl2xi9BqNandBDCAdIVWTa9df3fb/+CiWGTZbaEz3g=";
+        tag = "v2.13.8";
+        hash = "sha256-s8xMQx1fqInIZjWWroYqEsPWmR8jjrzDWXP+jiL9pyY=";
       };
       npmFlags = [
         "--omit=dev"
@@ -138,7 +138,7 @@ in
   # Structured questionnaires the model can put to you.
   rpiv-ask-user-question = rpivExtension {
     pname = "rpiv-ask-user-question";
-    npmHash = "sha256-OazOvc2LVgOzUrX263ckaarDdIE35MLv+PZ1Ppyd9D0=";
+    npmHash = "sha256-Tni3Zcp+QBQB9EZWv2SaFhmQCHVLa8ap7DrE7U50xGU=";
     subdir = "packages/rpiv-ask-user-question";
   };
 
@@ -146,7 +146,7 @@ in
   # and conversation compaction.
   rpiv-todo = rpivExtension {
     pname = "rpiv-todo";
-    npmHash = "sha256-POakift3TdnTvbKG3maRiw3bNu2r8OMcpmjfMEkcfDk=";
+    npmHash = "sha256-+QsYY1Z/CK97vhDSuUnrWtOARzo/xrd/jW2dcInQDe0=";
     subdir = "packages/rpiv-todo";
   };
 
@@ -154,12 +154,12 @@ in
   # the main agent is still running. Imports only pi's bundled modules.
   pi-btw = plain {
     pname = "pi-btw";
-    version = "0.6.1";
+    version = "0.8.0";
     src = pkgs.fetchFromGitHub {
       owner = "dbachelder";
       repo = "pi-btw";
-      tag = "v0.6.1";
-      hash = "sha256-/kvyhDRZe2C7uCs8gElBI4s2duYBKgYOVwrjNOnsif8=";
+      tag = "v0.8.0";
+      hash = "sha256-ktDQhWAmv8AaiVkiNFrpUp5iwRueYZ6dqrLDSCKUxJ0=";
     };
   };
 
@@ -171,12 +171,12 @@ in
   # pi-powerline is gone; use `/zentui` to switch footer style if needed.
   zentui = plain {
     pname = "pi-zentui";
-    version = "0.30.0";
+    version = "0.31.0";
     src = pkgs.fetchFromGitHub {
       owner = "lmilojevicc";
       repo = "pi-zentui";
-      tag = "v0.30.0";
-      hash = "sha256-b2E3rcsn9J/WUT+k1PiYr7qXWzsYWFjtw2luTNhTdkM=";
+      tag = "v0.31.0";
+      hash = "sha256-yE5UXWr1oGGv7oIXLUanbSVv3D3HjmTg0MCSIoi4uqQ=";
     };
   };
 
@@ -184,14 +184,14 @@ in
   # Generic for any project: no niri-desktop specific code, works in any cwd.
   pi-subagents = withDeps {
     pname = "pi-subagents";
-    version = "0.73.1";
+    version = "0.78.0";
     src = pkgs.fetchFromGitHub {
       owner = "nicobailon";
       repo = "pi-subagents";
-      tag = "v0.73.1";
-      hash = "sha256-EqWfWHlyXkhWNgov4gQnpnX/Gnz4QjjBBAPcx8Xrvjo=";
+      tag = "v0.78.0";
+      hash = "sha256-kTzwkgt+ZVRc5LoPCsryQcmMB9XJ5k5Tptrw3HV+9a8=";
     };
-    npmHash = "sha256-DZDCLk076bdn/sSSrA8i43h0wKyVbCm6pIoIH8QI9q8=";
+    npmHash = "sha256-SRnuPebtq8Ob7kGucJ5VA3ZEhojpglgbaRXv/hZoN/0=";
     npmFlags = [
       "--omit=dev"
     ];
@@ -205,14 +205,14 @@ in
   # and only uses OpenAI Hosted Search when active model is openai/openai-codex, so deepseek/muse untouched.
   pi-web-access = withDeps {
     pname = "pi-web-access";
-    version = "0.34.0";
+    version = "0.41.0";
     src = pkgs.fetchFromGitHub {
       owner = "nicobailon";
       repo = "pi-web-access";
-      tag = "v0.34.0";
-      hash = "sha256-KYcScVwKKuY393nzHtZBUVvQzBYaVm3JmBxVRuJY8PI=";
+      tag = "v0.41.0";
+      hash = "sha256-rO7rj3RVS/79cUpWUZCXktaxJbjLO4QDPezRTn+H120=";
     };
-    npmHash = "sha256-UN1aKEWbyGntuJmFTdDRMhlm4z6itwm8qiKe9WVhx84=";
+    npmHash = "sha256-LAmr0jojKdzAFwfVGDEjT2QDpQ/0FoGJ1dxgblTeX5w=";
     npmFlags = [
       "--omit=dev"
     ];
