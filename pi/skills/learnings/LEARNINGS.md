@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-15 — Huge pi sessions + zentui animation = 100% CPU and lag (gotcha) — `pi/perf`
+
+- What: A run in the 17MB / ~3k-message session emits ~2.2MB of ANSI and pegs pi at ~102-109% CPU; the same run in a fresh session emits 64KB and costs 0-12%. Per-frame cost scales with transcript size, and zentui's working line re-renders ~16x/s (`textIntervalMs: 60` + `spinnerIntervalMs: 100`).
+- Why/Context: The flood goes pi -> herdr (PTY proxy) -> ghostty, so the lag is felt worst inside herdr; idle is fine (1-3%), `--tui-mode regular` does not help, and `/compact` does not shrink the stored transcript (the 17MB session sits at 35% context and stays expensive).
+- How/Apply: Work in fresh sessions (biggest win); close unused herdr panes (7 resident pi + 7 veridb MCP children cost 2-10% each while idle); if a big session is unavoidable, slow `/zentui` Working-line intervals. Note zentui rewrites `~/.pi/agent/zentui.json` on exit, so a test instance can clobber hand edits.
+
+Source: user report of laggy pi in herdr/ghostty; measured by A/B runs with `script -qc` and /proc CPU sampling.
+
 ## 2026-10-15 — Added pi-cache-optimizer + pi-session-search (decision) — `pi/ext`
 
 - What: Both pinned as zero-dep `plain` derivations in `pi/packages.nix`, wired in `modules/core.nix`, registered in `scripts/update-pi-extensions.py` (`deps: False` + anchors).
