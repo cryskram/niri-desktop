@@ -2,6 +2,37 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-15 — Added pi-cache-optimizer + pi-session-search (decision) — `pi/ext`
+
+- What: Both pinned as zero-dep `plain` derivations in `pi/packages.nix`, wired in `modules/core.nix`, registered in `scripts/update-pi-extensions.py` (`deps: False` + anchors).
+- Why/Context: cache-optimizer raises provider prompt/KV cache hit rates (cost + speed) and exposes `Symbol.for("pi.routing.registry.v1")` / `"pi.cache.hints.v1"` that jev-router could opt into; session-search adds FTS5 search over past sessions (`node:sqlite` FTS5 → needs Node 22.19+).
+- How/Apply: session-search ships `skills/session-history` and it is listed explicitly in `skills = [...]` — a local store path drops a package's skills manifest, the same reason pi-btw's skill is listed.
+
+Source: user "add both of them" after the plugin shortlist review.
+
+## 2026-10-14 — Todo overlay collapses on ALT+T (preference) — `pi/todo`
+
+- What: rpiv-todo `collapseKey` is `alt+t`, declared via `xdg.configFile."rpiv-todo/config.json"` in `modules/core.nix`.
+- Why/Context: Default `ctrl+shift+t` is awkward; ALT+T toggles the panel. Rebind needs pi `/reload` (binding resolves at extension load).
+- How/Apply: Edit `collapseKey` in `modules/core.nix`; extension reads `~/.config/rpiv-todo/config.json`, never writes it.
+
+Source: user request 2026-10-14 — custom shortcut to hide the todo panel.
+
+## 2026-10-14 — Terse comments only (preference) — `code/style`
+
+- What: No long/explanatory comment blocks in code, scripts, ansible, or docs; one-liners only where load-bearing, otherwise delete.
+- Why/Context: User correction 2026-10-14 on the RBAC branch (cut ~110 lines); applies henceforth to all repos.
+
+Source: user instruction 2026-10-14 — "remember to not have them henceforth".
+
+## 2026-10-13 — OPEN: cut VM builds off prod CMS onto per-stack strapi (decision) — `phoenix/strapi`
+
+- What: Builds still read prod `cms.bondscanner.com` (local `.env` re-pinned there 2026-10-13); cutover needs, per stack: seeded content (`masterclass-landing-page` 404s on s1/s2), public/API permissions (401s), endpoint+token swap in build env, and the `masterclass/index.tsx` null-guard so CMS flakes never red a build again.
+- Why/Context: Same-CMS/same-VM means s1-green-s2-red is timing luck on prod's transient non-200s, not a stack difference; `fetchWithRetry` only retries exceptions, never non-200 bodies. One shared CMS can serve all stacks (token travels with endpoint); per-stack CMS needs per-CMS tokens. Tokens/admins live in DB: stage records ride dumps (admin `strapi@bondscanner.com` done on s1 id 12 + stage), `vm-builds` read-only token minted on s1 id 15 and row-copied to s2.
+- How/Apply: s1 admin `https://s1-strapi.one.phoenix.sustvest.in/admin` (creds with Vageesh, stage-only); `proxy: {koa:true}` required in `bond-scanner-cms/config/server.ts` behind Traefik (container `dist/` hot-patched, needs committing); prod `vm-builds` replacement = one Unlimited Read-only token on prod for all stacks.
+
+Source: user instruction 2026-10-13 — "remember this as a open issue".
+
 ## 2026-10-13 — Querion auto-sync: agent_end, quiet, per-session guard (decision) — `pi/ext`
 
 - What: `/sync` auto-runs on pi's `agent_end` (per prompt completion, not per-turn `turn_end`); fire-and-forget with per-session in-flight+trailing flags, status-key flash only, failures silent.
