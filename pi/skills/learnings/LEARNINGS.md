@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-15 — Icons: Papirus-Dark + Macchiato folders; catppuccin HM module is NOT imported (decision) — `theme/icons`
+
+- What: `home/theme.nix` uses `pkgs.catppuccin-papirus-folders.override { flavor = "macchiato"; accent = "mauve"; }` (name stays `Papirus-Dark`) plus `dconf.settings."org/gnome/desktop/interface"."icon-theme"` — HM's gtk module only writes gtk-2.0/gtk-3.0 settings.ini, GTK4/libadwaita read dconf. Verified: folder.svg fill becomes `#C6A0F6` (mauve), all three sampled icons differ from stock.
+- Why/Context: the repo had declared stock `papirus-icon-theme`, so folders were Papirus blue/yellow. **Open finding:** `catppuccin.*` is missing from the HM config — the catppuccin/nix HM module is never imported (only `catppuccin.nixosModules.catppuccin` in flake.nix), so `catppuccin.gtk.icon` and friends do not exist and app theming stays hand-wired via `theme/tokens.nix`. Importing it + `autoEnable` would restyle many apps and could fight those tokens.
+- How/Apply: DMS's own icon setting is the app-owned `iconThemeDark` in `~/.config/DankMaterialShell/settings.json`; the activation in `modules/dms-shell.nix` fills it only when absent (jq `//=`), so UI choices are never clobbered.
+
+Source: user request "install and setup some good icon theme".
+
 ## 2026-10-15 — Never add niri blur layer-rules for DMS (gotcha) — `niri/dms`
 
 - What: DMS implements `ext-bg-effect-v1` and requests blur for its own surfaces (bar, popouts, modals, notif) — toggle at Settings → Personalization → Theme & Colors. A `dms:*` layer-rule blur therefore double-applies and niri blurs the whole surface *rectangle*, showing a blurred/tinted box around rounded popouts.
