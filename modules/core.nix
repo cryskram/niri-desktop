@@ -149,6 +149,7 @@ in
     skills = [
       ../pi/skills
       "${piPackages.pi-btw}/skills/btw"
+      "${piPackages.pi-session-search}/skills/session-history"
     ];
 
     # Compact global Pi bootstrap, appended to the built-in system prompt.
@@ -191,6 +192,8 @@ in
           zentui
           pi-subagents
           pi-web-access
+          pi-cache-optimizer
+          pi-session-search
           ;
       in
       [
@@ -201,6 +204,8 @@ in
         "${zentui}"
         "${pi-subagents}"
         "${pi-web-access}"
+        "${pi-cache-optimizer}"
+        "${pi-session-search}"
         ../pi/extensions/safety.ts
         ../pi/extensions/jev-router.ts
         # MCP panel (/mcpx) + live `mcp` status key for zentui's Extension statuses
