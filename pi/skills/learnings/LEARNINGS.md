@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-15 — Never add niri blur layer-rules for DMS (gotcha) — `niri/dms`
+
+- What: DMS implements `ext-bg-effect-v1` and requests blur for its own surfaces (bar, popouts, modals, notif) — toggle at Settings → Personalization → Theme & Colors. A `dms:*` layer-rule blur therefore double-applies and niri blurs the whole surface *rectangle*, showing a blurred/tinted box around rounded popouts.
+- Why/Context: Compositor-side layer-rule blur is only the right tool on compositors *without* the protocol (Hyprland). niri has it, so the rule is redundant and visibly wrong.
+- How/Apply: Keep layer-rule blur for non-DMS surfaces only (this repo: the fuzzel fallback launcher). If DMS surfaces look unblurred, fix it in DMS settings, not in niri.
+
+Source: user report 2026-10-15 — blurred, tinted boxes around every bar popout right after the DMS switch.
+
 ## 2026-10-15 — Shell switched: Noctalia → DankMaterialShell 1.6 (decision) — `niri/dms`
 
 - What: `modules/dms-shell.nix` enables `programs.dms-shell` (package + quickshell overlaid from nixpkgs-unstable = 1.6.3, since stable 26.05 only has 1.4.x); the `noctalia` flake input, `home/noctalia.nix`, `noctalia-plugins/` and `theme/noctalia-macchiato.json` are gone; keybinds became `dms ipc call spotlight|clipboard|control-center|powermenu|lock`, screenshots `dms screenshot [region|full]`; idle/sleep lock uses DMS's lock with swaylock fallback; swaybg + its niri spawn were removed (DMS owns wallpaper).

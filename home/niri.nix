@@ -103,20 +103,12 @@ in
 
     // Glass for layer-shell surfaces that cannot ask for it themselves.
     //
-    // DMS does not implement ext-background-effect, so niri blurs its surfaces by
-    // namespace. The pattern is deliberately explicit rather than a blanket rule on
-    // top/overlay: that previously blurred Noctalia's transparent corner masks into
-    // visible squares in every screen corner. Transients and helpers (osd,
-    // notification-popup, toast, desktop widgets, tooltip) stay unblurred on purpose.
-    layer-rule {
-        match namespace=r#"^dms:(bar|popout|plugins:.*|control-center|dash|dankdash|app-launcher|spotlight|clipboard|settings|powermenu|power-menu|processlist|process-list-popout|file-browser|network-info(-wired)?|bluetooth-pairing|wifi-password|polkit|confirm-modal|modal|slideout|tray-menu-window|battery|vpn)$"#
-
-        background-effect {
-            blur true
-        }
-    }
-
-    // Fuzzel fallback launcher (used when DMS spotlight is unavailable).
+    // DMS requests blur for its own surfaces through ext-bg-effect-v1, which niri
+    // implements — so no layer rule is needed for the bar or its popouts. Adding
+    // one double-applies: niri blurs the whole surface rectangle, which shows up as
+    // a blurred, tinted box around rounded popouts. Blur is toggled in DMS itself
+    // (Settings → Personalization → Theme & Colors). That leaves only the fuzzel
+    // fallback launcher, which cannot ask for blur itself.
     layer-rule {
         match namespace=r#"^launcher$"#
 
