@@ -42,16 +42,20 @@ in
     xdg.configFile."DankMaterialShell/themes/catppuccin-macchiato.json".source =
       ../theme/dms-macchiato.json;
 
+    # Seed DMS's own config, never overwriting it: DMS rewrites settings.json from
+    # its UI, so only absent values get filled — the theme on a fresh install, and
+    # the icon theme (Papirus-Dark with Catppuccin folders, from home/theme.nix).
     home.activation.dmsSeedSettings = ''
       cfg="$HOME/.config/DankMaterialShell/settings.json"
+      mkdir -p "$(dirname "$cfg")"
       if [ ! -f "$cfg" ]; then
-        mkdir -p "$(dirname "$cfg")"
-        cat > "$cfg" <<'JSON'
-      {
-        "currentThemeName": "custom",
-        "customThemeFile": "${themeFile}"
-      }
-      JSON
+        printf '%s\n' '{ "currentThemeName": "custom", "customThemeFile": "${themeFile}" }' > "$cfg"
+      fi
+      tmp="$cfg.tmp"
+      if ${pkgs.jq}/bin/jq '.iconThemeDark //= "Papirus-Dark"' "$cfg" > "$tmp" 2>/dev/null; then
+        mv "$tmp" "$cfg"
+      else
+        rm -f "$tmp"
       fi
     '';
   };

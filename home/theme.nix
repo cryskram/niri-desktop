@@ -16,8 +16,14 @@ in
       };
       name = "catppuccin-macchiato-mauve-standard";
     };
+    # Papirus-Dark with Catppuccin Macchiato folder colours (mauve accent).
+    # The catppuccin-papirus-folders override recolours Papirus' folder icons;
+    # stock papirus-icon-theme keeps its own blue/yellow folders (RICE §18).
     iconTheme = {
-      package = pkgs.papirus-icon-theme;
+      package = pkgs.catppuccin-papirus-folders.override {
+        flavor = "macchiato";
+        accent = "mauve";
+      };
       name = "Papirus-Dark";
     };
     font = {
@@ -25,6 +31,10 @@ in
       size = tokens.fonts.size.sm;
     };
   };
+
+  # GTK4 / libadwaita apps read the icon theme from dconf (the gtk module only
+  # writes gtk-2.0 and gtk-3.0 settings.ini), so the value is set here too.
+  dconf.settings."org/gnome/desktop/interface"."icon-theme" = "Papirus-Dark";
 
   # Cursor — Catppuccin Macchiato Mauve at 24px
   home.pointerCursor = {
