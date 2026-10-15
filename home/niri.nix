@@ -30,9 +30,8 @@ in
 
     // --- Phase 3 skeleton overrides ---
 
-    // Wallpaper fallback (Catppuccin Macchiato background — solid color, per RICE §18).
-    // Decorative only; functionality must not depend on it.
-    spawn-at-startup "swaybg" "-c" "${tokens.colors.background}"
+    // Wallpaper is owned by DMS (its wallpaper service). No swaybg fallback here:
+    // two layers setting the background produced flicker (RICE §18).
 
     // Desktop scale — override the default config's example scale 2.
     output "eDP-1" {
@@ -104,13 +103,20 @@ in
 
     // Glass for layer-shell surfaces that cannot ask for it themselves.
     //
-    // Deliberately narrow. A blanket rule on the top/overlay layers also
-    // matched noctalia-screen-corner, which is one transparent corner mask per
-    // screen corner: the blur rendered behind those masks as a visible square
-    // in every corner, on top of the bar and the windows below. Noctalia also
-    // implements ext-background-effect, so its bar, panels, launchers and
-    // lockscreen already blur on their own and need no rule here. That leaves
-    // only the fuzzel fallback launcher, which cannot request blur itself.
+    // DMS does not implement ext-background-effect, so niri blurs its surfaces by
+    // namespace. The pattern is deliberately explicit rather than a blanket rule on
+    // top/overlay: that previously blurred Noctalia's transparent corner masks into
+    // visible squares in every screen corner. Transients and helpers (osd,
+    // notification-popup, toast, desktop widgets, tooltip) stay unblurred on purpose.
+    layer-rule {
+        match namespace=r#"^dms:(bar|popout|plugins:.*|control-center|dash|dankdash|app-launcher|spotlight|clipboard|settings|powermenu|power-menu|processlist|process-list-popout|file-browser|network-info(-wired)?|bluetooth-pairing|wifi-password|polkit|confirm-modal|modal|slideout|tray-menu-window|battery|vpn)$"#
+
+        background-effect {
+            blur true
+        }
+    }
+
+    // Fuzzel fallback launcher (used when DMS spotlight is unavailable).
     layer-rule {
         match namespace=r#"^launcher$"#
 
@@ -127,18 +133,18 @@ in
     }
 
     // Terminal — alacritty (primary per user preference, RICE §19).
-    // UX — clipboard, screenshots, recording, Noctalia panels (RICE §26-27, §7)
+    // UX — clipboard, screenshots, recording, DMS panels (RICE §26-27, §7)
     binds {
         "Mod+T" { spawn "ghostty"; }
         "Mod+Return" { spawn "ghostty"; }
-        "Mod+Slash" { spawn "sh" "-c" "noctalia msg panel-toggle launcher 2>/dev/null || fuzzel"; }
-        "Mod+D" { spawn "sh" "-c" "noctalia msg panel-toggle launcher 2>/dev/null || fuzzel"; } // keep legacy Mod+D
-        "Mod+Ctrl+V" { spawn "sh" "-c" "noctalia msg panel-toggle clipboard 2>/dev/null"; }
-        "Mod+Ctrl+C" { spawn "sh" "-c" "noctalia msg panel-toggle control-center 2>/dev/null"; }
-        "Mod+P" { spawn "sh" "-c" "noctalia msg panel-toggle session 2>/dev/null || wlogout"; }
-        "Super+Alt+L" { spawn "sh" "-c" "noctalia msg session lock 2>/dev/null || swaylock"; }
-        "Mod+Shift+S" { spawn "sh" "-c" "noctalia msg screenshot-region"; }
-        "Print" { spawn "sh" "-c" "noctalia msg screenshot-fullscreen"; }
+        "Mod+Slash" { spawn "sh" "-c" "dms ipc call spotlight toggle 2>/dev/null || fuzzel"; }
+        "Mod+D" { spawn "sh" "-c" "dms ipc call spotlight toggle 2>/dev/null || fuzzel"; } // keep legacy Mod+D
+        "Mod+Ctrl+V" { spawn "sh" "-c" "dms ipc call clipboard toggle 2>/dev/null"; }
+        "Mod+Ctrl+C" { spawn "sh" "-c" "dms ipc call control-center toggle 2>/dev/null"; }
+        "Mod+P" { spawn "sh" "-c" "dms ipc call powermenu toggle 2>/dev/null || wlogout"; }
+        "Super+Alt+L" { spawn "sh" "-c" "dms ipc call lock lock 2>/dev/null || swaylock"; }
+        "Mod+Shift+S" { spawn "sh" "-c" "dms screenshot"; }
+        "Print" { spawn "sh" "-c" "dms screenshot full"; }
         "Mod+Shift+R" { spawn "sh" "-c" "wf-recorder -g \"$(slurp -o)\" -f ~/Videos/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4"; }
         "Mod+Shift+E" { spawn "wlogout"; }
         "Mod+M" { spawn "niri-display-toggle"; }

@@ -61,7 +61,7 @@ in
     })
   ];
 
-  # Allow toggling wg-quick without password (for vpn-toggle + Noctalia/Waybar)
+  # Allow toggling wg-quick without password (for vpn-toggle + the DMS bar)
   security.sudo.extraRules = [
     {
       users = [ "vageesh" ];

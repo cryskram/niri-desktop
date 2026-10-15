@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-15 — Shell switched: Noctalia → DankMaterialShell 1.6 (decision) — `niri/dms`
+
+- What: `modules/dms-shell.nix` enables `programs.dms-shell` (package + quickshell overlaid from nixpkgs-unstable = 1.6.3, since stable 26.05 only has 1.4.x); the `noctalia` flake input, `home/noctalia.nix`, `noctalia-plugins/` and `theme/noctalia-macchiato.json` are gone; keybinds became `dms ipc call spotlight|clipboard|control-center|powermenu|lock`, screenshots `dms screenshot [region|full]`; idle/sleep lock uses DMS's lock with swaylock fallback; swaybg + its niri spawn were removed (DMS owns wallpaper).
+- Why/Context: this deleted the last expensive flake input (noctalia always source-built ~15 min) and brought the 1.6 island bar + a QML plugin API. Cost preview: 430 MiB fetch / 1.4 GiB unpacked, nothing heavy built locally (qt/kirigami/quickshell all cached).
+- How/Apply: **declarative boundary changed** — `~/.config/DankMaterialShell/settings.json` (bar layout, widget choices, theme selection) is app-owned and rewritten by the DMS UI, so it is deliberately not an HM symlink; the module only seeds it once (don't-clobber). Repo owns the theme (`theme/dms-macchiato.json`), plugins (`dms-plugins/` via `programs.dms-shell.plugins` → `/etc/xdg/quickshell/dms-plugins/`) and `DMS_DISABLE_MATUGEN=1` so the static palette wins and compositor config is never templated. See `docs/decisions/dank-material-shell.md`.
+
+Source: user chose "full switch on main" + unstable 1.6.3 after the DMS exploration.
+
 ## 2026-10-15 — Huge pi sessions + zentui animation = 100% CPU and lag (gotcha) — `pi/perf`
 
 - What: A run in the 17MB / ~3k-message session emits ~2.2MB of ANSI and pegs pi at ~102-109% CPU; the same run in a fresh session emits 64KB and costs 0-12%. Per-frame cost scales with transcript size, and zentui's working line re-renders ~16x/s (`textIntervalMs: 60` + `spinnerIntervalMs: 100`).

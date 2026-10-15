@@ -20,11 +20,6 @@
 
     pi.url = "github:lukasl-dev/pi.nix";
 
-    noctalia = {
-      url = "github:noctalia-dev/noctalia-shell";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -47,7 +42,6 @@
       nixpkgs,
       nixpkgs-unstable,
       pi,
-      noctalia,
       home-manager,
       spicetify-nix,
       catppuccin,
@@ -90,7 +84,6 @@
         specialArgs = {
           inherit
             pi
-            noctalia
             nixpkgs-unstable
             spicetify-nix
             catppuccin
@@ -102,6 +95,7 @@
           ./configuration.nix
           ./hardware-configuration.nix
           ./modules/core.nix
+          ./modules/dms-shell.nix
           ./modules/catppuccin.nix
           ./modules/theme.nix
           ./modules/shell.nix

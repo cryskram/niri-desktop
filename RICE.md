@@ -176,7 +176,7 @@ Niri is responsible for:
 * window rules
 * monitor configuration
 
-Noctalia (on Quickshell) is responsible for:
+DankMaterialShell (on Quickshell) is responsible for:
 
 * desktop UI
 * panels
@@ -185,7 +185,7 @@ Noctalia (on Quickshell) is responsible for:
 * interactions
 * launcher, notifications, wallpaper, lock (cohesive shell)
 
-Other tools provide focused functionality where Noctalia defers (e.g., `fuzzel`/`mako` as fallback).
+Other tools provide focused functionality where DMS defers (e.g. `fuzzel` as launcher fallback, `swaylock` as lock fallback).
 
 Conceptual stack:
 
@@ -193,7 +193,7 @@ Conceptual stack:
 NixOS
 └── Wayland
     └── Niri
-        ├── Noctalia (Quickshell)
+        ├── DankMaterialShell (Quickshell)
         │   ├── bar / dock
         │   ├── launcher
         │   ├── notifications
@@ -203,7 +203,7 @@ NixOS
         └── desktop utilities
 ```
 
-> Decision 2026-09-06: Noctalia over hand-rolled Quickshell — see `docs/decisions/noctalia.md` for alternatives and tradeoffs.
+> Decision 2026-10-15: DankMaterialShell over Noctalia — see `docs/decisions/dank-material-shell.md` for alternatives and tradeoffs (supersedes the 2026-09-06 Noctalia decision).
 
 ---
 
@@ -211,9 +211,9 @@ NixOS
 
 Chosen technology:
 
-**Noctalia** (built on Quickshell) — a cohesive, highly customizable Wayland shell.
+**DankMaterialShell** (built on Quickshell) — a cohesive, highly customizable Wayland shell.
 
-Hand-rolled Quickshell bar was prototyped and archived; Noctalia provides the same modular
+Hand-rolled Quickshell bar was prototyped and archived; DMS provides the same modular
 components as one integrated shell with fewer moving parts and r/unixporn polish out of the box.
 
 The shell must be modular.

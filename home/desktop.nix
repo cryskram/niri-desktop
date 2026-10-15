@@ -1,8 +1,9 @@
 # Desktop skeleton services (Home Manager).
 #
 # Phase 3: launcher, notifications, wallpaper, lock, terminal.
-# Noctalia now provides the shell (bar, panels, launcher, notifications,
-# wallpaper, lock) — quickshell custom bar removed (archived). Theme in Phase 4.
+# DMS provides the shell (bar, panels, launcher, notifications, wallpaper, lock)
+# via modules/dms-shell.nix — theme/noctalia-macchiato.json and the old noctalia
+# luau plugin were replaced by theme/dms-macchiato.json and dms-plugins/.
 {
   pkgs,
   ...
@@ -34,16 +35,10 @@ in
     separator-color = "00000000";
   };
 
-  # Terminal — ghostty only (RICE §19) — Macchiato, blur/glass via Noctalia theme
+  # Terminal — ghostty only (RICE §19) — Macchiato, blur/glass via the DMS theme
   programs.ghostty.enable = true;
 
-  # Wallpaper — swaybg (static fallback, per RICE §18)
-  # Spawned via niri's spawn-at-startup (see home/niri.nix) so it is tied
-  # to the compositor lifecycle. Installed to PATH so the spawn succeeds.
-  home.packages = with pkgs; [
-    swaybg
-  ];
-
-  # Shell now via Noctalia (home/noctalia.nix) — quickshell custom bar archived.
-  # Fallback wallpaper via swaybg remains for Noctalia's solid fallback.
+  # Wallpaper is owned by DMS (its wallpaper service, see modules/dms-shell.nix).
+  # swaybg used to be spawned by niri as a solid fallback; two wallpaper sources
+  # fought over the background, so it is no longer installed or spawned.
 }

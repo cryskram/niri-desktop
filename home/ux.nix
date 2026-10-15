@@ -1,18 +1,20 @@
 # UX — screenshots, recording, power (RICE §26-27, §7)
-# Clipboard is handled by Noctalia (home/noctalia.nix: clipboard_enabled).
+# Clipboard, screenshots and the lock are DMS's (modules/dms-shell.nix).
 # wl-clipboard kept for scriptable copy/paste; cliphist removed (redundant).
 { pkgs, ... }:
 {
-  # Idle — 5 min to lock + DPMS off (RICE §17), resume on input
+  # Idle — 5 min to lock + DPMS off (RICE §17), resume on input.
+  # Lock goes through DMS with swaylock as the fallback when the shell is down
+  # (same defensive chain as the Super+Alt+L keybind).
   services.swayidle = {
     enable = true;
     events = {
-      before-sleep = "${pkgs.swaylock}/bin/swaylock -f";
+      before-sleep = "sh -c '${pkgs.dms-shell}/bin/dms ipc call lock lock || ${pkgs.swaylock}/bin/swaylock -f'";
     };
     timeouts = [
       {
-        timeout = 300; # 5 min -> lock (Noctalia/swaylock, Storm theme)
-        command = "${pkgs.swaylock}/bin/swaylock -f";
+        timeout = 300; # 5 min -> lock (DMS lock, swaylock fallback)
+        command = "sh -c '${pkgs.dms-shell}/bin/dms ipc call lock lock || ${pkgs.swaylock}/bin/swaylock -f'";
       }
       {
         timeout = 305; # 5 sec after lock -> DPMS off, resume on input

@@ -1,5 +1,5 @@
 # OpenCode quota fetcher — systemd timer that keeps ~/.cache/opencode-quota.json fresh
-# for the Noctalia plugin (noctalia-plugins/opencode-quota). Also useful for debugging.
+# for the DMS bar widget (dms-plugins/opencode-quota). Also useful for debugging.
 { pkgs, ... }:
 let
   fetchScript = pkgs.writeShellScriptBin "opencode-quota-fetch" ''

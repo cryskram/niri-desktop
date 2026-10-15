@@ -1,0 +1,11 @@
+{
+  "id": "opencode-quota",
+  "name": "OpenCode Quota",
+  "description": "Rolling / weekly / monthly OpenCode usage, reset times in IST",
+  "version": "1.0.0",
+  "author": "vageesh",
+  "type": "widget",
+  "capabilities": ["dankbar-widget"],
+  "component": "./QuotaWidget.qml",
+  "icon": "cloud"
+}

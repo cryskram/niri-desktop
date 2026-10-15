@@ -1,7 +1,7 @@
 # Decision: Noctalia Shell over Custom Quickshell Bar
 
 **Date:** 2026-09-06
-**Status:** Accepted
+**Status:** Superseded by [`dank-material-shell.md`](dank-material-shell.md) (2026-10-15)
 
 ## Context
 RICE.md §6-7 originally specified a hand-rolled Quickshell bar with modular

@@ -9,10 +9,10 @@ One journal, many sessions. This skill owns `LEARNINGS.md` in this same director
 
 ## When to use
 
-- **Session start** (mandatory): Read `LEARNINGS.md` before planning, answering, or touching code. If the task touches preferences, tooling, Nix, Niri/Noctalia, or any prior decision, restore that context first.
+- **Session start** (mandatory): Read `LEARNINGS.md` before planning, answering, or touching code. If the task touches preferences, tooling, Nix, Niri/DMS, or any prior decision, restore that context first.
 - **Before any preference-sensitive action**: Naming, structure, formatting, commit style, Nix patterns, shell (fish), theme — check learnings before assuming.
 - **When the user corrects you, states a preference, or says "remember this"**: Append immediately.
-- **After you discover something reusable**: A pitfall, a non-obvious command, a module pattern that works (or doesn't), a quirk of Niri/Noctalia/pi.nix — distill it and append.
+- **After you discover something reusable**: A pitfall, a non-obvious command, a module pattern that works (or doesn't), a quirk of Niri/DMS/pi.nix — distill it and append.
 - **End of session / before handoff**: If anything new was learned, append before closing.
 
 Do not treat this as optional. The global Pi brain (`pi/brain/APPEND_SYSTEM.md` and `pi/brain/AGENTS.md`) requires it. If unsure whether something is worth remembering, remember it — 2-4 lines is cheap, re-learning is expensive.
@@ -33,7 +33,7 @@ Do not treat this as optional. The global Pi brain (`pi/brain/APPEND_SYSTEM.md` 
 Source: session summary / user correction / observed failure — one line.
 ```
 
-Categories: `preference` · `workflow` · `nix` · `niri/noctalia` · `pi` · `tooling` · `decision` · `gotcha`
+Categories: `preference` · `workflow` · `nix` · `niri/dms` · `pi` · `tooling` · `decision` · `gotcha`
 
 Tags: short scopes like `nix/flake`, `pi/skill`, `git/commit`, `shell/fish`, `dev/devenv`.
 
@@ -70,7 +70,7 @@ Source: user correction in niri-desktop session — requested abbr-first shell.
 ```markdown
 ## 2026-10-06 — Never `nix flake update` all inputs at once (gotcha) — `nix/flake`
 
-- What: Update one input at a time and dry-run build cost; `noctalia` always rebuilds from source (~15min), `nixpkgs` may rebuild kernel modules.
+- What: Update one input at a time and dry-run build cost; `nixpkgs` may rebuild kernel modules, and locally-built packages in flake inputs rebuild from source.
 - Why: Blind mass update burned an hour; cost matrix is in README § Updating inputs.
 - How: `nix flake update <input> && nix build --dry-run --no-link '.#nixosConfigurations."nixos".config.system.build.toplevel' | grep drv`
 

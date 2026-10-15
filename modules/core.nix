@@ -4,7 +4,6 @@
 {
   lib,
   pkgs,
-  noctalia,
   nixpkgs-unstable,
   spicetify-nix,
   ...
@@ -72,6 +71,12 @@ in
         # nixpkgs wraps its runtime deps (ripgrep, bubblewrap, socat); the former
         # claude-code-bin attribute was merged into it upstream.
         claude-code = unstable.claude-code;
+
+        # DankMaterialShell — Wayland shell (bar/launcher/notifications/lock/wallpaper).
+        # Stable 26.05 ships 1.4.x; 1.6.x adds the island bar layout. quickshell is
+        # overlaid too because DMS 1.6 requires a current one.
+        dms-shell = unstable.dms-shell;
+        quickshell = unstable.quickshell;
       })
   ];
 
@@ -224,7 +229,7 @@ in
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
   home-manager.backupFileExtension = "backup";
-  home-manager.extraSpecialArgs = { inherit noctalia spicetify-nix; };
+  home-manager.extraSpecialArgs = { inherit spicetify-nix; };
 
   home-manager.users.vageesh = {
     imports = [
@@ -235,7 +240,6 @@ in
       ../home/ux.nix
       ../home/shell.nix
       ../home/files.nix
-      ../home/noctalia.nix
       ../home/scripts.nix
       ../home/git.nix
       ../home/direnv.nix
@@ -316,7 +320,7 @@ in
     ELECTRON_OZONE_PLATFORM_HINT = "auto";
   };
 
-  # Services the Noctalia bar widgets need (bluetooth/battery pills vanished when
+  # Services the DMS bar widgets need (bluetooth/battery pills vanished when
   # GNOME desktop was removed — these were implicitly enabled by it).
   hardware.bluetooth.enable = true;
   services.upower.enable = true;

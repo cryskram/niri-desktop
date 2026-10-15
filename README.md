@@ -1,10 +1,10 @@
 # niri-desktop
 
-Reproducible NixOS desktop and developer workstation built around [Niri](https://github.com/YaLTeR/niri) + [Noctalia](https://github.com/noctalia-dev/noctalia-shell) — Catppuccin Macchiato, Wayland-native.
+Reproducible NixOS desktop and developer workstation built around [Niri](https://github.com/YaLTeR/niri) + [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) — Catppuccin Macchiato, Wayland-native.
 
 ![NixOS](https://img.shields.io/badge/NixOS-26.05-blue?logo=nixos)
 ![Niri](https://img.shields.io/badge/compositor-Niri-7aa2f7)
-![Noctalia](https://img.shields.io/badge/shell-Noctalia-414868)
+![DMS](https://img.shields.io/badge/shell-DankMaterialShell-414868)
 ![license](https://img.shields.io/badge/license-MIT-lightgrey)
 
 Single source of truth — clone and rebuild on compatible hardware.
@@ -12,12 +12,12 @@ Single source of truth — clone and rebuild on compatible hardware.
 ## Showcase
 
 - **Compositor:** Niri scrollable tiling, dynamic workspaces, rounded corners (`12px`), `8px` gaps, rings `2px`
-- **Shell:** Noctalia (Quickshell) — island pills, glass/blur, launcher/control-center/wallpaper/lock
+- **Shell:** DankMaterialShell (Quickshell) — island bar, glass/blur, launcher/control-center/wallpaper/lock
 - **Theme:** Catppuccin Macchiato (centralized tokens, no hard-coded palette)
 - **Login:** SDDM Astronaut (Wayland, `QtMultimedia` + Bibata cursor)
 - **Workstation:** `devenv` + `direnv` + Docker, full language toolchains
 
-> Spec: [`RICE.md`](RICE.md) · Architecture: [`AGENTS.md`](AGENTS.md) · Dev setup: [`DEV_ENVIRONMENT.md`](DEV_ENVIRONMENT.md) · Decision: [`docs/decisions/noctalia.md`](docs/decisions/noctalia.md)
+> Spec: [`RICE.md`](RICE.md) · Architecture: [`AGENTS.md`](AGENTS.md) · Dev setup: [`DEV_ENVIRONMENT.md`](DEV_ENVIRONMENT.md) · Decision: [`docs/decisions/dank-material-shell.md`](docs/decisions/dank-material-shell.md)
 
 ## Quick start
 
@@ -34,12 +34,12 @@ Requirements: NixOS `26.05` `x86_64`, flakes enabled, Intel graphics, `1920×108
 ## Structure
 
 ```
-flake.nix                — inputs: nixpkgs, unstable, home-manager, pi.nix, noctalia
+flake.nix                — inputs: nixpkgs, unstable, home-manager, pi.nix, catppuccin, spicetify
 configuration.nix        — system (boot, networking, pipewire, locale)
 hardware-configuration.nix — generated, don't edit casually
 modules/                 — core.nix (flake wiring, pi, HM), theme/shell/niri/sddm/docker/direnv/vpn.nix
-home/                    — niri.nix, noctalia.nix, theme.nix, shell.nix, git.nix, development.nix, ...
-theme/                   — tokens.nix + noctalia-macchiato.json (Noctalia palette)
+home/                    — niri.nix, theme.nix, shell.nix, git.nix, development.nix, ...
+theme/                   — tokens.nix + dms-macchiato.json (DankMaterialShell theme)
 pi/                      — pi prompts, skills, extensions (mcp-adapter, pi-btw, rpiv-todo/ask-user-question, zentui, pi-subagents, pi-web-access, safety/querion), rules, theme
 dev/                     — personal devenv definitions (shared/, templates/, company/)
 secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
@@ -50,7 +50,7 @@ secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
 
 ## Desktop
 
-**Stack:** NixOS → Wayland → Niri → Noctalia → utilities (`fuzzel`, `mako`, `swaybg`, `swaylock`).
+**Stack:** NixOS → Wayland → Niri → DankMaterialShell → utilities (`fuzzel` launcher fallback, `swaylock` lock fallback).
 
 **Bar (Noctalia islands):** `[launcher|workspaces] [clock] [network|bluetooth|volume|battery|control-center|session]` — per-pill hex, no overflow, survives missing BT/NET/muted/battery states. Panels (network/audio/BT) share Storm tokens.
 
@@ -65,7 +65,7 @@ secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
 | Bind | Action |
 |---|---|
 | `Mod+T` / `Mod+Return` | Ghostty |
-| `Mod+D` | Noctalia launcher (fallback fuzzel) |
+| `Mod+D` | DMS spotlight (fallback fuzzel) |
 | `Mod+Ctrl+V` | clipboard |
 | `Mod+Ctrl+C` | control-center |
 | `Mod+P` | session/power |
@@ -134,7 +134,7 @@ Mod+Shift+N        # or vpn-toggle
 vpn-status         # up/down
 systemctl status wg-quick-wg0
 journalctl -u wg-quick-wg0 -n 30
-# NM import to show inside Noctalia network panel:
+# NM import to show inside the DMS network panel:
 nmcli connection import type wireguard file ~/niri-desktop/secrets/wg0.conf
 ```
 
@@ -159,14 +159,14 @@ Known fix: `gcc`/`clang` both provide `bin/c++` → `lib.hiPrio gcc` / `lib.lowP
 
 ## Updating inputs
 
-Never run bare `nix flake update` — it bumps every input at once, and two of them can cost an hour of local compilation. Update one input at a time and preview the price first.
+Never run bare `nix flake update` — it bumps every input at once, and `nixpkgs` alone can cost ~10 minutes of local kernel-module compilation. Update one input at a time and preview the price first.
 
 ```bash
 cd ~/niri-desktop
 git status --short                   # must be clean
 git tag pre-update-$(date +%Y%m%d)   # cheap rollback point
 
-nix flake update <one-input>         # e.g. nixpkgs, noctalia, home-manager
+nix flake update <one-input>         # e.g. nixpkgs, home-manager
 
 # what will actually compile locally? (nix flake check does NOT tell you)
 nix build --dry-run --no-link '.#nixosConfigurations."nixos".config.system.build.toplevel' 2>&1 \
@@ -182,17 +182,20 @@ sudo nixos-rebuild switch --flake .#nixos --accept-flake-config
 
 | Input | Cost when updated | Why |
 |---|---|---|
-| `noctalia` | **always** a source build (~10–20 min) | the upstream flake publishes no binary cache |
 | `nixpkgs` | kernel modules (~10 min) when its version moves | |
-| `nixpkgs-unstable` | usually cached | Hydra builds unstable |
+| `nixpkgs-unstable` | usually cached | Hydra builds unstable; this is also where the shell comes from |
 | `pi` | cached | `pi.cachix.org` is in this flake's `nixConfig` |
 | `home-manager`, `catppuccin`, `spicetify-nix` | seconds | config only |
 
-Rule of thumb: `noctalia` is the one that can cost 20+ minutes; everything else is cheap — `nixpkgs` bumps mainly rebuild the kernel modules. A reasonable cadence is `nixpkgs` + `home-manager` + `nixpkgs-unstable` every few weeks, and `noctalia` only when you want the new version.
+Rule of thumb: `nixpkgs` is the only input that can cost ~10 minutes (kernel modules); everything else is cheap. A reasonable cadence is `nixpkgs` + `home-manager` + `nixpkgs-unstable` every few weeks.
+
+> Until 2026-10-15 this table had a `noctalia` row that **always** source-built (~10–20 min) because its flake has
+> no binary cache. Switching to DankMaterialShell (from `nixpkgs`) removed the last expensive input — see
+> [`docs/decisions/dank-material-shell.md`](docs/decisions/dank-material-shell.md).
 
 ### Updating pi extensions
 
-The third-party pi extensions (`pi-mcp-adapter`, `pi-subagents`, `pi-btw`, `pi-zentui`, `pi-web-access`, the two `rpiv` extensions) are pinned inside [`pi/packages.nix`](pi/packages.nix), **not** flake inputs — `nix flake update` never touches them.
+The third-party pi extensions (`pi-btw`, `pi-subagents`, `pi-web-access`, `pi-zentui`, `pi-cache-optimizer`, `pi-session-search`, the two `rpiv` extensions) are pinned inside [`pi/packages.nix`](pi/packages.nix), **not** flake inputs — `nix flake update` never touches them.
 
 ```bash
 cd ~/niri-desktop

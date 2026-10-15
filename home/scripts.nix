@@ -136,7 +136,7 @@
           SVC="wg-quick-wg0"
           ;;
       esac
-      # Prefer NM if connection exists (what Noctalia/Waybar toggles)
+      # Prefer NM if connection exists (what DMS toggles)
       if nmcli connection show "$CONN" >/dev/null 2>&1; then
         if nmcli -t -f TYPE,STATE device status 2>/dev/null | grep -q "^wireguard:connected"; then
           echo "Stopping NM $CONN..."
