@@ -2,13 +2,13 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
-## 2026-10-16 — Input diagnostics installed (decision) — `system/input`
+## 2026-10-16 — Input diagnostics installed + `input` group membership (decision) — `system/input`
 
-- What: `environment.systemPackages` gained `libinput` (1.31.3; the CLI is in the package's `bin` output), `evtest` 1.36 and `wev` 1.1.0.
-- Why/Context: niri links libinput as a *library*, so the box had no CLI to inspect input devices. No udev rules or group grants were added — `sudo libinput list-devices` suffices, and granting read access to `/dev/input` silently would be keylogging-capable.
-- How/Apply: `sudo libinput list-devices | debug-events | measure <feature> | record`, `sudo evtest`, `wev` (user-level Wayland events). Deliberately skipped `libinput-gestures` (niri owns gestures) and `services.libinput.enable` (an X11 concern).
+- What: `environment.systemPackages` gained `libinput` (1.31.3; the CLI is in the package's `bin` output), `evtest` 1.36 and `wev` 1.1.0; `users.users.vageesh.extraGroups` gained `input`.
+- Why/Context: niri links libinput as a *library*, so the box had no CLI to inspect input devices. `/dev/input/event*` are `root:input 0660` and the NixOS-provided `input` group already exists (gid 174, declared in the evaluated config), so membership removes the need for `sudo` — at the cost of read access to every keystroke device (keylogging-capable for anything running as the user). A stricter alternative if ever wanted: `services.udev.extraRules` with `TAG+="uaccess"`, which grants the *active session* only.
+- How/Apply: `libinput list-devices | debug-events | measure <feature> | record`, `evtest`, `wev` (Wayland events). Group changes need a fresh login — running processes keep their old group list; `newgrp input` fixes a single shell. Deliberately skipped `libinput-gestures` (niri owns gestures) and `services.libinput.enable` (an X11 concern).
 
-Source: user request "install libinput and its tools on this machine".
+Source: user request "install libinput and its tools", then "need to add myself to the input group".
 
 ## 2026-10-16 — pi-cache-optimizer + pi-session-search removed (decision) — `pi/ext`
 

@@ -344,4 +344,8 @@ in
     evtest
     wev
   ];
+
+  # Those tools open /dev/input/event* (root:input 0660), so membership replaces
+  # sudo. Scope: read access to every keystroke device — see the journal entry.
+  users.users.vageesh.extraGroups = [ "input" ];
 }
