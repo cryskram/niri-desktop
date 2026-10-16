@@ -2,6 +2,21 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-16 — Gotcha: staging for `flake check` leaks into the next commit — `workflow`
+
+- Twice in one session, `git add <newfile>` done *only* so `nix flake check` could see an untracked file left it in the index, so the next `git commit` absorbed it into the wrong commit (and a follow-up commit then found "nothing to commit").
+- How/Apply: stage for validation, then `git reset` (mixed — keeps the worktree) before composing the real commits; after each commit verify with `git show --stat` instead of trusting the message. Splitting a published commit needs an authorised `--force-with-lease`; verify the regroup with `git diff --quiet <old> HEAD` (tree must be identical).
+
+Source: icon/Tailscale installs earlier the same day.
+
+## 2026-10-16 — Tailscale in the chooser + guide (decision) — `system/net`
+
+- What: `vpn-toggle` gained a `tailscale` option (up/down through the CLI; no sudo thanks to `--operator`) and `vpn-status` reports its state; `docs/tailscale.md` documents setup, usage, NixOS specifics and the wg0/Proton interaction.
+- Why/Context: DMS's VPN widget lists **NetworkManager connections only** (`nmcli`), and Tailscale is not NM-managed, so the fuzzel chooser is Tailscale's only integration point. Tunnels that *can* be imported (`nmcli connection import type wireguard file …`) do appear in the DMS widget.
+- How/Apply: `vpn-toggle tailscale` or "tailscale (mesh VPN)" from `Mod+Shift+N`; state from `tailscale status --json | jq -r .BackendState` (Running/Stopped/NeedsLogin — NeedsLogin requires an interactive `sudo tailscale up`, so the toggle reports it rather than hanging).
+
+Source: user request to add Tailscale to the chooser and commit the guide.
+
 ## 2026-10-16 — Tailscale added (decision) — `system/net`
 
 - What: `modules/tailscale.nix` — `enable` + `openFirewall` (UDP 41641, direct peer connections instead of DERP) + `useRoutingFeatures = "client"` (sets `checkReversePath = "loose"`) + `extraSetFlags = [ "--operator=vageesh" ]`; `networking.firewall.trustedInterfaces` += `tailscale0`.
