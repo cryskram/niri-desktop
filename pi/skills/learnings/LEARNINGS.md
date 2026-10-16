@@ -2,6 +2,15 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-16 — Permission gate: pi-guard replaces safety.ts (decision) — `system/pi`
+
+- What: tool calls are gated by third-party `pi-guard` (pinned in `pi/packages.nix`, policy under `settings.guard` in `modules/core.nix`); the repo-local `pi/extensions/safety.ts` is gone — pi-guard covers bash + file paths + MCP, and two gates on one call would double-prompt.
+- Why/Context: pi-guard matches rules by EXACT tool name and sends any unlisted tool to `ask`, which headless (subagents, `pi -p`) means *blocked*, not prompted — so the rule set enumerates all 31 tools, and a new extension or MCP server needs its tools added. Verified semantics: a rule's first token must equal the command name exactly and only later tokens are globs (`mkfs*`, `*DROP TABLE*`, `shutdown*` are dead rules); `*` never crosses `/` so path values need `**` (`of=*`/`of=**` both miss, hence `dd` denied wholesale); for path-matched tools the catch-all must be `**`; `PI_GUARD` wants a bare rules map (an envelope silently degrades to defaults). Wrapper expansion is genuine: `bash -c 'rm -rf …'` and `find -exec rm` are caught.
+- How/Apply: `/guard list` shows effective rules and the prompt UI can save permanent allows (explicit declarative keys still win on merge). Verify in isolation with the raw store binary plus a project `.pi/settings.json`: the HM wrapper's `-e` args (i.e. an older safety.ts) load even with `--no-extensions` and mask pi-guard's decisions.
+
+Source: user asked whether to set up pi-permissions, then chose a full tool allowlist after measurement.
+
+
 ## 2026-10-16 — SSH in: sshd (key-only) + Tailscale SSH (decision) — `system/ssh`
 
 - What: `modules/ssh.nix` enables OpenSSH key-only (`PasswordAuthentication`/`KbdInteractiveAuthentication` false, `PermitRootLogin` "no", `openFirewall = false` → port 22 stays off the LAN) with an empty `users.users.vageesh.openssh.authorizedKeys.keys` slot; `modules/tailscale.nix` adds `"--ssh"` to `extraSetFlags`.
