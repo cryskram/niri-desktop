@@ -11,6 +11,14 @@ Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal.
 Source: user asked whether to set up pi-permissions, then chose a full tool allowlist after measurement.
 
 
+## 2026-10-16 — Link every project in reconstructed activity logs (workflow) — `tracker/evidence`
+
+- What: Dated activity logs reconstructed from GitHub should link every project repository with activity on each date, not just a representative repo.
+- Why/Context: Cross-project work is easy to hide behind one sample link; a dated evidence index makes each repo verifiable.
+- How/Apply: Keep one per-date/per-repository URL row in an evidence index and link the daily summary to that date's complete list.
+
+Source: User correction while refining Daily Task Tracker.
+
 ## 2026-10-16 — SSH in: sshd (key-only) + Tailscale SSH (decision) — `system/ssh`
 
 - What: `modules/ssh.nix` enables OpenSSH key-only (`PasswordAuthentication`/`KbdInteractiveAuthentication` false, `PermitRootLogin` "no", `openFirewall = false` → port 22 stays off the LAN) with an empty `users.users.vageesh.openssh.authorizedKeys.keys` slot; `modules/tailscale.nix` adds `"--ssh"` to `extraSetFlags`.
