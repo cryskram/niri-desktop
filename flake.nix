@@ -105,6 +105,7 @@
           ./modules/direnv.nix
           ./modules/vpn.nix
           ./modules/tailscale.nix
+          ./modules/ssh.nix
           pi.nixosModules.default
           home-manager.nixosModules.home-manager
         ];

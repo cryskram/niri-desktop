@@ -16,7 +16,13 @@
 
     # Applied at boot by tailscaled-set, so the CLI needs no sudo — and unlike a
     # manual `tailscale set --operator=…` it survives every rebuild.
-    extraSetFlags = [ "--operator=vageesh" ];
+    # --ssh serves SSH for tailnet clients from inside tailscaled: those packets
+    # are handled after WireGuard decryption and never reach the host's sshd, so
+    # tailnet logins are identity-based (tailnet ACLs) rather than key-based.
+    extraSetFlags = [
+      "--operator=vageesh"
+      "--ssh"
+    ];
   };
 
   # The module does not trust tailscale0, so tailnet peers could not reach local
