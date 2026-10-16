@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-16 — AIOC quota card: API shape drift, patched adapter, pi card deselected (finding) — `system/dms`
+
+- What: AiOverviewControl 1.21.0 validates the older Zen shape (`rollingUsage`/`usagePercent`/`resetInSec`), but `GET /zen/go/v1/usage` now returns `usage.{rolling,weekly,monthly}.{percent,resetsAt}`, so its opencode card silently degraded to an auth-only note. Fixed by `patches/aioc-opencode-usage-shape.patch` (accepts both shapes) plus `home.activation.patchAiOverviewControlOpencode`, which re-applies it every activation and skips once the file handles the current shape.
+- Why/Context: the failure was silent rather than an error, and the plugin's own fixtures/tests still encode the old shape — upstream's suite passes while production breaks. Its `pi` card has no API mode and buckets each session to its start day (under-reporting marathon sessions), so the selection moved to the API-backed `opencode` card that `OPENCODE_USAGE_SOURCE=api` already forces on `dms.service`.
+- How/Apply: verified through the plugin's own adapter (`source: opencode-usage`, rolling 8% / weekly 56% / monthly 87%) and its test suite (`tests/test-opencode.sh` passes, so the legacy shape still works); the bar pill matched the live rolling percent while battery (94%) and volume did not. Offer the patch upstream, then drop both the patch and the activation.
+
+Source: user reported the pi card in AI Usage Control "isn't proper" and asked for API-only data.
+
 ## 2026-10-16 — Permission gate: pi-guard replaces safety.ts (decision) — `system/pi`
 
 - What: tool calls are gated by third-party `pi-guard` (pinned in `pi/packages.nix`, policy under `settings.guard` in `modules/core.nix`); the repo-local `pi/extensions/safety.ts` is gone — pi-guard covers bash + file paths + MCP, and two gates on one call would double-prompt. Reads stay ungated by request (`read = "allow"`, any file): private keys and `.env` values can therefore reach a transcript, which `/sync` archives — gating the tool was not real protection anyway, since `cat` bypasses it. Writes are denied on the protected set.
