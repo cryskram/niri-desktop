@@ -244,16 +244,13 @@ in
               "systemctl halt" = "ask";
             };
 
-            # File tools. Reads are unrestricted except private keys and .env
-            # files; writes and edits respect protectedPaths.
-            read = {
-              "**" = "allow";
-              "**/.env" = "deny";
-              "**/*.env" = "deny";
-              "**/*.env.*" = "deny";
-              "**/*.pem" = "deny";
-              "**/id_*" = "deny";
-            };
+            # File tools: reads are unrestricted, writes/edits respect
+            # protectedPaths below.
+            #
+            # Reads are deliberately ungated (any file, including private keys and
+            # .env contents): that is the explicit preference, and the trade-off is
+            # that such values do reach the transcript, which /sync archives.
+            read = "allow";
             write = protectedPaths;
             edit = protectedPaths;
 
