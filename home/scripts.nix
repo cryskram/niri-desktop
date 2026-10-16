@@ -100,8 +100,8 @@
     '')
     (writeShellScriptBin "vpn-toggle" ''
       set -euo pipefail
-      # Toggle VPN — supports both company (wg0) and proton
-      # Usage: vpn-toggle [wg0|proton] — no arg shows chooser via fuzzel
+      # Toggle VPN — supports company (wg0), proton, and tailscale
+      # Usage: vpn-toggle [wg0|proton|proton-gui|tailscale] — no arg shows chooser via fuzzel
       choose_vpn() {
         local opts="wg0 (company)"
         if nmcli connection show proton >/dev/null 2>&1 || systemctl cat wg-quick-proton >/dev/null 2>&1 || [ -f "$HOME/niri-desktop/secrets/proton.conf" ]; then
@@ -111,6 +111,11 @@
         if command -v protonvpn-app >/dev/null 2>&1; then
           opts="$opts\nproton-gui (Proton VPN app)"
         fi
+        # Tailscale is not NetworkManager-managed, so it never appears in DMS's
+        # VPN widget — this chooser is its only integration point.
+        if command -v tailscale >/dev/null 2>&1; then
+          opts="$opts\ntailscale (mesh VPN)"
+        fi
         printf "%b" "$opts" | ${pkgs.fuzzel}/bin/fuzzel --dmenu --prompt "VPN: " 2>/dev/null | cut -d' ' -f1 || echo "wg0"
       }
       TARGET="''${1:-}"
@@ -118,6 +123,30 @@
         TARGET=$(choose_vpn)
       fi
       case "$TARGET" in
+        tailscale)
+          # No sudo needed: --operator=vageesh is applied at boot by tailscaled-set.
+          # NeedsLogin can only be resolved by an interactive `tailscale up` in a
+          # terminal (browser login), so say so rather than hanging here.
+          TS_STATE=$(tailscale status --json 2>/dev/null | jq -r '.BackendState // "Unknown"' 2>/dev/null || echo Unknown)
+          case "$TS_STATE" in
+            Running)
+              tailscale down 2>/dev/null || true
+              notify-send "VPN" "Tailscale disconnected" 2>/dev/null || true
+              ;;
+            Stopped)
+              if tailscale up 2>/dev/null; then
+                notify-send "VPN" "Tailscale connected" 2>/dev/null || true
+              else
+                notify-send "VPN" "Tailscale failed — check: tailscale status" 2>/dev/null || true
+              fi
+              ;;
+            *)
+              echo "Tailscale state: $TS_STATE — run: sudo tailscale up (browser login)"
+              notify-send "VPN" "Tailscale not logged in — run: sudo tailscale up" 2>/dev/null || true
+              ;;
+          esac
+          exit 0
+          ;;
         proton-gui)
           if pgrep -f protonvpn-app-wrapped >/dev/null 2>&1; then
             notify-send "VPN" "Proton VPN GUI already running" 2>/dev/null || true
@@ -173,7 +202,11 @@
     '')
     (writeShellScriptBin "vpn-status" ''
       set -euo pipefail
-      # Show status for both VPNs, or specific one if arg given
+      # Show status for both VPNs (+ tailscale), or specific one if arg given
+      if [ "''${1:-}" = "tailscale" ]; then
+        tailscale status --json 2>/dev/null | jq -r '.BackendState' 2>/dev/null | grep -q Running && echo "up" || echo "down"
+        exit 0
+      fi
       if [ -n "''${1:-}" ]; then
         CONN="$1"
         SVC="wg-quick-$1"
@@ -193,6 +226,13 @@
         fi
         echo "$CONN: $ST"
       done
+      if command -v tailscale >/dev/null 2>&1; then
+        if tailscale status --json 2>/dev/null | jq -r '.BackendState' 2>/dev/null | grep -q Running; then
+          echo "tailscale: up"
+        else
+          echo "tailscale: down"
+        fi
+      fi
     '')
     (writeShellScriptBin "niri-display-toggle" ''
       set -euo pipefail
