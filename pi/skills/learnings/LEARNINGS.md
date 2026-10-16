@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-16 — pi-cache-optimizer + pi-session-search removed (decision) — `pi/ext`
+
+- What: Both pins deleted (`pi/packages.nix`), unwired (`modules/core.nix` extensions + the `session-history` skill), dropped from `scripts/update-pi-extensions.py` (entries + anchors) and the README list; one-time activation removes the orphaned state (`~/.pi/session-search` = 11M FTS index, cache-optimizer shards + config).
+- Why/Context: cache-optimizer's footer showed `DS cache 0/0·0M/0M 0.0%` while pi's session log recorded `cacheRead: 224384` for `deepseek-v4.1-flash` — it creates per-model shard entries but never attributes usage through the **`jev/auto` virtual route**, so the status misreported the setup; session-search had no use case (journal + Querion cover recall).
+- How/Apply: 6 pins remain (pi-btw, zentui, pi-subagents, pi-web-access, rpiv-ask-user-question, rpiv-todo); `update-pi-extensions.py --check` = 6/6 ok. Beware: virtual-model routing breaks per-model extension attribution — prefer status extensions that read pi's own footer/metadata.
+
+Source: user request after asking what the cache footer meant.
+
 ## 2026-10-15 — Icons: Papirus-Dark + Macchiato folders; catppuccin HM module is NOT imported (decision) — `theme/icons`
 
 - What: `home/theme.nix` uses `pkgs.catppuccin-papirus-folders.override { flavor = "macchiato"; accent = "mauve"; }` (name stays `Papirus-Dark`) plus `dconf.settings."org/gnome/desktop/interface"."icon-theme"` — HM's gtk module only writes gtk-2.0/gtk-3.0 settings.ini, GTK4/libadwaita read dconf. Verified: folder.svg fill becomes `#C6A0F6` (mauve), all three sampled icons differ from stock.
