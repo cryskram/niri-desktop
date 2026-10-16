@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-16 — Input diagnostics installed (decision) — `system/input`
+
+- What: `environment.systemPackages` gained `libinput` (1.31.3; the CLI is in the package's `bin` output), `evtest` 1.36 and `wev` 1.1.0.
+- Why/Context: niri links libinput as a *library*, so the box had no CLI to inspect input devices. No udev rules or group grants were added — `sudo libinput list-devices` suffices, and granting read access to `/dev/input` silently would be keylogging-capable.
+- How/Apply: `sudo libinput list-devices | debug-events | measure <feature> | record`, `sudo evtest`, `wev` (user-level Wayland events). Deliberately skipped `libinput-gestures` (niri owns gestures) and `services.libinput.enable` (an X11 concern).
+
+Source: user request "install libinput and its tools on this machine".
+
 ## 2026-10-16 — pi-cache-optimizer + pi-session-search removed (decision) — `pi/ext`
 
 - What: Both pins deleted (`pi/packages.nix`), unwired (`modules/core.nix` extensions + the `session-history` skill), dropped from `scripts/update-pi-extensions.py` (entries + anchors) and the README list; one-time activation removes the orphaned state (`~/.pi/session-search` = 11M FTS index, cache-optimizer shards + config).

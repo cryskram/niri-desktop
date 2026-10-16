@@ -337,5 +337,11 @@ in
     jdk17
     jdk # latest (21) — for projects needing latest, use JAVA_HOME=${pkgs.jdk}/lib/openjdk or devenv override
     glow
+
+    # Input diagnostics (RICE §24). libinput's CLI reads /dev/input, so it needs
+    # root: `sudo libinput list-devices`. evtest = raw evdev, wev = Wayland events.
+    libinput
+    evtest
+    wev
   ];
 }
