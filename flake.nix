@@ -104,6 +104,7 @@
           ./modules/docker.nix
           ./modules/direnv.nix
           ./modules/vpn.nix
+          ./modules/tailscale.nix
           pi.nixosModules.default
           home-manager.nixosModules.home-manager
         ];
