@@ -217,4 +217,26 @@ in
       "--omit=dev"
     ];
   };
+
+  # pi-guard — permission gate for tool calls: bash commands parsed as an AST
+  # (so `sudo rm -rf`, `bash -c '…'` and `find -exec rm` are caught, unlike a
+  # regex blocklist), file-path globs for read/write/edit, and whole-tool rules
+  # for everything else. The policy lives declaratively under `settings.guard`
+  # in modules/core.nix — quiet by default, denying/prompting only on
+  # destructive operations, which is the opposite of upstream's ask-everything
+  # defaults (and of its ask-unknown-tools fallback).
+  pi-guard = withDeps {
+    pname = "pi-guard";
+    version = "1.6.0";
+    src = pkgs.fetchFromGitHub {
+      owner = "jdiamond";
+      repo = "pi-guard";
+      tag = "v1.6.0";
+      hash = "sha256-il/wRNdV2zLi07b6SBubuJX4R+HXIiV0Bsx0XrWSckE=";
+    };
+    npmHash = "sha256-nwer1uc8wiOV5v1IPbxN5gMRTP++ihffuFlSjcZb7cU=";
+    npmFlags = [
+      "--omit=dev"
+    ];
+  };
 }

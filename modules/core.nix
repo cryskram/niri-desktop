@@ -139,6 +139,160 @@ in
           };
         };
       };
+
+      # pi-guard — permission gate for tool calls.
+      #
+      # pi-guard resolves rules by EXACT tool name, and a tool with no entry falls
+      # through to "ask" — which in a headless run (subagents, `pi -p`) means
+      # *blocked*, not prompted. So this rule set is deliberately complete:
+      # destructive operations are gated, and every other tool the agent can call
+      # is listed as an outright allow. Adding an extension or an MCP server means
+      # adding its tools here (`/guard list` shows what is in effect, and the
+      # prompt UI offers to save a permanent allow).
+      #
+      # Two levels: `deny` blocks with no prompt (nothing denied is ever the right
+      # answer to a request), `ask` confirms first — with an "allow for this
+      # session" option, so a repeat costs one prompt rather than one per call.
+      #
+      # Rule order matters: `settings` is serialised sorted, so the catch-all "*"
+      # sorts first and every specific rule after it. pi-guard takes the last
+      # match, which is what makes a catch-all-first policy work.
+      guard =
+        let
+          # For path-matched tools the catch-all is "**", NOT "*": a single `*`
+          # does not cross "/", so with `*` every real path would fall through to
+          # the "ask" default (verified: a write to an absolute path was blocked).
+          protectedPaths = {
+            "**" = "allow";
+            "**/.ssh/**" = "deny";
+            "**/.gnupg/**" = "deny";
+            "**/.aws/**" = "deny";
+            "**/secrets/**" = "deny";
+            "**/.env" = "deny";
+            "**/*.env" = "deny";
+            "**/*.env.*" = "deny"; # .env.local and friends; .envrc stays writable
+            "**/*.pem" = "deny";
+            "**/*.key" = "deny";
+            "**/id_*" = "deny";
+            "**/.pi/agent/auth.json" = "deny";
+          };
+        in
+        {
+          enabled = true;
+          rules = {
+            bash = {
+              # Ordinary commands run unprompted; everything below is the exception.
+              "*" = "allow";
+
+              # Hard stops: silent block, reason shown to the model.
+              #
+              # pi-guard requires a rule's FIRST token to equal the command name
+              # exactly and treats only the remaining tokens as globs, so a
+              # keyword-only rule such as "*DROP TABLE*" can never match. Database
+              # clients are therefore named individually, with the keyword as a
+              # glob against any argument.
+              # (verified: without the client name, `sqlite3 … 'DROP TABLE t'` ran)
+              # `dd` is denied outright rather than just its `of=` form: the value is
+              # a path, and no reliable glob expresses it — a single `*` will not cross
+              # "/", and `**` only acts as a globstar as a whole path segment
+              # (verified: `of=*` and `of=**` both let `dd … of=/tmp/x` through).
+              dd = "deny";
+              mkfs = "deny";
+              "mkfs.ext2" = "deny";
+              "mkfs.ext3" = "deny";
+              "mkfs.ext4" = "deny";
+              "mkfs.xfs" = "deny";
+              "mkfs.btrfs" = "deny";
+              "mkfs.fat" = "deny";
+              "mkfs.vfat" = "deny";
+              dropdb = "deny";
+              dropuser = "deny";
+              "psql *DROP*" = "deny";
+              "psql *TRUNCATE*" = "deny";
+              "mariadb *DROP*" = "deny";
+              "mysql *DROP*" = "deny";
+              "sqlite3 *DROP*" = "deny";
+              "redis-cli *FLUSH*" = "deny";
+
+              # Confirm before running. `-r`/`-R`/`--recursive` are separate
+              # spellings and `-fr` reverses the flags, so each form is listed;
+              # pi-guard expands wrapper commands, which is why `sudo rm -rf`,
+              # `bash -c 'rm -rf /'` and `find . -exec rm {} \;` all land here.
+              "rm -r*" = "ask";
+              "rm -R*" = "ask";
+              "rm -fr*" = "ask";
+              "rm -fR*" = "ask";
+              "rm --recursive*" = "ask";
+              "git reset --hard" = "ask";
+              "git clean -f*" = "ask";
+              "git push -f" = "ask";
+              "git push --force" = "ask"; # --force-with-lease stays allowed
+              "chmod 777*" = "ask";
+              "docker system prune*" = "ask";
+              "docker volume prune*" = "ask";
+              "docker volume rm*" = "ask";
+              "docker rm -f*" = "ask";
+              "kubectl delete*" = "ask";
+              "terraform destroy*" = "ask";
+              "terraform apply -auto-approve*" = "ask";
+              reboot = "ask";
+              poweroff = "ask";
+              halt = "ask";
+              shutdown = "ask";
+              "systemctl reboot" = "ask";
+              "systemctl poweroff" = "ask";
+              "systemctl halt" = "ask";
+            };
+
+            # File tools. Reads are unrestricted except private keys and .env
+            # files; writes and edits respect protectedPaths.
+            read = {
+              "**" = "allow";
+              "**/.env" = "deny";
+              "**/*.env" = "deny";
+              "**/*.env.*" = "deny";
+              "**/*.pem" = "deny";
+              "**/id_*" = "deny";
+            };
+            write = protectedPaths;
+            edit = protectedPaths;
+
+            # Everything else is allowed outright — see the note above about the
+            # "ask" default for unlisted tools. `powershell` is safe to allow
+            # because pi shells out to pwsh, which is not installed here.
+            ask_user_question = "allow";
+            bg_wait = "allow";
+            codemode = "allow";
+            contact_supervisor = "allow";
+            fetch_content = "allow";
+            find = "allow";
+            get_search_content = "allow";
+            grep = "allow";
+            ls = "allow";
+            powershell = "allow";
+            source_check = "allow";
+            subagent = "allow";
+            subagent_supervisor = "allow";
+            subagents_enable = "allow";
+            todo = "allow";
+            tool_search = "allow";
+            web_enable = "allow";
+            web_search = "allow";
+
+            # veridb MCP tools, named mcp__<server>__<tool>. `query` is the one
+            # that can mutate data — flip it to "ask" for a confirmation prompt
+            # (which blocks headless calls).
+            mcp__veridb__describe_table = "allow";
+            mcp__veridb__explain_query = "allow";
+            mcp__veridb__list_databases = "allow";
+            mcp__veridb__list_schemas = "allow";
+            mcp__veridb__list_tables = "allow";
+            mcp__veridb__query = "allow";
+            mcp__veridb__sample_rows = "allow";
+            mcp__veridb__search_columns = "allow";
+            mcp__veridb__veridb_status = "allow";
+          };
+        };
     };
 
     # Repo-owned skills (tracked via the flake). The parent dir is passed (like
@@ -196,6 +350,7 @@ in
           zentui
           pi-subagents
           pi-web-access
+          pi-guard
           ;
       in
       [
@@ -206,7 +361,11 @@ in
         "${zentui}"
         "${pi-subagents}"
         "${pi-web-access}"
-        ../pi/extensions/safety.ts
+        "${pi-guard}"
+        # Permission gate — the policy is settings.guard below. Supersedes the
+        # former repo-local safety.ts: bash is parsed as an AST (so wrapper
+        # commands like `sudo rm -rf` are re-checked instead of slipping past a
+        # regex), and file paths and MCP tools are gated too.
         ../pi/extensions/jev-router.ts
         # MCP panel (/mcpx) + live `mcp` status key for zentui's Extension statuses
         # (/zentui extensions): enabled servers as `● name(count)`, refreshed on

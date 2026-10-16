@@ -73,6 +73,11 @@ EXTENSIONS = [
         "repo": ("nicobailon", "pi-web-access"),
         "deps": True,
     },
+    {
+        "name": "pi-guard",
+        "repo": ("jdiamond", "pi-guard"),
+        "deps": True,
+    },
 ]
 
 
