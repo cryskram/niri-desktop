@@ -243,7 +243,6 @@ in
       ../home/spicetify.nix
       ../home/neovim.nix
       ../home/zed.nix
-      ../home/opencode-quota-fetch.nix
     ];
 
     home.stateVersion = "26.05";
@@ -311,6 +310,13 @@ in
       rm -rf "$HOME/.pi/session-search"
       rm -rf "$HOME/.pi/agent/pi-cache-optimizer-stats.d"
       rm -f "$HOME/.pi/agent/pi-cache-optimizer-config.json"
+    '';
+
+    # The repo's own opencode-quota widget and its fetcher timer were retired on
+    # 2026-10-16 — AiOverviewControl's opencode card reports the same Zen quota
+    # windows. Its cache files would otherwise sit unread forever.
+    home.activation.cleanupOpencodeQuotaWidget = ''
+      rm -f "$HOME/.cache/opencode-quota.json" "$HOME/.cache/opencode-stats.json"
     '';
 
   };

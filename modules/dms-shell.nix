@@ -27,16 +27,19 @@ in
     # Kept installed but disabled at runtime (DMS_DISABLE_MATUGEN below): the rice
     # is a fixed Catppuccin Macchiato scheme, not wallpaper-derived.
     enableDynamicTheming = true;
-
-    # Quota pill — QML rewrite of the old Noctalia luau plugin. Same data source:
-    # the opencode-quota-fetch timer writes ~/.cache/opencode-quota.json.
-    plugins.opencode-quota.src = ../dms-plugins/opencode-quota;
   };
 
   # Static theme must win. Without this DMS regenerates colors from the wallpaper
   # through matugen and would also template compositor config fragments, which
   # would fight the declarative niri config.
-  systemd.user.services.dms.environment.DMS_DISABLE_MATUGEN = "1";
+  systemd.user.services.dms.environment = {
+    DMS_DISABLE_MATUGEN = "1";
+
+    # AiOverviewControl's opencode card must read the Zen quota endpoint. Its
+    # default (local) mode reads opencode's own database, which never sees pi
+    # traffic — the usage that actually consumes this plan.
+    OPENCODE_USAGE_SOURCE = "api";
+  };
 
   home-manager.users.vageesh = {
     xdg.configFile."DankMaterialShell/themes/catppuccin-macchiato.json".source =

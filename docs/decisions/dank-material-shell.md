@@ -37,8 +37,7 @@ overlay, enabled through `programs.dms-shell` in `modules/dms-shell.nix`
 
 - **Repo-owned:** the package/overlay pin, module options,
   `theme/dms-macchiato.json` (Catppuccin Macchiato mapped to DMS/matugen color
-  keywords), the quota widget (`dms-plugins/opencode-quota/`, installed
-  declaratively via `programs.dms-shell.plugins`), niri keybinds and layer rules.
+  keywords), niri keybinds and layer rules.
 - **App-owned: `~/.config/DankMaterialShell/settings.json`** — bar layout, widget
   choices, theme selection. DMS rewrites this file from its own UI, so it is
   deliberately *not* a Home Manager symlink (a read-only store link would break
@@ -47,6 +46,18 @@ overlay, enabled through `programs.dms-shell` in `modules/dms-shell.nix`
 - `DMS_DISABLE_MATUGEN=1` is set on `dms.service`: matugen would otherwise derive
   colors from the wallpaper and template compositor config fragments, fighting
   both the static palette and the declarative niri config.
+- **Cost and quota reporting is third-party.** The repo's own quota pill
+  (`dms-plugins/opencode-quota/` + `home/opencode-quota-fetch.nix`) was retired on
+  2026-10-16 in favour of AiOverviewControl from the DMS plugin store, which
+  covers both views. `OPENCODE_USAGE_SOURCE=api` is set on `dms.service` so its
+  `opencode` card reports the Go-plan windows (rolling 5 h / weekly / monthly)
+  rather than its default local mode, which reads opencode's own database and
+  therefore cannot see pi traffic. Its `pi` card reads
+  `~/.pi/agent/sessions/**/*.jsonl` locally (no network) and buckets each session
+  to its start day, so marathon sessions under-report recent windows.
+  Credential note: AiOverviewControl accepts `."opencode".key` in opencode's
+  `auth.json`; the separate `aiQuotas` plugin instead wants `."opencode-go"` and
+  an `opencode.db` `credential` row, neither of which exists on this machine.
 - **Removed:** the `noctalia` flake input, `home/noctalia.nix`,
   `noctalia-plugins/opencode-quota/*.luau`, `theme/noctalia-macchiato.json`, and
   the `noctalia msg …` keybinds (now `dms ipc call …`, keeping the fuzzel /

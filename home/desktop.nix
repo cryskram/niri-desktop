@@ -3,7 +3,7 @@
 # Phase 3: launcher, notifications, wallpaper, lock, terminal.
 # DMS provides the shell (bar, panels, launcher, notifications, wallpaper, lock)
 # via modules/dms-shell.nix — theme/noctalia-macchiato.json and the old noctalia
-# luau plugin were replaced by theme/dms-macchiato.json and dms-plugins/.
+# luau plugin were replaced by theme/dms-macchiato.json.
 {
   pkgs,
   ...
