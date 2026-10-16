@@ -9,6 +9,7 @@
 # does not exist yet — never overwriting what the UI saved.
 { lib, pkgs, ... }:
 let
+  tokens = import ../theme/tokens.nix;
   themeFile = "/home/vageesh/.config/DankMaterialShell/themes/catppuccin-macchiato.json";
 in
 {
@@ -47,7 +48,7 @@ in
 
     # Seed DMS's own config, never overwriting it: DMS rewrites settings.json from
     # its UI, so only absent values get filled — the theme on a fresh install, and
-    # the icon theme (Papirus-Dark with Catppuccin folders, from home/theme.nix).
+    # the icon theme (Tela-circle purple, from home/theme.nix).
     home.activation.dmsSeedSettings = ''
       cfg="$HOME/.config/DankMaterialShell/settings.json"
       mkdir -p "$(dirname "$cfg")"
@@ -55,7 +56,11 @@ in
         printf '%s\n' '{ "currentThemeName": "custom", "customThemeFile": "${themeFile}" }' > "$cfg"
       fi
       tmp="$cfg.tmp"
-      if ${pkgs.jq}/bin/jq '.iconThemeDark //= "Papirus-Dark"' "$cfg" > "$tmp" 2>/dev/null; then
+      # `//=` fills an absent value; the equality test migrates the value this
+      # module seeded before (Papirus-Dark) without touching a UI-made choice.
+      if ${pkgs.jq}/bin/jq --arg name "${tokens.icons.name}" '
+           .iconThemeDark = (if (.iconThemeDark // "Papirus-Dark") == "Papirus-Dark" then $name else .iconThemeDark end)
+         ' "$cfg" > "$tmp" 2>/dev/null; then
         mv "$tmp" "$cfg"
       else
         rm -f "$tmp"

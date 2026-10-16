@@ -62,6 +62,12 @@ rec {
     ];
   };
 
+  icons = {
+    # Name only — the package (Tela-circle purple, plus the prune of upstream's
+    # dangling symlinks) is built in home/theme.nix because it needs pkgs.
+    name = "Tela-circle-purple-dark";
+  };
+
   fonts = {
     ui = "Inter";
     mono = "JetBrains Mono";

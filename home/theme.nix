@@ -16,15 +16,18 @@ in
       };
       name = "catppuccin-macchiato-mauve-standard";
     };
-    # Papirus-Dark with Catppuccin Macchiato folder colours (mauve accent).
-    # The catppuccin-papirus-folders override recolours Papirus' folder icons;
-    # stock papirus-icon-theme keeps its own blue/yellow folders (RICE §18).
+    # Tela-circle, purple colourway (name from theme/tokens.nix).
+    # Upstream 2026-07-07 ships three dangling symlinks (xsi-addon-symbolic,
+    # application-x-addon-symbolic, org.xfce.appfinder) which nixpkgs'
+    # noBrokenSymlinks fixup hook rejects; they are pruned before fixup. Drop
+    # this override once upstream or nixpkgs ships the fix.
     iconTheme = {
-      package = pkgs.catppuccin-papirus-folders.override {
-        flavor = "macchiato";
-        accent = "mauve";
-      };
-      name = "Papirus-Dark";
+      package = (pkgs.tela-circle-icon-theme.override { colorVariants = [ "purple" ]; }).overrideAttrs (old: {
+        postInstall = (old.postInstall or "") + ''
+          find "$out/share/icons" -xtype l -delete
+        '';
+      });
+      name = tokens.icons.name;
     };
     font = {
       name = tokens.fonts.ui;
@@ -34,7 +37,7 @@ in
 
   # GTK4 / libadwaita apps read the icon theme from dconf (the gtk module only
   # writes gtk-2.0 and gtk-3.0 settings.ini), so the value is set here too.
-  dconf.settings."org/gnome/desktop/interface"."icon-theme" = "Papirus-Dark";
+  dconf.settings."org/gnome/desktop/interface"."icon-theme" = tokens.icons.name;
 
   # Cursor — Catppuccin Macchiato Mauve at 24px
   home.pointerCursor = {
