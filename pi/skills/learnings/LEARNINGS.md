@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-16 — SSH in: sshd (key-only) + Tailscale SSH (decision) — `system/ssh`
+
+- What: `modules/ssh.nix` enables OpenSSH key-only (`PasswordAuthentication`/`KbdInteractiveAuthentication` false, `PermitRootLogin` "no", `openFirewall = false` → port 22 stays off the LAN) with an empty `users.users.vageesh.openssh.authorizedKeys.keys` slot; `modules/tailscale.nix` adds `"--ssh"` to `extraSetFlags`.
+- Why/Context: `--ssh` makes tailscaled claim **tailnet** port 22 in userspace (gVisor netstack, after WireGuard decryption), so those packets never reach the kernel — sshd cannot serve tailnet clients and tailnet logins are ACL/identity-based instead. NixOS's openssh defaults are password auth **on** (both password and keyboard-interactive), so key-only requires disabling both explicitly. The failure text identifies the responder: `permission denied (tailscale)` = Tailscale SSH needing an ACL rule, `(publickey)` = OpenSSH, `connection refused` = nobody.
+- How/Apply: tailnet SSH needs the console policy rule (`src autogroup:member`, `dst autogroup:self`, `users autogroup:nonroot`); key-based tailnet SSH means dropping `--ssh`; LAN sshd means `openFirewall = true`. sshd authorises nobody until keys are added, so the tailnet path is the working one out of the box.
+
+Source: user request "enable ssh connections to this machine" (chose "Both").
+
 ## 2026-10-16 — Gotcha: staging for `flake check` leaks into the next commit — `workflow`
 
 - Twice in one session, `git add <newfile>` done *only* so `nix flake check` could see an untracked file left it in the index, so the next `git commit` absorbed it into the wrong commit (and a follow-up commit then found "nothing to commit").
