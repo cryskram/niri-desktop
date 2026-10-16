@@ -154,7 +154,6 @@ in
     skills = [
       ../pi/skills
       "${piPackages.pi-btw}/skills/btw"
-      "${piPackages.pi-session-search}/skills/session-history"
     ];
 
     # Compact global Pi bootstrap, appended to the built-in system prompt.
@@ -197,8 +196,6 @@ in
           zentui
           pi-subagents
           pi-web-access
-          pi-cache-optimizer
-          pi-session-search
           ;
       in
       [
@@ -209,8 +206,6 @@ in
         "${zentui}"
         "${pi-subagents}"
         "${pi-web-access}"
-        "${pi-cache-optimizer}"
-        "${pi-session-search}"
         ../pi/extensions/safety.ts
         ../pi/extensions/jev-router.ts
         # MCP panel (/mcpx) + live `mcp` status key for zentui's Extension statuses
@@ -307,6 +302,15 @@ in
     home.activation.cleanupMcpAdapter = ''
       rm -f "$HOME/.config/mcp/mcp.json" "$HOME/.config/mcp/mcp.json.backup"
       rmdir --ignore-fail-on-non-empty "$HOME/.config/mcp" 2>/dev/null || true
+    '';
+
+    # One-time cleanup for the pi extensions removed on 2026-10-16. Their state is
+    # regenerable and nothing owns it once the extension is gone: the FTS index
+    # (11M) and the cache-optimizer's stat shards/config would otherwise linger.
+    home.activation.cleanupRemovedPiExtensions = ''
+      rm -rf "$HOME/.pi/session-search"
+      rm -rf "$HOME/.pi/agent/pi-cache-optimizer-stats.d"
+      rm -f "$HOME/.pi/agent/pi-cache-optimizer-config.json"
     '';
 
   };

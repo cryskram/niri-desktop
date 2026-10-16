@@ -73,16 +73,6 @@ EXTENSIONS = [
         "repo": ("nicobailon", "pi-web-access"),
         "deps": True,
     },
-    {
-        "name": "pi-cache-optimizer",
-        "repo": ("jiangge", "pi-cache-optimizer"),
-        "deps": False,
-    },
-    {
-        "name": "pi-session-search",
-        "repo": ("samfoy", "pi-session-search"),
-        "deps": False,
-    },
 ]
 
 
@@ -198,8 +188,6 @@ def regions_of(text):
         "zentui": "zentui = plain {",
         "pi-subagents": "pi-subagents = withDeps {",
         "pi-web-access": "pi-web-access = withDeps {",
-        "pi-cache-optimizer": "pi-cache-optimizer = plain {",
-        "pi-session-search": "pi-session-search = plain {",
         "rpiv-ask-user-question": "rpiv-ask-user-question = rpivExtension {",
         "rpiv-todo": "rpiv-todo = rpivExtension {",
     }

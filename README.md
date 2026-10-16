@@ -195,7 +195,7 @@ Rule of thumb: `nixpkgs` is the only input that can cost ~10 minutes (kernel mod
 
 ### Updating pi extensions
 
-The third-party pi extensions (`pi-btw`, `pi-subagents`, `pi-web-access`, `pi-zentui`, `pi-cache-optimizer`, `pi-session-search`, the two `rpiv` extensions) are pinned inside [`pi/packages.nix`](pi/packages.nix), **not** flake inputs — `nix flake update` never touches them.
+The third-party pi extensions (`pi-btw`, `pi-subagents`, `pi-web-access`, `pi-zentui`, the two `rpiv` extensions) are pinned inside [`pi/packages.nix`](pi/packages.nix), **not** flake inputs — `nix flake update` never touches them.
 
 ```bash
 cd ~/niri-desktop

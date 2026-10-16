@@ -217,28 +217,4 @@ in
       "--omit=dev"
     ];
   };
-
-  # Provider prompt/KV cache hit rates; also exposes a router protocol jev-router can opt into.
-  pi-cache-optimizer = plain {
-    pname = "pi-cache-optimizer";
-    version = "2.8.25";
-    src = pkgs.fetchFromGitHub {
-      owner = "jiangge";
-      repo = "pi-cache-optimizer";
-      tag = "v2.8.25";
-      hash = "sha256-8a57uNoQsA2IAVLtGLXHVyzKOam9DuPbKCHhM4UeTaY=";
-    };
-  };
-
-  # FTS5 search over past sessions; ships the session-history skill.
-  pi-session-search = plain {
-    pname = "pi-session-search";
-    version = "1.6.0";
-    src = pkgs.fetchFromGitHub {
-      owner = "samfoy";
-      repo = "pi-session-search";
-      tag = "v1.6.0";
-      hash = "sha256-pUV6TM/5P+9EIBuZ+FaQDbzR5kPeOyJKLbbgMrhHMc4=";
-    };
-  };
 }
