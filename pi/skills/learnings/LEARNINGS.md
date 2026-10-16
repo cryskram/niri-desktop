@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-16 — Cost/quota views: AIOC `pi` card + Zen API mode; custom widget retired (decision) — `dms/aioc`
+
+- What: `OPENCODE_USAGE_SOURCE=api` on `dms.service` makes AiOverviewControl's `opencode` card report the OpenCode Go windows (rolling 5 h / weekly / monthly) instead of its default local mode; the repo's own `dms-plugins/opencode-quota/` + `home/opencode-quota-fetch.nix` (widget + 5-min fetcher timer) were deleted, with a one-time activation clearing `~/.cache/opencode-{quota,stats}.json`.
+- Why/Context: pi is the driver, so opencode's local DB ($0.65 lifetime, $0.018 on opencode-go) says nothing about real usage. AIOC's `pi` card reads `~/.pi/agent/sessions/**/*.jsonl` locally (no network) — the only truthful source — but it buckets each **whole session to its start day**, so marathon sessions under-report: measured today $0 vs real $0.23, week $6.80 vs real $10.64 ($10.64 = by-message-date sum). Cold scan of 242 MB of sessions costs ~7 s of jq CPU per 120 s cache window.
+- How/Apply: costs → AIOC `pi` card (list-price dollars, not the $10/mo plan); quota → AIOC `opencode` card in api mode, since the quota % is the real constraint. Credentials differ per plugin: AIOC accepts `."opencode".key` in opencode's `auth.json` (present); `aiQuotas` wants `."opencode-go"` + an `opencode.db` `credential` row (0 rows) → `not_authenticated`. Endpoint shape: `usage.{rolling,weekly,monthly}.{status,percent,resetsAt}`. Verified 2026-10-16: rolling 2%, weekly 52%, **monthly 85%** (resets Oct 21).
+
+Source: user asked which provider to use for costs in the new AiOverviewControl DMS plugin.
+
 ## 2026-10-16 — Input diagnostics installed + `input` group membership (decision) — `system/input`
 
 - What: `environment.systemPackages` gained `libinput` (1.31.3; the CLI is in the package's `bin` output), `evtest` 1.36 and `wev` 1.1.0; `users.users.vageesh.extraGroups` gained `input`.
