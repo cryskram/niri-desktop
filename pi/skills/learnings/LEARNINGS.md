@@ -2,6 +2,22 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-16 — Tailscale added (decision) — `system/net`
+
+- What: `modules/tailscale.nix` — `enable` + `openFirewall` (UDP 41641, direct peer connections instead of DERP) + `useRoutingFeatures = "client"` (sets `checkReversePath = "loose"`) + `extraSetFlags = [ "--operator=vageesh" ]`; `networking.firewall.trustedInterfaces` += `tailscale0`.
+- Why/Context: the module does **not** trust `tailscale0`, so tailnet peers could not reach local services (SSH, `tailscale serve`). `loose` rp_filter is required because wg0 and Proton routes coexist here. `--operator` via `extraSetFlags` is applied at boot by `tailscaled-set`, so the CLI needs no sudo and the setting survives rebuilds (a manual `tailscale set` would not).
+- How/Apply: login is interactive (`sudo tailscale up`), node key in `/var/lib/tailscale/tailscaled.state` — never in the repo. Flip `useRoutingFeatures` to `"both"` only to advertise an exit node or subnet routes. For unattended auth, `authKeyFile` + `extraUpFlags` drive `tailscaled-autoconnect.service`.
+
+Source: user request "install tela icon theme + tailscale, and guide me through the setup and usage of tailscale".
+
+## 2026-10-16 — Icons: Tela-circle purple replaces Papirus-Dark (decision) — `theme`
+
+- What: `Tela-circle-purple-dark` in `gtk.iconTheme`, dconf and DMS `iconThemeDark`; the name is centralized in `theme/tokens.nix` (`icons.name`); `catppuccin-papirus-folders` (171 MB) dropped from the closure.
+- Why/Context: **`tela-circle-icon-theme` 2026-07-07 is broken in nixpkgs for every colourway** — upstream ships 3 dangling symlinks (`xsi-addon-symbolic`, `application-x-addon-symbolic`, `org.xfce.appfinder`) that the `noBrokenSymlinks` fixup hook rejects, so nothing is in the binary cache. Our override prunes broken links in `postInstall` (the check stays enabled); delete it once upstream or nixpkgs fixes it.
+- How/Apply: DMS's `settings.json` is app-owned, so the seed migrates only the value it previously wrote (`Papirus-Dark` → Tela) and leaves UI choices alone — `//=` alone never replaces an existing key. Tela supports `colorVariants` (purple, dracula, nord, …) and a `circularFolder` flag via `override`.
+
+Source: user request; chose Tela-circle purple and "activate now" when asked.
+
 ## 2026-10-16 — Cost/quota views: AIOC `pi` card + Zen API mode; custom widget retired (decision) — `dms/aioc`
 
 - What: `OPENCODE_USAGE_SOURCE=api` on `dms.service` makes AiOverviewControl's `opencode` card report the OpenCode Go windows (rolling 5 h / weekly / monthly) instead of its default local mode; the repo's own `dms-plugins/opencode-quota/` + `home/opencode-quota-fetch.nix` (widget + 5-min fetcher timer) were deleted, with a one-time activation clearing `~/.cache/opencode-{quota,stats}.json`.
