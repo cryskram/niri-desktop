@@ -1,0 +1,77 @@
+diff --git a/providers/native/opencode.bash b/providers/native/opencode.bash
+index 51a8c59..b81f1d0 100644
+--- a/providers/native/opencode.bash
++++ b/providers/native/opencode.bash
+@@ -65,23 +65,51 @@ fetch_opencode_native() {
+     return 0
+   fi
+ 
++  # Two response shapes are in the wild: the original
++  # {rollingUsage,weeklyUsage,monthlyUsage} with usagePercent/resetInSec, and the
++  # current {usage:{rolling,weekly,monthly}} with percent/resetsAt (absolute ISO).
++  # Accepting both keeps older deployments and the test fixtures working.
+   if [ "$http_status" = "200" ] && jq -e '
+-    def valid_window:
++    def pct: type == "number" and . >= 0 and . <= 100;
++    def legacy_window:
+       type == "object"
+-      and (.usagePercent | type == "number" and . >= 0 and . <= 100)
++      and (.usagePercent | pct)
+       and (.resetInSec | type == "number" and . >= 0);
+-    (.rollingUsage | valid_window)
+-    and (.weeklyUsage | valid_window)
+-    and (.monthlyUsage | valid_window)
++    def current_window:
++      type == "object"
++      and (.percent | pct)
++      and (.resetsAt | type == "string" and . != "");
++    def legacy_shape:
++      (.rollingUsage | legacy_window)
++      and (.weeklyUsage | legacy_window)
++      and (.monthlyUsage | legacy_window);
++    def current_shape:
++      (.usage.rolling | current_window)
++      and (.usage.weekly | current_window)
++      and (.usage.monthly | current_window);
++    legacy_shape or current_shape
+   ' "$tmp_body" >/dev/null 2>&1; then
+     jq -c '
+-      def make_window($w; $minutes; $label): {
+-        usedPercent: $w.usagePercent,
++      def make_window($percent; $minutes; $label; $resetsAt): {
++        usedPercent: $percent,
+         windowMinutes: $minutes,
+-        resetsAt: ((now + $w.resetInSec) | todate),
++        resetsAt: $resetsAt,
+         resetDescription: $label
+       };
++      def legacy($w; $minutes; $label):
++        make_window($w.usagePercent; $minutes; $label; ((now + $w.resetInSec) | todate));
++      def current($w; $minutes; $label):
++        make_window($w.percent; $minutes; $label; $w.resetsAt);
+       . as $body |
++      (if $body.usage then
++         {primary:   current($body.usage.rolling; 300;   "5h"),
++          secondary: current($body.usage.weekly;  10080; "weekly"),
++          tertiary:  current($body.usage.monthly; 43200; "monthly")}
++       else
++         {primary:   legacy($body.rollingUsage; 300;   "5h"),
++          secondary: legacy($body.weeklyUsage;  10080; "weekly"),
++          tertiary:  legacy($body.monthlyUsage; 43200; "monthly")}
++       end) as $windows |
+       {
+         provider: "opencode",
+         source: "opencode-usage",
+@@ -89,9 +117,9 @@ fetch_opencode_native() {
+           identity: {providerID: "opencode", accountEmail: "OpenCode Go account", loginMethod: "api-key"},
+           accountEmail: "OpenCode Go account",
+           loginMethod: "api-key",
+-          primary:   make_window($body.rollingUsage; 300;   "5h"),
+-          secondary: make_window($body.weeklyUsage;  10080; "weekly"),
+-          tertiary:  make_window($body.monthlyUsage; 43200; "monthly"),
++          primary:   $windows.primary,
++          secondary: $windows.secondary,
++          tertiary:  $windows.tertiary,
+           updatedAt: (now | todate)
+         },
+         credits: {

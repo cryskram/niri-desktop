@@ -66,5 +66,47 @@ in
         rm -f "$tmp"
       fi
     '';
+
+    # AiOverviewControl 1.21.0 validates the pre-2026-10 Zen quota shape
+    # (rollingUsage/usagePercent/resetInSec); the endpoint now answers with
+    # usage.{rolling,weekly,monthly}.{percent,resetsAt}, so its opencode card
+    # degraded to an auth-only note. The patch accepts both shapes. Re-applied on
+    # every activation because the plugin store can replace the file, and skipped
+    # once the file already handles the current shape (our patch or upstream's).
+    home.activation.patchAiOverviewControlOpencode = ''
+      plugin="$HOME/.config/DankMaterialShell/plugins/aiOverviewControl"
+      adapter="$plugin/providers/native/opencode.bash"
+      if [ -f "$adapter" ] && ! grep -q 'current_shape' "$adapter"; then
+        if ${pkgs.patch}/bin/patch --forward --silent -p1 -d "$plugin" \
+             < ${../patches/aioc-opencode-usage-shape.patch}; then
+          echo "AiOverviewControl: opencode adapter patched for the current Zen usage shape"
+        else
+          echo "AiOverviewControl: opencode adapter patch FAILED — upstream may have changed it" >&2
+        fi
+      fi
+    '';
+
+    # The API-backed opencode card replaces the local pi card: pi's numbers come
+    # from ~/.pi/agent/sessions/**/*.jsonl bucketed to each session's start day, so
+    # a long session under-reports recent windows. `pi` is what was in place before
+    # this change; any other selection is a UI choice and is left alone.
+    home.activation.dmsSeedPluginSettings = ''
+      cfg="$HOME/.config/DankMaterialShell/plugin_settings.json"
+      if [ -f "$cfg" ]; then
+        tmp="$cfg.tmp"
+        if ${pkgs.jq}/bin/jq '
+             if .aiOverviewControl then
+               (.aiOverviewControl.providerSelection =
+                  (if (.aiOverviewControl.providerSelection // "pi") == "pi" then "opencode" else .aiOverviewControl.providerSelection end)
+                | .aiOverviewControl.pillProviders =
+                  (if (.aiOverviewControl.pillProviders // "pi") == "pi" then "opencode" else .aiOverviewControl.pillProviders end))
+             else . end
+           ' "$cfg" > "$tmp" 2>/dev/null; then
+          mv "$tmp" "$cfg"
+        else
+          rm -f "$tmp"
+        fi
+      fi
+    '';
   };
 }
