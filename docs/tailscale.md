@@ -11,7 +11,7 @@ What the module sets, and why:
 | --- | --- |
 | `openFirewall` (UDP 41641) | Peers can reach this node directly; without it traffic falls back to DERP relays. |
 | `useRoutingFeatures = "client"` | Sets `checkReversePath = "loose"`, required because wg0, Proton and accepted Tailscale routes coexist here. |
-| `extraSetFlags = [ "--operator=vageesh" ]` | Applied at boot by `tailscaled-set.service`, so the CLI needs no sudo — and, unlike a manual `tailscale set`, survives every rebuild. |
+| `extraSetFlags = [ "--operator=vageesh" "--ssh" ]` | Applied at boot by `tailscaled-set.service`, so the CLI needs no sudo and Tailscale SSH is on — and, unlike a manual `tailscale set`, both survive every rebuild. |
 | `firewall.trustedInterfaces = [ "tailscale0" ]` | The module does not add it; without it tailnet peers cannot reach local services (SSH, `tailscale serve`) even with the tunnel up. |
 
 ## First login
@@ -38,7 +38,7 @@ tailscale ping <peer>     # reports whether that path is direct or via DERP
 
 | Goal | Command |
 | --- | --- |
-| SSH without keys or open ports | `sudo tailscale up --ssh` once (plus the ACL grant), then `ssh <host>` / `tailscale ssh <host>` |
+| SSH from other tailnet devices | `ssh nixos` (MagicDNS) — served by Tailscale SSH, no keys; needs the ACL rule in the [SSH section](#ssh) |
 | Expose a local service to the tailnet | `tailscale serve <port>` → `https://<host>.<tailnet>.ts.net` with automatic TLS; `tailscale serve status`, `tailscale serve reset` |
 | Expose it to the public internet | `tailscale funnel <port>` — world-reachable, use sparingly |
 | Send all traffic through another node | `sudo tailscale up --exit-node=<peer> --exit-node-allow-lan-access`; undo with `--exit-node=` |
@@ -53,6 +53,53 @@ Also integrated into the fuzzel chooser (`vpn-toggle tailscale`, or pick
 `tailscale (mesh VPN)` from `Mod+Shift+N`) and `vpn-status` reports its state.
 Tailscale is not NetworkManager-managed, so it does **not** appear in DMS's VPN
 widget — that widget only lists `nmcli` connections.
+
+## SSH
+
+Two servers answer port 22 on this machine, and which one you reach depends on
+how you connect:
+
+| Path | Answered by | Authentication |
+| --- | --- | --- |
+| Over the tailnet | Tailscale SSH (`--ssh` in `extraSetFlags`) | Tailnet identity + ACLs, no keys |
+| localhost, LAN, anywhere else | sshd from `modules/ssh.nix` | SSH keys only (password auth disabled) |
+
+Tailscale SSH claims **tailnet** port 22 in userspace: after WireGuard decryption
+tailscaled handles those packets itself (gVisor netstack), so they never reach
+the kernel and sshd cannot serve tailnet clients while `--ssh` is enabled.
+Non-tailnet connections still reach sshd normally — that is the split.
+
+Tailnet access needs a policy rule. The console's default when you enable SSH:
+
+```json
+{
+  "ssh": [
+    {
+      "action": "accept",
+      "src": ["autogroup:member"],
+      "dst": ["autogroup:self"],
+      "users": ["autogroup:nonroot"]
+    }
+  ]
+}
+```
+
+Which server answered is visible in the failure text, which saves guessing:
+
+| Message | Meaning |
+| --- | --- |
+| `permission denied (tailscale)` | Tailscale SSH answered — the policy rule is missing or does not cover that user/host |
+| `permission denied (publickey)` | OpenSSH answered — no authorized key for that user here |
+| `connection refused` | Nobody answered — Tailscale is down or `--ssh` is off, and nothing is listening |
+
+Variations worth knowing:
+
+- **Key-based OpenSSH over the tailnet**: remove `"--ssh"` from `extraSetFlags`;
+tailnet port 22 then reaches sshd.
+- **sshd from the LAN**: set `openFirewall = true` in `modules/ssh.nix` (port 22 is
+closed to non-tailnet networks by default).
+- **Authorized keys**: add them to `users.users.vageesh.openssh.authorizedKeys.keys`
+in `modules/ssh.nix`. Public keys are safe to commit; private keys never are.
 
 ## NixOS specifics
 
