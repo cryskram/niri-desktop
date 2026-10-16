@@ -186,7 +186,8 @@ Pi customization lives in `modules/core.nix` (`programs.pi.coding-agent`):
   * `zentui` — footer/status TUI
   * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; default model `auto` via jev; all built-ins explicitly inherit shared global/project context and skills; avoid `deepseek-*` because it leaks tool calls as text)
   * `pi-web-access` — `web_search`/`fetch_content`/`source_check` for researcher/evidence-auditor; coexists with native MCP parallel-search (different tool namespaces)
-  * local: `pi/extensions/safety.ts` (destructive-command gate) + `querion-sync.ts` (`/sync`)
+  * `pi-guard` — permission gate for tool calls (bash parsed as an AST, file paths, MCP); policy is declarative under `settings.guard` in `modules/core.nix` — quiet for ordinary work, `deny`/`ask` only for destructive operations. Unlisted tools fall through to `ask`, so a new extension or MCP server needs its tools added there
+  * local: `querion-sync.ts` (`/sync`)
 * shared Pi brain → `pi/brain/README.md` documents ownership; `pi/brain/AGENTS.md` is installed as user-level `~/.pi/agent/AGENTS.md`; `pi/brain/APPEND_SYSTEM.md` is passed through `rules` as `--append-system-prompt` (never replace Pi's built-in prompt with `SYSTEM.md`)
 * context → `pi/context.md` (runnable project context, <100 lines) + repo-root `context.md` symlink → `pi/context.md`; repository-root `AGENTS.md` is the niri-desktop-specific operating manual; shared preferences and discoveries live in the `learnings` journal
 * prompt templates → intentionally empty (`pi/prompts/.gitkeep`, `promptTemplates = [ ]`) — skills preferred over prompts (see pi docs: skills carry description + on-demand loading)
