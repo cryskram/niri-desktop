@@ -52,12 +52,25 @@ overlay, enabled through `programs.dms-shell` in `modules/dms-shell.nix`
   covers both views. `OPENCODE_USAGE_SOURCE=api` is set on `dms.service` so its
   `opencode` card reports the Go-plan windows (rolling 5 h / weekly / monthly)
   rather than its default local mode, which reads opencode's own database and
-  therefore cannot see pi traffic. Its `pi` card reads
-  `~/.pi/agent/sessions/**/*.jsonl` locally (no network) and buckets each session
-  to its start day, so marathon sessions under-report recent windows.
+  therefore cannot see pi traffic. That `opencode` card is the one in use: the
+  `pi` card reads `~/.pi/agent/sessions/**/*.jsonl`, buckets each session to its
+  start day (so marathon sessions under-report) and has no API mode, so
+  `plugin_settings.json` is seeded to migrate a `pi` selection to `opencode`
+  while leaving any other UI choice alone.
   Credential note: AiOverviewControl accepts `."opencode".key` in opencode's
   `auth.json`; the separate `aiQuotas` plugin instead wants `."opencode-go"` and
   an `opencode.db` `credential` row, neither of which exists on this machine.
+- **Patched adapter (temporary).** AiOverviewControl 1.21.0 validates the older
+  Zen quota shape (`rollingUsage`/`usagePercent`/`resetInSec`), while
+  `GET /zen/go/v1/usage` now answers `usage.{rolling,weekly,monthly}` with
+  `percent`/`resetsAt`. The mismatch was silent — the card degraded to an
+  auth-only note ("quota endpoint unavailable") rather than failing loudly — and
+  the plugin's own fixtures still encode the old shape, so upstream's test suite
+  passes while production breaks. `patches/aioc-opencode-usage-shape.patch`
+  accepts both shapes, and `home.activation.patchAiOverviewControlOpencode`
+  re-applies it on every activation (the plugin store can replace the file) while
+  skipping once the file already handles the current shape. Drop both once
+  upstream ships a fix: https://github.com/bernardopg/AiOverviewControl
 - **Removed:** the `noctalia` flake input, `home/noctalia.nix`,
   `noctalia-plugins/opencode-quota/*.luau`, `theme/noctalia-macchiato.json`, and
   the `noctalia msg …` keybinds (now `dms ipc call …`, keeping the fuzzel /
