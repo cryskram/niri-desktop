@@ -24,6 +24,29 @@
       grep = "rg";
       find = "fd";
     };
+    functions = {
+      # Full-width markdown. glow word-wraps at a fixed `width` (its default is 80,
+      # and the old imperative config pinned exactly that) on a terminal that is
+      # usually twice as wide. Feed it the live column count instead, so the wrap
+      # follows the window and survives monitor changes. An explicit -w/--width
+      # wins, and bare `glow` (file browser) and `-t/--tui` are passed through.
+      glow = ''
+        if test (count $argv) -eq 0
+            command glow $argv
+            return
+        end
+        if contains -- -w $argv; or string match -qr '^--width|^-t$|^--tui$' -- $argv
+            command glow $argv
+            return
+        end
+        set -l cols (tput cols 2>/dev/null)
+        if test -z "$cols"
+            command glow $argv
+            return
+        end
+        command glow -w $cols $argv
+      '';
+    };
     interactiveShellInit = ''
       set -g fish_greeting ""
       # Catppuccin Macchiato palette for fish
@@ -168,6 +191,24 @@
   # hm-session-vars so fish picks it up too. (xdg.localBinInPath is the other
   # option, but it appends and needs xdg.enable, which is off here.)
   home.sessionPath = [ "$HOME/.local/bin" ];
+
+  # glow's config, declarative now (it used to be an app-owned file in ~/.config
+  # that pinned `width: 80` — half of a 160-column terminal).
+  # Width is deliberately absent: glow reads this file statically, so a fixed
+  # value can never follow the window. The `glow` fish function above passes the
+  # live column count with -w, and a -w flag overrides whatever this file says.
+  # (`width: 0` here is NOT "no wrap" — glow treats a zero config width as unset
+  # and falls back to 80; only `-w 0` on the command line disables wrapping.)
+  xdg.configFile."glow/glow.yml".text = ''
+    # style name or JSON path (default "auto")
+    style: "auto"
+    # mouse support (TUI-mode only)
+    mouse: false
+    # use pager to display markdown
+    pager: false
+    # show all files, including hidden and ignored.
+    all: false
+  '';
 
   home.packages = with pkgs; [
     yq-go
