@@ -60,6 +60,13 @@ overlay, enabled through `programs.dms-shell` in `modules/dms-shell.nix`
   Credential note: AiOverviewControl accepts `."opencode".key` in opencode's
   `auth.json`; the separate `aiQuotas` plugin instead wants `."opencode-go"` and
   an `opencode.db` `credential` row, neither of which exists on this machine.
+  OpenCode rotated its key format: current console keys are `oc_sk_…` (51 chars),
+  while an older `sk-…` (67 chars) key answers `401 api_key_expired` — and
+  `opencode auth login` does **not** renew it (the API says so in the error). Mint
+  a replacement at <https://opencode.ai/console>, or copy a still-valid key from
+  pi's own `~/.pi/agent/auth.json`, which keeps `opencode` and `opencode-go`
+  entries. `source: opencode-api` plus a 401 therefore means credentials, not a
+  code bug — check the endpoint directly before touching the adapter.
 - **Patched adapter (temporary).** AiOverviewControl 1.21.0 validates the older
   Zen quota shape (`rollingUsage`/`usagePercent`/`resetInSec`), while
   `GET /zen/go/v1/usage` now answers `usage.{rolling,weekly,monthly}` with
