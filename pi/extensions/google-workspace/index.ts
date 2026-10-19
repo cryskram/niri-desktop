@@ -15,6 +15,7 @@
  * Declarative: loaded via modules/core.nix `programs.pi.coding-agent.extensions`
  * (the directory, so the sibling modules come along).
  */
+import { readFileSync } from "node:fs";
 import type {
 	ExtensionAPI,
 	ExtensionCommandContext,
@@ -64,18 +65,60 @@ function describeClient(): string {
 	return `OAuth client: ${suffix}…${client.clientSecret ? " (with secret)" : " (no secret — Desktop clients usually have one)"}\nStored at ${clientPath()}`;
 }
 
-async function readClientInput(ctx: ExtensionCommandContext, value: string): Promise<unknown> {
-	const trimmed = value.trim();
-	if (!trimmed) throw new Error("Nothing given.");
-	if (trimmed.startsWith("{")) return JSON.parse(trimmed);
-	const path = trimmed.startsWith("~") ? trimmed.replace("~", process.env.HOME ?? "") : trimmed;
-	try {
-		const { readFileSync } = await import("node:fs");
-		return JSON.parse(readFileSync(path, "utf8"));
-	} catch {
-		// Not JSON and not a readable file: treat it as a bare client ID.
-		return { clientId: trimmed };
+/**
+ * Dialog input is not clean text: terminal palette replies (OSC 4), cursor reports
+ * and drag & drop quoting all arrive as if typed. `\u001b]4;65;rgb:…\u001b\\` landed
+ * inside a pasted path once and the path was stored as the client ID.
+ */
+export function sanitizeInput(value: string): string {
+	return value
+		.replace(/\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)?/g, "") // OSC … BEL | ESC \
+		.replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "") // CSI
+		.replace(/\u001b[@-Z\\-_]/g, "") // other escapes
+		.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "") // C0 except tab
+		.trim()
+		.replace(/^['"]|['"]$/g, "")
+		.replace(/\\(?=\s)/g, "") // /path\ with\ spaces
+		.trim();
+}
+
+/** Every Google OAuth client ID ends this way; anything else is a paste accident. */
+const CLIENT_ID_PATTERN = /[0-9]{6,}-[a-z0-9_-]+\.apps\.googleusercontent\.com/i;
+const CLIENT_ID_EXACT = new RegExp(`^${CLIENT_ID_PATTERN.source}$`, "i");
+
+async function readClientInput(value: string): Promise<unknown> {
+	const cleaned = sanitizeInput(value);
+	if (!cleaned) throw new Error("Nothing given.");
+
+	if (cleaned.startsWith("{")) {
+		try {
+			return JSON.parse(cleaned);
+		} catch (error) {
+			throw new Error(`That looks like JSON but does not parse: ${(error as Error).message}`);
+		}
 	}
+
+	const expanded = cleaned.startsWith("~") ? cleaned.replace("~", process.env.HOME ?? "") : cleaned;
+	const isPath = expanded.includes("/") || expanded.toLowerCase().endsWith(".json");
+	if (isPath) {
+		try {
+			return JSON.parse(readFileSync(expanded, "utf8"));
+		} catch (error) {
+			// Never fall back to "must be a bare client ID" here: that is exactly
+			// how a path full of control sequences became the stored client ID and
+			// produced Google's "OAuth client was not found" an hour later.
+			throw new Error(`Could not read an OAuth client from "${expanded}": ${(error as Error).message}`);
+		}
+	}
+
+	const candidate = cleaned.match(CLIENT_ID_PATTERN)?.[0] ?? cleaned;
+	if (!CLIENT_ID_EXACT.test(candidate)) {
+		throw new Error(
+			`"${cleaned}" is neither a readable file path nor a Google OAuth client ID ` +
+				`(expected something like 1234567890-abc.apps.googleusercontent.com).`,
+		);
+	}
+	return { clientId: candidate };
 }
 
 async function setupClient(ctx: ExtensionCommandContext, value?: string): Promise<void> {
@@ -105,14 +148,21 @@ async function setupClient(ctx: ExtensionCommandContext, value?: string): Promis
 	}
 	let parsed: unknown;
 	try {
-		parsed = await readClientInput(ctx, raw);
+		parsed = await readClientInput(raw);
 	} catch (error) {
 		ctx.ui.notify(`Could not read that client: ${(error as Error).message}`, "error");
 		return;
 	}
 	try {
 		const saved = saveClient(parsed);
-		ctx.ui.notify(`Saved OAuth client ${saved.clientId.slice(0, 12)}… to ${clientPath()} (mode 0600).`, "info");
+		ctx.ui.notify(`Saved OAuth client ${saved.clientId.slice(0, 14)}… to ${clientPath()} (mode 0600).`, "info");
+		const kind = (parsed as { web?: unknown }).web ? "web" : "installed";
+		if (kind === "web") {
+			ctx.ui.notify(
+				"That is a Web-application client: it only accepts redirect URIs registered exactly, so add http://127.0.0.1:8765/callback under Authorized redirect URIs (a Desktop-app client would take any loopback port).",
+				"warning",
+			);
+		}
 	} catch (error) {
 		ctx.ui.notify((error as Error).message, "error");
 	}

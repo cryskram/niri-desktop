@@ -56,6 +56,9 @@ function readJson(path: string): unknown {
 	}
 }
 
+/** Every Google OAuth client ID ends with this; a stored value that does not is a paste accident, not a client. */
+const CLIENT_ID_PATTERN = /^[0-9]{6,}-[a-z0-9_-]+\.apps\.googleusercontent\.com$/i;
+
 /** Accepts `{clientId, clientSecret}`, Google's downloaded `{"installed":{...}}` / `{"web":{...}}`, or nothing. */
 function parseClient(raw: unknown): ClientCredentials | undefined {
 	if (!raw || typeof raw !== "object") return undefined;
@@ -63,8 +66,15 @@ function parseClient(raw: unknown): ClientCredentials | undefined {
 	const inner = (outer.installed ?? outer.web ?? outer) as Record<string, unknown>;
 	const id = inner.client_id ?? inner.clientId;
 	if (typeof id !== "string" || !id) return undefined;
+	if (!CLIENT_ID_PATTERN.test(id.trim())) {
+		// Refusing here is the point: a rejected ID would otherwise surface as
+		// Google's unhelpful "OAuth client was not found" on the next sign-in.
+		throw new Error(
+			`"${id.trim().slice(0, 60)}" is not a Google OAuth client ID (expected something like 1234567890-abc.apps.googleusercontent.com).`,
+		);
+	}
 	const secret = inner.client_secret ?? inner.clientSecret;
-	return { clientId: id, clientSecret: typeof secret === "string" && secret ? secret : undefined };
+	return { clientId: id.trim(), clientSecret: typeof secret === "string" && secret ? secret : undefined };
 }
 
 export function loadClient(): ClientCredentials | undefined {
