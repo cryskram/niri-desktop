@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-19 — Editor stash extension, and how to test a pi TUI extension without tmux (finding) — `pi/ui`
+
+- What: added `pi/extensions/stash.ts` — pi-powerline-footer's editor stash without the footer: `Alt+S` four-state toggle (stash / restore-and-pop / update / nothing), `stash Nl` status key, plus `/stash`, `/stash-history` (Replace/Append/Cancel) and `/stash-clear`. The active stash is a `custom` session entry (`pi.appendEntry`, outside model context, branch-scoped) so `/reload` and resume keep it; recent drafts persist to `$PI_CODING_AGENT_DIR/stash-history.json` (0600, newest-first, deduped, atomic write).
+- Why/Context: stash was the one powerline feature worth keeping after reverting to zentui, and powerline itself must not come back (2026-10-10). `pi.registerShortcut` fires only while the *default editor* has focus, so `alt+s` cannot shadow selector keys; not registering `ctrl+s` avoids the built-in-conflict warning entirely.
+- How/Apply: TUI extensions are testable without tmux (not installed) — (a) import the factory from the `.ts` with plain Node ≥22 type stripping and drive it with fake `pi`/`ctx` objects (four-state table, branch rebuild on reload, history Replace/Append/Cancel, no-UI safety); (b) drive the real TUI over a Python `pty`, send `\x1bs` for alt+s, and assert on ANSI-stripped output, including `/hotkeys` listing the shortcut.
+
+Source: user asked for "a stashing extension for pi... something similar to what pi-powerline-footer used to offer".
+
 ## 2026-10-19 — OpenCode Zen key expired; pi's store had the working one (gotcha) — `system/dms`
 
 - What: the AIOC opencode card went to an error because `~/.local/share/opencode/auth.json` held an old-format `sk-…` key (67 chars). The endpoint answered `401 {"code":"api_key_expired","message":"… Signing in again will not renew this key."}` — so `opencode auth login` is not the fix. `~/.pi/agent/auth.json` already held a current `oc_sk_…` key (51 chars) under both `opencode` and `opencode-go`; copying it across healed the CLI and the card (`source: opencode-usage`).
