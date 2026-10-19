@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-19 — OpenCode Zen key expired; pi's store had the working one (gotcha) — `system/dms`
+
+- What: the AIOC opencode card went to an error because `~/.local/share/opencode/auth.json` held an old-format `sk-…` key (67 chars). The endpoint answered `401 {"code":"api_key_expired","message":"… Signing in again will not renew this key."}` — so `opencode auth login` is not the fix. `~/.pi/agent/auth.json` already held a current `oc_sk_…` key (51 chars) under both `opencode` and `opencode-go`; copying it across healed the CLI and the card (`source: opencode-usage`).
+- Why/Context: OpenCode rotated key formats, and the failure is indistinguishable from a plugin regression until you hit the endpoint directly. Read `source` first: `opencode-api` with a 401 = credentials; `opencode-local` = the env override (`OPENCODE_USAGE_SOURCE=api`) wasn't in the shell you tested from, which is why a manual adapter run can look falsely broken.
+- How/Apply: prove it with an authenticated `curl -H "Authorization: Bearer …" https://opencode.ai/zen/go/v1/usage`; then back up and atomically rewrite the auth store (`jq --slurpfile` keeps the key out of argv, mode 600). New keys are minted at https://opencode.ai/console.
+
+Source: user spotted "expecting an updated opencode api key" and asked for a look.
+
 ## 2026-10-16 — AIOC quota card: API shape drift, patched adapter, pi card deselected (finding) — `system/dms`
 
 - What: AiOverviewControl 1.21.0 validates the older Zen shape (`rollingUsage`/`usagePercent`/`resetInSec`), but `GET /zen/go/v1/usage` now returns `usage.{rolling,weekly,monthly}.{percent,resetsAt}`, so its opencode card silently degraded to an auth-only note. Fixed by `patches/aioc-opencode-usage-shape.patch` (accepts both shapes) plus `home.activation.patchAiOverviewControlOpencode`, which re-applies it every activation and skips once the file handles the current shape.
