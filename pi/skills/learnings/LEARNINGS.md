@@ -2,6 +2,15 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-19 — Google Workspace as an extension, not an MCP server (decision) — `pi/google`
+
+- What: `pi/extensions/google-workspace/` — `/google` adds Google accounts the way `/login` picks a provider (each sign-in gets its own record; `prompt=select_account`, and Google's `hd` claim marks Workspace-managed accounts), and 13 tools (Sheets/Docs/Drive + a `google_api` escape hatch for Gmail/Calendar/Tasks) run with the selected account's token; every tool takes an optional `account`. Credentials live at `$PI_CODING_AGENT_DIR/google/{client,accounts}.json` (dir 0700, files 0600), never in the repo. Guide: `docs/google-workspace.md`.
+- Why/Context: Vageesh explicitly wanted account selection like a login provider plus "sheets or anything", not one fixed credential set — which rules out both MCP routes (Google's dev-preview `*mcp.googleapis.com` servers, and workspace-mcp's single-user stdio). Google's remote MCP servers also need `access_type=offline` for refresh tokens, and pi's `mcp.json` `oauth` block (1.2.0) has no extra-parameter knob.
+- How/Apply: the OAuth client must be a **Desktop app** client in a GCP project with Drive/Sheets/Docs APIs enabled; consent screens left in Testing expire refresh tokens after 7 days (publish, or expect another `/google add`). pi-guard tool rules are exact-name (only path tools are globbed), so renaming a tool in `tools.ts` silently turns it into `"ask"` ⇒ blocked headless — the 13 rules are in `modules/core.nix` and the tool names must match them exactly.
+- Test recipe without a model call: `discoverAndLoadExtensions([<store path>], cwd, agentDir)` from pi's `dist/core/extensions/loader.js` under jiti validates registration exactly as pi does (tool names via the `tools` Map keys, definitions under `registered.definition`); `/tmp/gws-check/test.mjs` stubs Google's endpoints (token exchange, Drive/Sheets/Docs) to exercise sign-in, account switching and tool calls offline.
+
+Source: user request 2026-10-19 in a pi session — "let it be an extension, and not an mcp thing… select any of my google accounts".
+
 ## 2026-10-19 — Editor stash extension, and how to test a pi TUI extension without tmux (finding) — `pi/ui`
 
 - What: added `pi/extensions/stash.ts` — pi-powerline-footer's editor stash without the footer: `Alt+S` four-state toggle (stash / restore-and-pop / update / nothing), `stash Nl` status key, plus `/stash`, `/stash-history` (Replace/Append/Cancel) and `/stash-clear`. The active stash is a `custom` session entry (`pi.appendEntry`, outside model context, branch-scoped) so `/reload` and resume keep it; recent drafts persist to `$PI_CODING_AGENT_DIR/stash-history.json` (0600, newest-first, deduped, atomic write).
