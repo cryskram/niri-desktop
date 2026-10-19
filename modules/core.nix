@@ -374,6 +374,11 @@ in
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
         # Configured via xdg.configFile."querion/config.json" (home-manager block below).
         ../pi/extensions/querion-sync.ts
+        # Editor stash — Alt+S parks the draft and returns a clean editor, Alt+S
+        # again restores it (port of pi-powerline-footer's stash, footer and all
+        # else dropped). /stash, /stash-history, /stash-clear. State rides the
+        # session branch via appendEntry, so /reload and resume keep it.
+        ../pi/extensions/stash.ts
       ];
   };
 
