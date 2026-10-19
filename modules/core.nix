@@ -288,6 +288,26 @@ in
             mcp__veridb__sample_rows = "allow";
             mcp__veridb__search_columns = "allow";
             mcp__veridb__veridb_status = "allow";
+
+            # Google Workspace extension tools (pi/extensions/google-workspace).
+            # pi-guard matches tool names exactly, so all of them are listed;
+            # google_drive_write (trash/delete) and google_api (arbitrary API call)
+            # are the two worth flipping to "ask" — remember that "ask" blocks
+            # headless calls. google_drive_export writes a local file, which the
+            # path rules never see, because only path-matched tools are globbed.
+            google_accounts = "allow";
+            google_api = "allow";
+            google_docs_create = "allow";
+            google_docs_read = "allow";
+            google_docs_write = "allow";
+            google_drive_export = "allow";
+            google_drive_read = "allow";
+            google_drive_search = "allow";
+            google_drive_write = "allow";
+            google_sheets_batch = "allow";
+            google_sheets_create = "allow";
+            google_sheets_read = "allow";
+            google_sheets_write = "allow";
           };
         };
     };
@@ -379,6 +399,11 @@ in
         # else dropped). /stash, /stash-history, /stash-clear. State rides the
         # session branch via appendEntry, so /reload and resume keep it.
         ../pi/extensions/stash.ts
+        # Google Workspace — `/google` adds Google accounts the way /login picks a
+        # provider (personal and Workspace-managed side by side), and 13 tools work
+        # on Sheets, Docs and Drive with the selected account's own token. See
+        # docs/google-workspace.md. Directory path for the same reason as mcp-panel.
+        ../pi/extensions/google-workspace
       ];
   };
 
