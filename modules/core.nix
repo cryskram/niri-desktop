@@ -356,6 +356,10 @@ in
       "/home/vageesh/Projects/TAP/claude-plugins/ultra-mariadb/skills/schema-reference"
       "--skill"
       "/home/vageesh/Projects/TAP/claude-plugins/ultra-mariadb/skills/query-patterns"
+      # phoenix — the shared-dev-VM deploy tool (leaf-engineering/phoenix, private,
+      # so a path rather than a flake input). Single SKILL.md, no sibling assets.
+      "--skill"
+      "/home/vageesh/Projects/TAP/phoenix/skills/phoenix"
     ];
 
     extensions =

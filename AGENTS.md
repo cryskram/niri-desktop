@@ -179,7 +179,7 @@ source of truth, and every change must reproduce on a fresh system.
 
 Pi customization lives in `modules/core.nix` (`programs.pi.coding-agent`):
 
-* skills → `pi/skills/` (`skills`); repo-owned: `repo-understanding`, `learnings` (shared journal `pi/skills/learnings/LEARNINGS.md`), and the evidence-only `vageesh` scaffold; company skills stay outside the repo (TAP `claude-plugins/...` via `extraArgs --skill`)
+* skills → `pi/skills/` (`skills`); repo-owned: `repo-understanding`, `learnings` (shared journal `pi/skills/learnings/LEARNINGS.md`), and the evidence-only `vageesh` scaffold; company skills stay outside the repo (`~/Projects/TAP/…` via `extraArgs --skill`)
 * extensions → `pi/packages.nix` + `pi/extensions/*.ts` (`extensions`):
   * `pi-btw` — `/btw` parallel side sessions
   * `rpiv-ask-user-question` / `rpiv-todo` — structured questions + todo overlay
