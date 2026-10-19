@@ -99,7 +99,9 @@ refreshed automatically 60 s before expiry, and one refresh per account runs at 
   sharing. Flip those two rules to `"ask"` in `modules/core.nix` to confirm each call — note
   that `"ask"` blocks headless runs (subagents, `pi -p`).
 
-Verified offline: account store, PKCE/loopback sign-in, scope handling, account switching,
-tool registration and request shaping against stubbed Google endpoints
-(`tsc --noEmit` clean). Not yet exercised against the real API — that needs a live OAuth
-client and a signed-in account.
+Verified: account store, PKCE/loopback sign-in, scope handling, account switching, tool
+registration and request shaping against stubbed Google endpoints (`tsc --noEmit` clean,
+plus a harness that drives the real sign-in flow). Verified live, read-only: token refresh,
+identity scopes, Drive listing and Sheets metadata for a connected Workspace account
+(`/tmp/gws-check/live-check.mjs`). Not yet exercised live: every writing tool — the first
+real write is the first test of it.
