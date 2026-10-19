@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-19 — glow at full width: its `width` cannot be static, so compute it per launch (finding) — `cli/terminal`
+
+- What: `~/.config/glow/glow.yml` pinned `width: 80`, so markdown rendered as an 80-column strip in a ~160-column terminal. Fixed with a `glow` fish function that passes `-w (tput cols)` (an explicit `-w`/`--width` still wins; bare `glow` and `-t/--tui` pass through) plus a declarative config in `home/shell.nix` that no longer pins width.
+- Why/Context: rendered content is `width − 4` (glamour's 2-column margins per side), so `-w <cols>` fills the window exactly, while a static config value can never follow resizes or monitors. `width: 0` in the *config* is not "no wrap" — glow treats a zero config width as unset and falls back to 80; only the `-w 0` flag disables wrapping. `--config` on the CLI appeared to be ignored entirely; `$XDG_CONFIG_HOME/glow/glow.yml` is the path that works.
+- How/Apply: verified in ptys of 220 and 100 columns (content 216 / 96 = cols − 4), explicit `-w 60` and `--width=60` still narrowed to 57, and a no-tty run still rendered — measured by ANSI-stripping glow's output and taking the max line width.
+
+Source: user asked to make glow "full width" instead of half the screen.
+
 ## 2026-10-19 — Google Workspace as an extension, not an MCP server (decision) — `pi/google`
 
 - What: `pi/extensions/google-workspace/` — `/google` adds Google accounts the way `/login` picks a provider (each sign-in gets its own record; `prompt=select_account`, and Google's `hd` claim marks Workspace-managed accounts), and 13 tools (Sheets/Docs/Drive + a `google_api` escape hatch for Gmail/Calendar/Tasks) run with the selected account's token; every tool takes an optional `account`. Credentials live at `$PI_CODING_AGENT_DIR/google/{client,accounts}.json` (dir 0700, files 0600), never in the repo. Guide: `docs/google-workspace.md`.
