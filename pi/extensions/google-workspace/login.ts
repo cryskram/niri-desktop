@@ -8,6 +8,7 @@
  */
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import {
+	BASE_SCOPES,
 	buildAuthUrl,
 	claimsFromIdToken,
 	createPkce,
@@ -16,6 +17,7 @@ import {
 	exchangeCode,
 	openInBrowser,
 	openLoopback,
+	scopeLabels,
 	type Loopback,
 } from "./oauth.ts";
 import { loadClient, upsertAccount, type AccountRecord } from "./store.ts";
@@ -49,7 +51,11 @@ export async function signInWithGoogle(
 ): Promise<AccountRecord> {
 	const client = loadClient();
 	if (!client) throw new Error("No OAuth client configured yet. Run /google setup first.");
-	const scopes = options.scopes?.length ? options.scopes : DEFAULT_SCOPES;
+	// openid + email are what name the account (ID token claims, then userinfo),
+	// so they are added back whatever the caller asked for: a `--scopes=` list
+	// without them signs in successfully and then cannot say who signed in.
+	const requested = options.scopes?.length ? options.scopes : DEFAULT_SCOPES;
+	const scopes = [...new Set([...BASE_SCOPES, ...requested])];
 	const state = crypto.randomUUID();
 	const { verifier, challenge } = await createPkce();
 
@@ -84,15 +90,33 @@ export async function signInWithGoogle(
 		const tokens = await exchangeCode({ client, code, verifier, redirectUri });
 		const claims = claimsFromIdToken(tokens.id_token);
 		let email = claims.email;
+		let identityError: string | undefined;
 		if (!email) {
 			const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
 				headers: { authorization: `Bearer ${tokens.access_token}` },
 			});
-			const info = (await response.json().catch(() => ({}))) as { email?: string; name?: string };
+			const info = (await response.json().catch(() => ({}))) as {
+				email?: string;
+				name?: string;
+				error?: string | { message?: string };
+			};
 			email = info.email;
 			claims.name ??= info.name;
+			if (!email) {
+				identityError =
+					typeof info.error === "string"
+						? info.error
+						: (info.error?.message ?? `userinfo returned ${response.status}`);
+			}
 		}
-		if (!email) throw new Error("Signed in, but Google returned no email address for the account.");
+		if (!email) {
+			// Happens when the authorization request omitted openid/email: the token
+			// exchange succeeds, then nothing identifies the account.
+			throw new Error(
+				`Signed in, but Google returned no email address (${identityError ?? "no id_token, and userinfo had no email"}; granted scopes: ${scopeLabels(tokens.scope ? tokens.scope.split(" ") : scopes)}). ` +
+					`Run /google add again — openid and email are now always requested.`,
+			);
+		}
 
 		const record: AccountRecord = {
 			email,
@@ -107,6 +131,13 @@ export async function signInWithGoogle(
 		if (!record.refreshToken) {
 			ctx.ui.notify(
 				"Google did not return a refresh token — this account will need re-authentication when the hour is up. Re-run /google add to try again.",
+				"warning",
+			);
+		}
+		const notGranted = scopes.filter((scope) => !record.scopes.includes(scope));
+		if (notGranted.length) {
+			ctx.ui.notify(
+				`Google did not grant: ${scopeLabels(notGranted)}. Tools needing those will fail with a scope error until the consent screen or the admin allows them.`,
 				"warning",
 			);
 		}

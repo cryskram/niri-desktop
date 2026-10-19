@@ -22,7 +22,7 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import { ENDPOINT, googleJson, requireAccount } from "./api.ts";
 import { signInWithGoogle } from "./login.ts";
-import { DEFAULT_GROUPS, parseScopes, SCOPE_GROUPS, scopeLabels } from "./oauth.ts";
+import { DEFAULT_GROUPS, DEFAULT_SCOPES, parseScopes, SCOPE_GROUPS, scopeLabels } from "./oauth.ts";
 import {
 	accountEmails,
 	clientPath,
@@ -174,11 +174,13 @@ async function addAccount(ctx: ExtensionCommandContext, args: string): Promise<v
 		await setupClient(ctx);
 		if (!loadClient()) return;
 	}
-	let scopes = DEFAULT_GROUPS.map((group) => SCOPE_GROUPS[group]!);
+	let scopes = DEFAULT_SCOPES;
 	let loginHint: string | undefined;
 	for (const token of args.split(/\s+/).filter(Boolean)) {
 		if (token.startsWith("--scopes=")) {
 			try {
+				// parseScopes returns the named groups/URLs only; the base identity
+				// scopes are re-added in signInWithGoogle, which is where they matter.
 				scopes = parseScopes(token.slice("--scopes=".length));
 			} catch (error) {
 				ctx.ui.notify((error as Error).message, "error");
