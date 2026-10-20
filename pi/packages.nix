@@ -198,11 +198,12 @@ in
   };
 
   # pi-web-access — web search / fetch / source_check for researcher + evidence-auditor.
-  # Coexists with native MCP parallel-search — different tool names, no clash:
-  #   pi-web-access: web_search, fetch_content, source_check, get_search_content
-  #   native MCP: parallel-search.* via pi mcp (OAuth, exposure direct)
-  # pi-web-access fallback chain defaults to Exa MCP (zero-config) -> Brave -> Parallel API etc.,
-  # and only uses OpenAI Hosted Search when active model is openai/openai-codex, so deepseek/muse untouched.
+  # Runs alongside MCP without clashing: the adapter exposes its own namespace
+  # (`mcp` proxy tool → veridb today), while pi-web-access owns web_search,
+  # fetch_content, source_check and get_search_content. Search is keyless via Exa.
+  # Answer/summary models are pinned to a concrete provider in
+  # ~/.pi/agent/web-search.json (declared in modules/core.nix) because the default
+  # jev/auto is a virtual router that cannot be streamed directly.
   pi-web-access = withDeps {
     pname = "pi-web-access";
     version = "0.41.0";

@@ -491,6 +491,23 @@ in
       };
     };
 
+    # pi-web-access config (web_search / fetch_content / source_check).
+    # Search and plain fetch need no keys (Exa search, direct HTTP fetch), but the
+    # answer and summary features call a provider directly, so they cannot use the
+    # virtual router model: with the default jev/auto they fail with "Virtual model
+    # jev/auto must be routed before streaming". Pinning one concrete model here
+    # fixes answer mode, the summary workflow and the curator everywhere, including
+    # inside subagents. Swap the pair below rather than hand-editing the file.
+    # (Free options exist — e.g. opencode/cat-jam-free — but this pair is verified.)
+    home.file.".pi/agent/web-search.json".text = builtins.toJSON {
+      workflow = "none";
+      summaryModel = "opencode/claude-haiku-4-5";
+      fetch = {
+        answerProvider = "opencode";
+        answerModel = "claude-haiku-4-5";
+      };
+    };
+
     # One-time cleanup for the pi extensions removed on 2026-10-16. Their state is
     # regenerable and nothing owns it once the extension is gone: the FTS index
     # (11M) and the cache-optimizer's stat shards/config would otherwise linger.

@@ -40,7 +40,7 @@ hardware-configuration.nix — generated, don't edit casually
 modules/                 — core.nix (flake wiring, pi, HM), theme/shell/niri/sddm/docker/direnv/vpn.nix
 home/                    — niri.nix, theme.nix, shell.nix, git.nix, development.nix, ...
 theme/                   — tokens.nix + dms-macchiato.json (DankMaterialShell theme)
-pi/                      — pi prompts, skills, extensions (mcp-adapter, pi-btw, rpiv-todo/ask-user-question, zentui, pi-subagents, pi-web-access, safety/querion), rules, theme
+pi/                      — pi prompts, skills, extensions (mcp-adapter, pi-btw, rpiv-todo/ask-user-question, zentui, pi-subagents, pi-web-access, pi-guard; local jev-router/stash/querion-sync/google-workspace), rules, theme
 dev/                     — personal devenv definitions (shared/, templates/, company/)
 secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
 ```
@@ -52,7 +52,7 @@ secrets/                 — gitignored VPN/keys (README + .gitkeep tracked)
 
 **Stack:** NixOS → Wayland → Niri → DankMaterialShell → utilities (`fuzzel` launcher fallback, `swaylock` lock fallback).
 
-**Bar (Noctalia islands):** `[launcher|workspaces] [clock] [network|bluetooth|volume|battery|control-center|session]` — per-pill hex, no overflow, survives missing BT/NET/muted/battery states. Panels (network/audio/BT) share Storm tokens.
+**Bar (DankMaterialShell islands):** `[launcher|workspaces] [clock] [network|bluetooth|volume|battery|control-center|session]` — per-pill hex, no overflow, survives missing BT/NET/muted/battery states. Panels (network/audio/BT) share the Macchiato tokens from `theme/tokens.nix`.
 
 **Tokens (`theme/tokens.nix`):** `background #24273a`, `surface #363a4f`, `accent #c6a0f6`, etc. — change there, not per-file.
 
@@ -150,9 +150,9 @@ sudo nixos-rebuild switch --flake .#nixos --accept-flake-config
 
 devenv --version; direnv version; docker --version; docker compose version
 go version; node --version; python --version; rustc --version; java --version
-pi --version  # 0.87.1 — keep pi.nix overlay, don't imperatively upgrade
+pi --version  # 1.2.0 — keep the pi.nix wrapper + nixpkgs-unstable binary, don't imperatively upgrade
 opencode --version  # 1.18.25
-pi --list           # should show mcp-adapter, pi-btw, rpiv-todo, rpiv-ask-user-question, zentui, pi-subagents, pi-web-access
+pi --list           # should show mcp-adapter, pi-btw, rpiv-todo, rpiv-ask-user-question, zentui, pi-subagents, pi-web-access, pi-guard
 ```
 
 Known fix: `gcc`/`clang` both provide `bin/c++` → `lib.hiPrio gcc` / `lib.lowPrio clang`; `corepack` bundled in `nodejs_24`.
@@ -195,7 +195,7 @@ Rule of thumb: `nixpkgs` is the only input that can cost ~10 minutes (kernel mod
 
 ### Updating pi extensions
 
-The third-party pi extensions (`pi-btw`, `pi-subagents`, `pi-web-access`, `pi-zentui`, the two `rpiv` extensions) are pinned inside [`pi/packages.nix`](pi/packages.nix), **not** flake inputs — `nix flake update` never touches them.
+The third-party pi extensions (`pi-btw`, `pi-subagents`, `pi-web-access`, `pi-zentui`, `pi-guard`, `pi-mcp-adapter`, the two `rpiv` extensions) are pinned inside [`pi/packages.nix`](pi/packages.nix), **not** flake inputs — `nix flake update` never touches them.
 
 ```bash
 cd ~/niri-desktop
@@ -231,7 +231,7 @@ That is not a breakage — the build is reporting the new hash. Either let `scri
 nix build --no-link '.#pi-web-access'   # or .#mcp-adapter / .#pi-subagents / .#rpiv-todo
 ```
 
-Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: all children run `muse-spark-1.2-contributor` (same model as the main session — deepseek is excluded because it leaks DSML tool calls as text). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`); it coexists with MCP `parallel-search` (`mcp-oauth` via `mcp-adapter`) on different tool namespaces.
+Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: main session and every child use `jev/auto` at high thinking (a virtual router that dispatches to the cheapest adequate physical model; deepseek is excluded for tool work because it leaks DSML tool calls as text). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`). MCP is a separate namespace: `pi-mcp-adapter` exposes one `mcp` proxy tool for all servers (`veridb` today) — a child that needs it must run as a background child (`async: true`).
 
 A `nixpkgs` bump of `nodejs`/`npm` changes what the pi extension fixed-output derivations produce:
 
@@ -250,7 +250,7 @@ nix build --no-link --impure --expr '
   in ext.pi-web-access'   # or ext.mcp-adapter / ext.pi-subagents / ext.rpiv-todo
 ```
 
-Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: `deepseek-v4-flash` for children, oracle `muse-spark` (never `deepseek-pro`). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`); it coexists with MCP `parallel-search` (`mcp-oauth` via `mcp-adapter`) on different tool namespaces.
+Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: `jev/auto` at high thinking for the main session and every child (virtual router → cheapest adequate physical model; deepseek is excluded for tool work because it leaks DSML tool calls as text). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`). MCP is a separate namespace: `pi-mcp-adapter` exposes one `mcp` proxy tool for all servers (`veridb` today) — a child that needs it must run as a background child (`async: true`).
 
 See [Rollback & tags](#rollback--tags) for backing out of an update.
 
@@ -266,7 +266,7 @@ See [Rollback & tags](#rollback--tags) for backing out of an update.
 | Launcher | Control Center | Multi-monitor |
 |---|---|---|
 | ![launcher](assets/screenshots/04-launcher.png) | ![control-center](assets/screenshots/05-control-center.png) | ![multi](assets/screenshots/06-multi.png) |
-| Noctalia launcher (`Mod+D`) | Noctalia control-center (`Mod+Ctrl+C`) | `eDP-1` + `HDMI-A-1` extend/mirror (`Mod+M`) |
+| DMS spotlight (`Mod+D`, fuzzel fallback) | DMS control-center (`Mod+Ctrl+C`) | `eDP-1` + `HDMI-A-1` extend/mirror (`Mod+M`) |
 
 Capture:
 ```bash

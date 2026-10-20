@@ -90,21 +90,21 @@ These are machine-level tools and applications.
 
 ### AI development
 
-* pi (0.87.1 via `pi.nix` overlay) + extensions:
-  * `mcp-adapter` — MCP gateway (`parallel-search` via `mcp-oauth`, `deepwiki`, `chrome-devtools`)
-  * `pi-web-access` — `web_search`/`fetch_content`/`source_check` for web research (zero-config Exa MCP fallback; only uses OpenAI Hosted Search when active model is `openai`/`openai-codex`)
-  * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; default `deepseek-v4-flash`, oracle `muse-spark` never `pro`)
+* pi (1.2.0, nixpkgs-unstable binary + the declarative `pi.nix` wrapper) + extensions:
+  * `mcp-adapter` — MCP client; **replaces pi's built-in MCP** (`settings.extensions = [ "-builtin:mcp" ]`). One `mcp` proxy tool for every server, lazy connections, idle servers stopped after 10 min, OAuth in the OS keychain. Servers live in `~/.pi/agent/mcp.json` (declared in `modules/core.nix`); `veridb` is the only one today. `/mcp` opens its panel, `pi-mcp-adapter doctor` checks connectivity
+  * `pi-web-access` — `web_search`/`fetch_content`/`source_check`/`get_search_content` for web research (search works keyless via Exa). Config is declarative in `~/.pi/agent/web-search.json`: `workflow: none`, and summary/answer models pinned to a **concrete** model (`opencode/claude-haiku-4-5`) because the default `jev/auto` is a virtual router that cannot be streamed directly ("Virtual model jev/auto must be routed before streaming")
+  * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; all `jev/auto` at high thinking). Children need `async: true` to see MCP, since foreground children never load ambient extensions
   * `pi-btw` (`/btw`), `rpiv-ask-user-question`, `rpiv-todo`, `zentui`
-  * `pi-guard` — permission gate (bash AST + file paths + MCP); policy in `modules/core.nix` `settings.guard`. Unlisted tools default to `ask` (blocked in headless runs), so new tools must be added
-  * local `querion-sync.ts` (`/sync`)
+  * `pi-guard` — permission gate (bash AST + file paths + MCP); policy in `modules/core.nix` `settings.guard`. Unlisted tools default to `ask` (blocked in headless runs), so new *extension* tools must be added; MCP needs nothing because the adapter funnels every server through one `mcp` tool
+  * local `jev-router.ts` (`/jev` routing + compaction + triage), `stash.ts` (`Alt+S`), `querion-sync.ts` (`/sync`), `google-workspace/` (`/google`)
 * opencode (via `nixpkgs-unstable`)
 * devenv + direnv
 
-Pi remains the primary coding agent (15+ providers, hundreds of models via `opencode-go` `deepseek-v4-flash`/`muse-spark`).
+Pi remains the primary coding agent: `jev` is the default provider with `auto` as the model — a virtual router that dispatches each request to the cheapest adequate physical model (muse, GLM, GPT, Kimi, …) at high thinking.
 
 OpenCode remains available as an additional coding agent/provider.
 
-`pi-web-access` and MCP `parallel-search` coexist on different tool namespaces — no clash.
+`pi-web-access` and the MCP `mcp` proxy tool live in different namespaces — no clash.
 
 ---
 
