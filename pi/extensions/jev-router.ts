@@ -13,6 +13,16 @@
  *   deepseek-v4.1-flash         $0.15 in / $0.60 out / $0.003 cached  (384k maxTokens — longest output; also serves trivial)
  *   gpt-6-luna                  $0.10 in / $0.50 out / $0.01 cached   (≤272k; $0.20/$0.75 above, 21k req/mo, 1M ctx)
  *
+ * Compaction (session_before_compact, below): Jev classifies the history being
+ * summarized and picks the cheapest adequate summarizer — complex histories get
+ * gpt-6-luna's reasoning, reasoning-heavy ones glm-5.3-flash, everything else the
+ * cheapest muse. Summaries run at low reasoning with no cache writes (one-off
+ * prompt, same as pi's built-in path), instead of inheriting the session's high
+ * thinking level. File lists are merged cumulatively (including the previous
+ * compaction's, which pi skips for extension summaries) so repeated compactions
+ * keep accumulating read/modified files exactly like the built-in one. Any
+ * failure falls back to pi's default compaction (which routes direct → muse).
+ *
  * Intelligence / task affinity (observed):
  *   muse-spark-1.3  — best agentic tool use, strong coding, cheapest. Default workhorse.
  *   gpt-6-luna      — highest reasoning for complex / cross-cutting / hard debug.
@@ -35,12 +45,16 @@
  * Requires: TYPESAFE_API_KEY (via /login → typesafe) + opencode-go API key.
  */
 
-import type { Message } from "@earendil-works/pi-ai";
+import { uuidv7, type Message } from "@earendil-works/pi-ai";
 import type {
   ExtensionAPI,
   ExtensionContext,
   ModelRoute,
   ModelRouteRequest,
+} from "@earendil-works/pi-coding-agent";
+import {
+  convertToLlm,
+  serializeConversation,
 } from "@earendil-works/pi-coding-agent";
 
 const PROVIDER = "opencode-go" as const;
@@ -139,11 +153,13 @@ function pickTarget(complexity: string, taskKind: string, probs: Record<string, 
   return MUSE; // default workhorse
 }
 
-async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ target: TargetId; complexity: string; taskKind: string; probs: Record<string, number> } | null> {
+async function classifyText(
+  prompt: string,
+  ctx: ExtensionContext,
+  signal?: AbortSignal,
+): Promise<{ complexity: string; taskKind: string; probs: Record<string, number> } | null> {
   const jev = ctx.modelRegistry.findOfType("classifier", "typesafe", "jev-latest");
   if (!jev) return null;
-
-  const prompt = lastUserText(req.messages).slice(0, 16_000);
   if (!prompt.trim()) return null;
 
   const result = await ctx.modelRegistry.classify(
@@ -172,7 +188,7 @@ async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ targe
         },
       },
     },
-    { signal: req.signal },
+    { signal },
   );
 
   if (result.stopReason !== "stop") return null;
@@ -204,8 +220,87 @@ async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ targe
     ...tAns.probabilities as Record<string, number>,
   };
 
-  return { target: pickTarget(complexity, taskKind, cAns.probabilities as Record<string, number>), complexity, taskKind, probs };
+  return { complexity, taskKind, probs };
 }
+
+async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ target: TargetId; complexity: string; taskKind: string; probs: Record<string, number> } | null> {
+  const prompt = lastUserText(req.messages).slice(0, 16_000);
+  const classified = await classifyText(prompt, ctx, req.signal);
+  if (!classified) return null;
+  return {
+    ...classified,
+    target: pickTarget(classified.complexity, classified.taskKind, classified.probs),
+  };
+}
+
+// Map Jev answers → compaction summarizer. Unlike live routing, summary output
+// is short and bounded, so input price dominates and muse (cheapest everywhere)
+// is the default; Jev only promotes histories that need better reasoning.
+function pickSummarizer(complexity: string, taskKind: string): TargetId {
+  if (complexity.toLowerCase() === "complex") return GPT6_LUNA;
+  if (taskKind.toLowerCase().includes("reasoning")) return GLM_FLASH;
+  return MUSE;
+}
+
+// Jev's context is 64k; sample head (goal) + tail (recent progress) so both
+// survive truncation.
+function sampleForClassification(full: string, budget = 16_000): string {
+  if (full.length <= budget) return full;
+  const half = Math.floor(budget / 2);
+  return full.slice(0, half) + "\n\n[... middle truncated for classification ...]\n\n" + full.slice(-half);
+}
+
+function asStringSet(v: unknown): Set<string> {
+  if (v instanceof Set) return new Set([...v].filter((x): x is string => typeof x === "string"));
+  if (Array.isArray(v)) return new Set(v.filter((x): x is string => typeof x === "string"));
+  return new Set();
+}
+
+// Same shape pi uses (`<read-files>` / `<modified-files>` suffix on the summary
+// plus matching `details`), reimplemented here because only serializeConversation
+// is exported from the package root. Merging the previous compaction's lists by
+// hand offsets pi's rule of not carrying file lists forward from extension
+// summaries (`fromHook`), so repeated Jev compactions accumulate like built-ins.
+function formatFileSuffix(readFiles: string[], modifiedFiles: string[]): string {
+  const sections: string[] = [];
+  if (readFiles.length > 0) sections.push(`<read-files>\n${readFiles.join("\n")}\n</read-files>`);
+  if (modifiedFiles.length > 0) sections.push(`<modified-files>\n${modifiedFiles.join("\n")}\n</modified-files>`);
+  if (sections.length === 0) return "";
+  return `\n\n${sections.join("\n\n")}`;
+}
+
+const SUMMARY_FORMAT = `## Goal
+[What is the user trying to accomplish? Can be multiple items if the session covers different tasks.]
+
+## Constraints & Preferences
+- [Any constraints, preferences, or requirements mentioned by user]
+- [Or "(none)" if none were mentioned]
+
+## Progress
+### Done
+- [x] [Completed tasks/changes]
+
+### In Progress
+- [ ] [Current work]
+
+### Blocked
+- [Issues preventing progress, if any]
+
+## Key Decisions
+- **[Decision]**: [Brief rationale]
+
+## Next Steps
+1. [Ordered list of what should happen next]
+
+## Critical Context
+- [Any data, examples, or references needed to continue]
+- [Or "(none)" if not applicable]
+
+Keep each section concise. Preserve exact file paths, function names, and error messages.`;
+
+const SUMMARY_SYSTEM_PROMPT =
+  "You are a context summarization assistant. Read the conversation and produce a structured summary in the exact format requested. " +
+  "Do NOT continue the conversation. Do NOT respond to any questions in it. ONLY output the structured summary.";
 
 export default function (pi: ExtensionAPI) {
   const def = {
@@ -270,6 +365,115 @@ export default function (pi: ExtensionAPI) {
   // Virtual model provider can be any string; this makes discovery easier
   // if users filter by provider.
   pi.registerVirtualModel({ ...def, provider: PROVIDER });
+
+  // Jev-routed compaction: classify the history being summarized and use the
+  // cheapest adequate summarizer (complex → gpt-6-luna, reasoning → glm flash,
+  // else muse). Runs at low reasoning with no cache writes instead of
+  // inheriting the session's thinking level, and merges file lists
+  // cumulatively like pi's built-in compaction. Returning undefined (or
+  // throwing) falls back to the default summary, which routes direct → muse.
+  pi.on("session_before_compact", async (event, ctx) => {
+    try {
+      const { preparation, branchEntries, customInstructions, signal } = event;
+      const allMessages = [
+        ...(preparation.messagesToSummarize ?? []),
+        ...(preparation.turnPrefixMessages ?? []),
+      ];
+      if (allMessages.length === 0) return undefined;
+
+      const conversationText = serializeConversation(convertToLlm(allMessages));
+      if (!conversationText.trim()) return undefined;
+
+      let summarizer: TargetId = MUSE;
+      const classified = await classifyText(sampleForClassification(conversationText), ctx, signal).catch(() => null);
+      if (classified) summarizer = pickSummarizer(classified.complexity, classified.taskKind);
+
+      const model = ctx.modelRegistry.find(PROVIDER, summarizer);
+      if (!model) return undefined;
+
+      ctx.ui.notify(`Jev compaction: summarizing ${allMessages.length} messages with ${SHORT[summarizer] ?? summarizer}…`, "info");
+
+      const reserve = preparation.settings?.reserveTokens || 16384;
+      const maxTokens = Math.min(Math.floor(0.8 * reserve), model.maxTokens > 0 ? model.maxTokens : 8192);
+
+      let promptText = `<conversation>\n${conversationText}\n</conversation>\n\n`;
+      if (preparation.previousSummary) {
+        promptText +=
+          `Update the existing structured summary below with new information. RULES:\n` +
+          `- PRESERVE all existing information from the previous summary\n` +
+          `- ADD new progress, decisions, and context from the new messages\n` +
+          `- UPDATE the Progress section: move items from "In Progress" to "Done" when completed\n` +
+          `- UPDATE "Next Steps" based on what was accomplished\n` +
+          `- PRESERVE exact file paths, function names, and error messages\n\n` +
+          `<previous-summary>\n${preparation.previousSummary}\n</previous-summary>\n\n`;
+      } else {
+        promptText += `Create a structured context checkpoint summary that another LLM will use to continue the work.\n\n`;
+      }
+      promptText += `Use this EXACT format:\n\n${SUMMARY_FORMAT}`;
+      if (customInstructions) promptText += `\n\nAdditional focus: ${customInstructions}`;
+
+      const response = await ctx.modelRegistry.complete(
+        model,
+        {
+          messages: [
+            {
+              role: "user" as const,
+              content: [{ type: "text" as const, text: promptText }],
+              timestamp: Date.now(),
+            },
+          ],
+        },
+        {
+          maxTokens,
+          signal,
+          cacheRetention: "none",
+          sessionId: uuidv7(),
+          // Summaries don't need deep thinking; "low" keeps the one-off call
+          // cheap. Same key pi's built-in summarizer sets on its stream path;
+          // adapters that don't understand it ignore it harmlessly.
+          reasoning: "low",
+        },
+      );
+
+      // Never persist partial/failed summaries as the session checkpoint.
+      if (!response || response.stopReason !== "stop") return undefined;
+      if (response.content.some((b) => b.type === "toolCall")) return undefined;
+      const summary = response.content
+        .filter((b): b is { type: "text"; text: string } => b.type === "text")
+        .map((b) => b.text)
+        .join("\n");
+      if (!summary.trim()) return undefined;
+
+      // Cumulative file lists: preparation.fileOps (this pass) + the previous
+      // compaction's details (pi skips extension summaries when accumulating).
+      const fileOps = preparation.fileOps as unknown as { read?: unknown; written?: unknown; edited?: unknown } | undefined;
+      const read = asStringSet(fileOps?.read);
+      const modified = new Set([...asStringSet(fileOps?.written), ...asStringSet(fileOps?.edited)]);
+      for (let i = branchEntries.length - 1; i >= 0; i--) {
+        const e = branchEntries[i] as unknown as { type?: string; details?: { readFiles?: unknown; modifiedFiles?: unknown } };
+        if (e?.type === "compaction" && e.details) {
+          for (const f of asStringSet(e.details.readFiles)) read.add(f);
+          for (const f of asStringSet(e.details.modifiedFiles)) modified.add(f);
+          break;
+        }
+      }
+      const readFiles = [...read].filter((f) => !modified.has(f)).sort();
+      const modifiedFiles = [...modified].sort();
+
+      return {
+        compaction: {
+          summary: summary + formatFileSuffix(readFiles, modifiedFiles),
+          firstKeptEntryId: preparation.firstKeptEntryId,
+          tokensBefore: preparation.tokensBefore,
+          usage: response.usage,
+          details: { readFiles, modifiedFiles },
+        },
+      };
+    } catch {
+      // Fall back to pi's default compaction (routes direct → muse).
+      return undefined;
+    }
+  });
 
   // Publish the dispatched physical model for the footer. `message_end`
   // carries the physical `provider`/`model` of the assistant message, so

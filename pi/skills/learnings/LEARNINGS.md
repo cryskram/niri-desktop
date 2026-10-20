@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-20 — Jev-routed compaction summaries in jev-router.ts (decision) — `pi/compact`
+
+- What: `pi/extensions/jev-router.ts` now handles `session_before_compact` — Jev classifies the history being summarized (head+tail 16k sample, `classifyText` shared with the route path) and picks the cheapest adequate summarizer (complex → gpt-6-luna, reasoning → glm-5.3-flash, else muse-spark-1.3), at low reasoning with no cache writes instead of inheriting session high thinking.
+- Why/Context: default compaction already flowed through the router as `direct` → muse, but always muse (quality-blind) at session thinking level; Jev is classifier-only (typesafe/jev-latest, 64k ctx) so it routes the summary, never writes it. File lists merge cumulatively by hand (prep fileOps + previous compaction details) because pi skips `fromHook` summaries when accumulating.
+- How/Apply: no `modules/core.nix` change (file already wired); any failure returns undefined → default compaction. Verified via pi's own `discoverAndLoadExtensions` loader (0 errors, both handlers registered) plus a stub-ctx harness: standard → muse, complex → luna with file carry, reasoning → glm, empty/failed summary → fallback.
+
+Source: user request 2026-10-20 in a pi session — "use jev for efficient compaction".
+
 ## 2026-10-19 — glow at full width: its `width` cannot be static, so compute it per launch (finding) — `cli/terminal`
 
 - What: `~/.config/glow/glow.yml` pinned `width: 80`, so markdown rendered as an 80-column strip in a ~160-column terminal. Fixed with a `glow` fish function that passes `-w (tput cols)` (an explicit `-w`/`--width` still wins; bare `glow` and `-t/--tui` pass through) plus a declarative config in `home/shell.nix` that no longer pins width.
