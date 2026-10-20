@@ -2,6 +2,12 @@
 
 Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
+## 2026-10-20 — Jev triage suggests subagents only when earned (decision) — `pi/delegate`
+
+- What: `pi/extensions/jev-router.ts` handles `before_agent_start` — Jev classifies each user prompt (scope: focused/multi/broad × action: answer/explore/implement/review, 0.6 confidence gate) and only then injects a short `jev-triage` system section naming scout/researcher/worker/reviewer/oracle; focused work stays fully silent (stale section deleted, footer `jev-triage` key cleared on `agent_end`).
+- Why/Context: Vageesh wanted triage/delegation without subagents for everything. Suggest-only by design: extensions have no subagent-spawn API (the `subagent` tool is model-side), and auto-spawning would fight the caution — the main model still decides, now with Jev's nudge.
+- How/Apply: no wiring change (same file); verified via pi's loader (4 handlers, 0 errors) + stub harness: trivial/low-confidence/Jev-down/custom-event → silent, broad-explore → scout, multi-implement → worker, broad-review → oracle. Pre-existing staged changes (`core.nix`, `packages.nix`, `update-pi-extensions.py`) left untouched — commit only `jev-router.ts` + this entry when asked.
+
 ## 2026-10-20 — Jev-routed compaction summaries in jev-router.ts (decision) — `pi/compact`
 
 - What: `pi/extensions/jev-router.ts` now handles `session_before_compact` — Jev classifies the history being summarized (head+tail 16k sample, `classifyText` shared with the route path) and picks the cheapest adequate summarizer (complex → gpt-6-luna, reasoning → glm-5.3-flash, else muse-spark-1.3), at low reasoning with no cache writes instead of inheriting session high thinking.
