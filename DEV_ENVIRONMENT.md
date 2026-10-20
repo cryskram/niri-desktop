@@ -97,12 +97,12 @@ These are machine-level tools and applications.
   * `pi-btw` (`/btw`), `rpiv-ask-user-question`, `rpiv-todo`, `zentui`
   * `pi-guard` — permission gate (bash AST + file paths + MCP); policy in `modules/core.nix` `settings.guard`. Unlisted tools default to `ask` (blocked in headless runs), so new *extension* tools must be added; MCP needs nothing because the adapter funnels every server through one `mcp` tool
   * local `jev-router.ts` (`/jev` routing + compaction + triage), `stash.ts` (`Alt+S`), `querion-sync.ts` (`/sync`), `google-workspace/` (`/google`)
-* opencode (via `nixpkgs-unstable`)
+* opencode 2.1.1 — the daemon-based rewrite, packaged in `pkgs/opencode2.nix` from the npm platform binary because nixpkgs still ships the 1.x line. It owns the `opencode` command and reads v1's config (`~/.config/opencode/opencode.json`) and credentials (`~/.local/share/opencode/auth.json`) unchanged; note it runs as a background service by default (`opencode --standalone` opts out)
 * devenv + direnv
 
 Pi remains the primary coding agent: `jev` is the default provider with `auto` as the model — a virtual router that dispatches each request to the cheapest adequate physical model (muse, GLM, GPT, Kimi, …) at high thinking.
 
-OpenCode remains available as an additional coding agent/provider.
+OpenCode 2 remains available as an additional coding agent/provider (pi is still the primary agent).
 
 `pi-web-access` and the MCP `mcp` proxy tool live in different namespaces — no clash.
 

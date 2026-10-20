@@ -151,7 +151,7 @@ sudo nixos-rebuild switch --flake .#nixos --accept-flake-config
 devenv --version; direnv version; docker --version; docker compose version
 go version; node --version; python --version; rustc --version; java --version
 pi --version  # 1.2.0 — keep the pi.nix wrapper + nixpkgs-unstable binary, don't imperatively upgrade
-opencode --version  # 1.18.25
+opencode --version  # 2.1.1 — OpenCode 2 from pkgs/opencode2.nix (nixpkgs still has 1.x); reads v1 config/creds unchanged
 pi --list           # should show mcp-adapter, pi-btw, rpiv-todo, rpiv-ask-user-question, zentui, pi-subagents, pi-web-access, pi-guard
 ```
 

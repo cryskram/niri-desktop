@@ -60,7 +60,12 @@ in
         };
       in
       {
-        opencode = unstable.opencode;
+        # OpenCode 2 replaces the 1.x line: same `opencode` command, same config
+        # (~/.config/opencode/opencode.json) and credential (~/.local/share/
+        # opencode/auth.json) locations, so the repo config and AiOverviewControl's
+        # quota card keep working. nixpkgs has no v2 yet, so it comes from the npm
+        # platform package — see pkgs/opencode2.nix for why that is not the wrapper.
+        opencode = final.callPackage ../pkgs/opencode2.nix { };
         pi-coding-agent = unstable.pi-coding-agent;
 
         # herdr — agent multiplexer / terminal workspace for coding agents.
