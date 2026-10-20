@@ -396,13 +396,6 @@ in
         # commands like `sudo rm -rf` are re-checked instead of slipping past a
         # regex), and file paths and MCP tools are gated too.
         ../pi/extensions/jev-router.ts
-        # MCP panel (/mcpx) + live `mcp` status key for zentui's Extension statuses
-        # (/zentui extensions): enabled servers as `● name(count)`, refreshed on
-        # a 2s poll so a disabled server disappears without waiting for the next prompt.
-        # Pass the directory (not index.ts): Nix copies a single file path alone
-        # into the store, dropping the sibling panel.ts/state.ts imports. A
-        # directory copies whole, and pi resolves <dir>/index.ts itself.
-        ../pi/extensions/mcp-panel
         # Querion session archive — /sync uploads pi sessions for on-the-go reading.
         # Configured via xdg.configFile."querion/config.json" (home-manager block below).
         ../pi/extensions/querion-sync.ts
@@ -414,7 +407,9 @@ in
         # Google Workspace — `/google` adds Google accounts the way /login picks a
         # provider (personal and Workspace-managed side by side), and 13 tools work
         # on Sheets, Docs and Drive with the selected account's own token. See
-        # docs/google-workspace.md. Directory path for the same reason as mcp-panel.
+        # docs/google-workspace.md. Pass the directory (not index.ts): Nix copies a
+        # single file path alone into the store, dropping the sibling module it
+        # imports; a directory copies whole, and pi resolves <dir>/index.ts itself.
         ../pi/extensions/google-workspace
       ];
   };

@@ -48,9 +48,11 @@ Tasks, no interactive MCP UI, and its tool search is word-based only.
 - On first start the adapter appends `-builtin:mcp` to `settings.json` itself.
   Declaring it here keeps that file declarative (it is a store symlink) and
   silences pi's "built-in MCP was not loaded" warning.
-- `pi/extensions/mcp-panel` (`/mcpx`) still reads native state. It is
-  superseded by the adapter's `/mcp` panel and is kept only until the
-  workaround cleanup pass.
+- The custom MCP panel (`pi/extensions/mcp-panel`, `/mcpx`, plus its footer
+  `mcp` status key) was removed on 2026-10-20. It existed to observe the
+  built-in MCP's native state; the adapter's own `/mcp` panel does the same job
+  and `/mcp-adapter tools` lists tools, so the homegrown panel was pure
+  maintenance.
 
 ## Considered and rejected: pi-background-tasks
 `pi-background-tasks` (2.6.10) was evaluated on 2026-10-20 for the "subagent
