@@ -152,9 +152,11 @@ in
       # through to "ask" — which in a headless run (subagents, `pi -p`) means
       # *blocked*, not prompted. So this rule set is deliberately complete:
       # destructive operations are gated, and every other tool the agent can call
-      # is listed as an outright allow. Adding an extension or an MCP server means
-      # adding its tools here (`/guard list` shows what is in effect, and the
-      # prompt UI offers to save a permanent allow).
+      # is listed as an outright allow. Adding a *new extension* means adding its
+      # tools here (`/guard list` shows what is in effect, and the prompt UI offers
+      # to save a permanent allow). Adding an *MCP server* does not: pi-mcp-adapter
+      # funnels every server through one `mcp` proxy tool, so MCP policy is
+      # server-agnostic and needs no edit no matter how many servers get added.
       #
       # Two levels: `deny` blocks with no prompt (nothing denied is ever the right
       # answer to a request), `ask` confirms first — with an "allow for this
@@ -282,11 +284,12 @@ in
             web_enable = "allow";
             web_search = "allow";
 
-            # MCP. pi-mcp-adapter replaces the built-in MCP and reaches every server
-            # through ONE `mcp` proxy tool, so there is no per-server tool name to
-            # allow any more (the old mcp__veridb__* entries were built-in naming and
-            # no longer exist). Per-tool caution now lives in the adapter config
-            # (approveTools / directTools) rather than here.
+            # MCP. pi-mcp-adapter replaces the built-in MCP and reaches *every*
+            # server through ONE `mcp` proxy tool, so this one line covers any
+            # number of future MCP servers — there is deliberately no per-server
+            # or per-tool entry here to maintain or remove. Per-tool caution, when
+            # wanted, lives in the adapter's own config (approveTools /
+            # directTools) rather than in this map.
             mcp = "allow";
 
             # Google Workspace extension tools (pi/extensions/google-workspace).

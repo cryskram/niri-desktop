@@ -33,7 +33,16 @@ Tasks, no interactive MCP UI, and its tool search is word-based only.
 ## Tradeoffs
 - pi-guard sees MCP as the single `mcp` tool, not one name per MCP tool.
   Per-tool caution now belongs to the adapter's own `approveTools` /
-  `directTools`; the `mcp__veridb__*` allowlist entries are gone.
+  `directTools`; the `mcp__veridb__*` allowlist entries are gone. This is a
+  deliberate one-time cost: the guard policy is now server-agnostic, so adding
+  MCP servers never touches it again.
+- **Subagents cannot use MCP from the foreground.** pi-subagents foreground
+  children are sessions inside the parent process and never load the parent's
+  ambient extensions, so the adapter (and `mcp`) is simply absent. A child that
+  needs MCP must set `async: true` (background children load ambient extensions)
+  and list `mcp` in `tools`, or use `tools: "inherit"`. Foreground children get
+  the parent's registered *providers* only, which is why model routing still
+  works there.
 - One more npm FOD (registry `node_modules`, ~490 lockfile entries) instead of
   leaning on pi's bundled MCP.
 - On first start the adapter appends `-builtin:mcp` to `settings.json` itself.
@@ -42,3 +51,20 @@ Tasks, no interactive MCP UI, and its tool search is word-based only.
 - `pi/extensions/mcp-panel` (`/mcpx`) still reads native state. It is
   superseded by the adapter's `/mcp` panel and is kept only until the
   workaround cleanup pass.
+
+## Considered and rejected: pi-background-tasks
+`pi-background-tasks` (2.6.10) was evaluated on 2026-10-20 for the "subagent
+can't reach MCP" problem and rejected — it does not address it. Its
+`bg_delegate` children are inspect-only by construction (read/grep/find/ls, no
+shell, writes or network) and run with ambient extensions isolated by default,
+so MCP stays unreachable there regardless. `bg_run_pi_attested` does spawn a
+real `pi --mode json` child with normal discovery, but it is a one-shot
+prompt-to-report task, not steerable delegation.
+
+`async: true` on pi-subagents is the supported answer and costs nothing. The
+package would also add 11 tools (each needing a pi-guard rule), an
+Anthropic-attribution lane this setup does not use, a `Shift+Down` dock
+binding, and Fusion runs that spawn three candidates plus an evaluator and a
+merger for every call. If a shell-job manager is ever wanted, the documented
+fallback is `PI_BG_FEATURES=process`: `bg_run` / `bg_kill` / `bg_logs` /
+`bg_status` plus the footer dock, with no delegation or Fusion surface.
