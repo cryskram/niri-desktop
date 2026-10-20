@@ -91,6 +91,12 @@ in
       theme = "catppuccin-macchiato";
       defaultTools = [ "+codemode" ]; # keep read/bash/edit/write + codemode (JS orchestration, parallel calls, image models)
 
+      # Built-in MCP off: pi-mcp-adapter (wired in `extensions` below) registers the
+      # same `/mcp` command and replaces it. Declaring it here rather than letting
+      # the adapter append it keeps settings.json declarative, and it silences pi's
+      # "built-in MCP was not loaded" warning on every start.
+      extensions = [ "-builtin:mcp" ];
+
       # Good development ergonomics — explicit declarative defaults (see pi docs: settings.md, sessions.md).
       enableSkillCommands = true;
       hideThinkingBlock = false;
@@ -276,18 +282,12 @@ in
             web_enable = "allow";
             web_search = "allow";
 
-            # veridb MCP tools, named mcp__<server>__<tool>. `query` is the one
-            # that can mutate data — flip it to "ask" for a confirmation prompt
-            # (which blocks headless calls).
-            mcp__veridb__describe_table = "allow";
-            mcp__veridb__explain_query = "allow";
-            mcp__veridb__list_databases = "allow";
-            mcp__veridb__list_schemas = "allow";
-            mcp__veridb__list_tables = "allow";
-            mcp__veridb__query = "allow";
-            mcp__veridb__sample_rows = "allow";
-            mcp__veridb__search_columns = "allow";
-            mcp__veridb__veridb_status = "allow";
+            # MCP. pi-mcp-adapter replaces the built-in MCP and reaches every server
+            # through ONE `mcp` proxy tool, so there is no per-server tool name to
+            # allow any more (the old mcp__veridb__* entries were built-in naming and
+            # no longer exist). Per-tool caution now lives in the adapter config
+            # (approveTools / directTools) rather than here.
+            mcp = "allow";
 
             # Google Workspace extension tools (pi/extensions/google-workspace).
             # pi-guard matches tool names exactly, so all of them are listed;
@@ -372,6 +372,7 @@ in
           pi-subagents
           pi-web-access
           pi-guard
+          mcp-adapter
           ;
       in
       [
@@ -383,6 +384,10 @@ in
         "${pi-subagents}"
         "${pi-web-access}"
         "${pi-guard}"
+        # MCP client — replaces the built-in MCP support (see settings.extensions
+        # above). One `mcp` proxy tool, lazy server connections, idle servers
+        # stopped after 10 min, OAuth tokens in the OS keychain.
+        "${mcp-adapter}"
         # Permission gate — the policy is settings.guard below. Supersedes the
         # former repo-local safety.ts: bash is parsed as an AST (so wrapper
         # commands like `sudo rm -rf` are re-checked instead of slipping past a
@@ -460,7 +465,10 @@ in
       collapseKey = "alt+t";
     };
 
-    # MCP servers — native pi (0.99+) reads ~/.pi/agent/mcp.json directly.
+    # MCP servers. pi-mcp-adapter owns MCP now and reads the same files the
+    # built-in did (Pi 0.99+ reads ~/.pi/agent/mcp.json and .pi/mcp.json; the
+    # adapter also accepts ~/.config/mcp/mcp.json), so declarations did not move
+    # and `pi mcp add` / `pi mcp list` still operate on this file.
     # pi-web-access already provides web_search/fetch/source_check, so the
     # parallel-search/deepwiki/chrome-devtools MCPs are redundant. The local
     # dummy harness that once lived here has been removed now that the MCP
@@ -484,14 +492,6 @@ in
         };
       };
     };
-
-    # One-time cleanup of the old adapter path. Home Manager leaves unmanaged
-    # files in place, so without this ~/.config/mcp/mcp.json (and its .backup)
-    # would linger as an orphan after the migration to ~/.pi/agent/mcp.json.
-    home.activation.cleanupMcpAdapter = ''
-      rm -f "$HOME/.config/mcp/mcp.json" "$HOME/.config/mcp/mcp.json.backup"
-      rmdir --ignore-fail-on-non-empty "$HOME/.config/mcp" 2>/dev/null || true
-    '';
 
     # One-time cleanup for the pi extensions removed on 2026-10-16. Their state is
     # regenerable and nothing owns it once the extension is gone: the FTS index

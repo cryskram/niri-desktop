@@ -239,4 +239,26 @@ in
       "--omit=dev"
     ];
   };
+
+  # MCP client for pi. Loading this extension replaces pi's built-in MCP support
+  # (see settings.extensions = [ "-builtin:mcp" ] in modules/core.nix): one `mcp`
+  # proxy tool instead of one tool per MCP tool, servers connected lazily and
+  # stopped after idling, OAuth tokens in the OS keychain. It reads the same
+  # mcp.json files the built-in does, so server declarations did not move.
+  mcp-adapter = withDeps {
+    pname = "pi-mcp-adapter";
+    version = "5.4.0";
+    src = pkgs.fetchFromGitHub {
+      owner = "nicobailon";
+      repo = "pi-mcp-adapter";
+      tag = "v5.4.0";
+      hash = "sha256-iRj+rdop8eBeZb9zFxFiKufEHJMqI0KylsNWeU7atb8=";
+    };
+    npmHash = "sha256-/ymDTGmZt0w57vJX3BK0F8FS6geopIMX2aN1cCjKxJY=";
+    # Runtime deps come from the registry (typebox included, so the host-provided
+    # peer needs no suppression). --omit=dev only, never --legacy-peer-deps.
+    npmFlags = [
+      "--omit=dev"
+    ];
+  };
 }

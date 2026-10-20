@@ -78,6 +78,11 @@ EXTENSIONS = [
         "repo": ("jdiamond", "pi-guard"),
         "deps": True,
     },
+    {
+        "name": "mcp-adapter",
+        "repo": ("nicobailon", "pi-mcp-adapter"),
+        "deps": True,
+    },
 ]
 
 
@@ -193,6 +198,8 @@ def regions_of(text):
         "zentui": "zentui = plain {",
         "pi-subagents": "pi-subagents = withDeps {",
         "pi-web-access": "pi-web-access = withDeps {",
+        "pi-guard": "pi-guard = withDeps {",
+        "mcp-adapter": "mcp-adapter = withDeps {",
         "rpiv-ask-user-question": "rpiv-ask-user-question = rpivExtension {",
         "rpiv-todo": "rpiv-todo = rpivExtension {",
     }
