@@ -13,6 +13,13 @@
  *   deepseek-v4.1-flash         $0.15 in / $0.60 out / $0.003 cached  (384k maxTokens — longest output; also serves trivial)
  *   gpt-6-luna                  $0.10 in / $0.50 out / $0.01 cached   (≤272k; $0.20/$0.75 above, 21k req/mo, 1M ctx)
  *
+ * Triage (before_agent_start, below): Jev classifies each user prompt by scope
+ * + action and, only when delegation is meaningful, adds a short
+ * `jev-triage` system section naming the right subagent (scout/researcher/
+ * worker/reviewer/oracle). Focused Q&A and single edits stay silent — no
+ * section, no noise. Suggest-only: extensions can't spawn subagents, and
+ * auto-spawning would fight the "only when meaningful" rule.
+ *
  * Compaction (session_before_compact, below): Jev classifies the history being
  * summarized and picks the cheapest adequate summarizer — complex histories get
  * gpt-6-luna's reasoning, reasoning-heavy ones glm-5.3-flash, everything else the
@@ -302,6 +309,100 @@ const SUMMARY_SYSTEM_PROMPT =
   "You are a context summarization assistant. Read the conversation and produce a structured summary in the exact format requested. " +
   "Do NOT continue the conversation. Do NOT respond to any questions in it. ONLY output the structured summary.";
 
+const TRIAGE_SECTION = "jev-triage";
+const TRIAGE_STATUS_KEY = "jev-triage";
+
+type TriageRole = "scout" | "researcher" | "worker" | "reviewer" | "oracle";
+
+const TRIAGE_GUIDANCE: Record<TriageRole, string> = {
+  scout: "Triage: broad exploration. Consider delegating recon to the scout subagent first, then implement from its findings. If it proves single-file, do it directly.",
+  researcher: "Triage: multi-part investigation. Consider delegating to the researcher subagent to gather findings in parallel, then synthesize. If it's answerable from visible context, answer directly.",
+  worker: "Triage: multi-file implementation. Consider delegating the work to the worker subagent while you hold the plan. If it proves single-file, do it directly.",
+  reviewer: "Triage: a change spanning files wants verification. Consider having the reviewer subagent check the work after implementation.",
+  oracle: "Triage: broad, high-stakes change. Consider consulting the oracle subagent for a second opinion on the approach before implementing.",
+};
+
+async function classifyTriage(
+  prompt: string,
+  ctx: ExtensionContext,
+): Promise<{ scope: string; action: string; actionP: number } | null> {
+  const jev = ctx.modelRegistry.findOfType("classifier", "typesafe", "jev-latest");
+  if (!jev) return null;
+  if (!prompt.trim()) return null;
+
+  const result = await ctx.modelRegistry.classify(
+    jev,
+    {
+      state: { prompt },
+      questions: {
+        scope: {
+          type: "choice",
+          instructions: "How wide is the work described in `prompt`?",
+          criteria: {
+            focused: "Single file, single lookup, or a question about already-visible code",
+            multi: "Several files but one thread of work",
+            broad: "Repo-wide exploration, many unknowns, or parallel lines of inquiry",
+          },
+        },
+        action: {
+          type: "choice",
+          instructions: "What shape of work does `prompt` ask for?",
+          criteria: {
+            answer: "Q&A, explanation, or review of visible code — answerable inline",
+            explore: "Reconnaissance across the codebase before acting",
+            implement: "Multi-step code changes across files",
+            review: "A change wanting verification or a second opinion",
+          },
+        },
+      },
+    },
+    {},
+  );
+
+  if (result.stopReason !== "stop") return null;
+  const sAns = result.answers.scope;
+  const aAns = result.answers.action;
+  if (sAns?.type !== "choice" || aAns?.type !== "choice") return null;
+
+  let scope = "focused";
+  let maxP = -1;
+  for (const [k, v] of Object.entries(sAns.probabilities)) {
+    if ((v ?? 0) > maxP) {
+      maxP = v ?? 0;
+      scope = k;
+    }
+  }
+  let action = "answer";
+  let actionP = -1;
+  for (const [k, v] of Object.entries(aAns.probabilities)) {
+    if ((v ?? 0) > actionP) {
+      actionP = v ?? 0;
+      action = k;
+    }
+  }
+
+  return { scope, action, actionP };
+}
+
+// Suggest-only verdict. Anything focused/answerable-inline stays silent (null)
+// so subagents only enter the picture when the shape of the work earns it.
+function triageVerdict(scope: string, action: string, actionP: number): TriageRole | null {
+  if (actionP < 0.6) return null;
+  switch (action) {
+    case "answer":
+      return scope === "focused" ? null : "researcher";
+    case "explore":
+      return "scout";
+    case "implement":
+      return scope === "focused" ? null : "worker";
+    case "review":
+      if (scope === "focused") return null;
+      return scope === "broad" ? "oracle" : "reviewer";
+    default:
+      return null;
+  }
+}
+
 export default function (pi: ExtensionAPI) {
   const def = {
     provider: "jev",
@@ -473,6 +574,41 @@ export default function (pi: ExtensionAPI) {
       // Fall back to pi's default compaction (routes direct → muse).
       return undefined;
     }
+  });
+
+  pi.on("agent_end", async (_event, ctx) => {
+    try {
+      ctx.ui.setStatus(TRIAGE_STATUS_KEY, undefined);
+    } catch {
+      // Footer bookkeeping must never break the loop.
+    }
+    return undefined;
+  });
+
+  // Jev triage: suggest-only delegation. Classifies the user prompt by scope +
+  // action and, only when a subagent earns its keep, adds a short guidance
+  // section naming the role. Focused work stays silent (section deleted so no
+  // stale verdict leaks across runs). Never blocks the run.
+  pi.on("before_agent_start", async (event, ctx) => {
+    try {
+      if (event.messageType !== "user") return undefined;
+      const triaged = await classifyTriage(event.prompt.slice(0, 16_000), ctx).catch(() => null);
+      const role = triaged ? triageVerdict(triaged.scope, triaged.action, triaged.actionP) : null;
+      if (!role) {
+        delete event.systemPromptOptions.sections[TRIAGE_SECTION];
+        return undefined;
+      }
+      event.systemPromptOptions.sections[TRIAGE_SECTION] = TRIAGE_GUIDANCE[role];
+      ctx.ui.notify(`Jev triage: ${role} fits this task — delegation guidance added.`, "info");
+      try {
+        ctx.ui.setStatus(TRIAGE_STATUS_KEY, role);
+      } catch {
+        // Footer bookkeeping must never block a run.
+      }
+    } catch {
+      // Triage must never block a run.
+    }
+    return undefined;
   });
 
   // Publish the dispatched physical model for the footer. `message_end`
