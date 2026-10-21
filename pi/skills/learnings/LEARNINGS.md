@@ -1,6 +1,13 @@
 # Learnings — Journal for niri-desktop + Pi
 
-Reverse chronological. Newest on top. Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
+Reverse chronological. Newest on top.
+
+## 2026-10-20 — pi-btw sub-sessions don't load ambient extensions, so virtual models break there (gotcha) — `pi/btw`
+
+- What: `/btw` failed with `No API key found for jev.` while the main thread ran `jev/auto` fine. pi-btw builds its side sub-session with its own `DefaultResourceLoader`, so the wrapper's `--extension` set is absent — including `jev-router.ts`, which registers the *virtual* model `jev/auto`. Provider `jev` then resolves as a plain provider, and the key lookup fails.
+- Why/Context: any virtual model (registered by an extension rather than a real provider) is unusable in a child session that reloads resources. Same shape as pi-subagents foreground children not loading ambient extensions. "Pick a concrete model instead" is not available declaratively: BTW's only config file accepts `extensions` and `workspace`, and `/btw:model` is a per-session entry.
+- How/Apply: declare `~/.pi/agent/btw.json` = `{"extensions":["<store path of jev-router.ts>"]}` in `modules/core.nix`. The router then loads inside the sub-session and BTW inherits the main thread's routing. Verified the exact store path loads standalone in pi with no errors.
+ Each entry is 2-4 lines of durable signal. See `SKILL.md` for the entry template and when to read/write.
 
 ## 2026-10-20 — Jev triage suggests subagents only when earned (decision) — `pi/delegate`
 
