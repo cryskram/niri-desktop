@@ -36,10 +36,29 @@
  *   deepseek-v4.1   — bulk generation / 384k output / math heavy + trivial Q&A.
  *   glm-5.3-flash   — balanced flash, vision-capable, good for mixed media.
  *
- * Routing:
+ * Routing — capability first, price as tie-break. "Cheapest adequate" was the
+ * wrong objective: the router picks the model whose affinity matches the turn.
+ *
+ *   tool-driven turns (coding, edits, any tool activity)
+ *     standard   → muse        (cheap, best tool discipline)
+ *     complex    → gpt-6-luna  (hard + tools needs reasoning)
+ *     stuck      → gpt-6-luna  (2+ failed tool calls this turn)
+ *   text-driven turns (chat, math, Q&A, bulk/long output)
+ *     any tier   → deepseek-v4.1  (384k output, strongest at math/Q&A)
+ *     complex    → deepseek-v4.1  (hard + long output; 384k output wins)
+ *   reasoning (planning/trade-offs) → glm-5.3-flash unless complex → luna
+ *   images       → glm-5.3-flash (vision)
+ *
+ * deepseek is deliberately kept out of tool-driven turns only: it leaks tool
+ * calls as DSML text. Its intelligence is used where that failure cannot fire.
+ *
+ * Routing mechanics:
  *   - Jev classifies `complexity` (trivial/standard/complex) and `task_kind`
- *     (coding/reasoning/generation/chat). Result cached in router state so we
- *     pay the Jev latency once per session branch.
+ *     (coding/reasoning/generation/chat) per user turn, plus conversation
+ *     evidence (images, failed tools, edits, code fences, paths).
+ *   - `reconcile` keeps the branch's model unless the evidence justifies a
+ *     switch (escalate up, step down once a plan becomes edits, leave deepseek
+ *     when the turn needs tools), so stable sessions pay no cache misses.
  *   - Sticky routing for continuations/retries preserves prompt-cache & thinking
  *     signatures (per virtual-models.md).
  *   - Fallback when Jev unavailable → muse-spark-1.3-contributor.
@@ -125,16 +144,21 @@ function lastUserText(messages: readonly Message[]): string {
     .join("\n");
 }
 
-// Map Jev answers → target. Costs are secondary to capability; muse is cheapest
-// so we default to it unless Jev signals a specialty.
+// Capability-first routing (price only breaks ties). Each target is chosen for
+// the *affinity* it is known to be good at:
+//   muse      — agentic coding, reliable tool calls, cheapest output
+//   gpt-6-luna— deep reasoning / hard debugging; cheapest input, 21k req/mo cap
+//   deepseek  — math, Q&A, bulk/long output (384k); leaks tool calls as text, so
+//               text-driven turns only
+//   glm-flash — balanced flash + vision
 //
 // Two rules learned the hard way:
 //   * deepseek-v4.1-flash leaks tool calls as DSML/XML text instead of structured
-//     calls, so it is reserved for work with no tool calls at all (chat / bare
-//     Q&A, and compaction summaries elsewhere in this file). Any coding or
-//     generation task goes to muse/glm/luna, which have reliable tool discipline.
+//     calls. It is excluded from tool-driven turns (coding, edits, any tool
+//     activity) and used where that failure cannot fire: chat, math, bare Q&A,
+//     bulk generation.
 //   * the classifier only sees one prompt, so structural evidence (code fences,
-//     several paths, hard-debug vocabulary) can promote a "standard" verdict —
+//     several paths, hard-debug vocabulary) promotes a "standard" verdict —
 //     otherwise gpt-6-luna would almost never be reached.
 const HARD_PATTERN =
   /\b(debug|race|deadlock|segfault|flaky|regression|architecture?|architectural|design|migrat\w*|trade-?offs?|optimi[sz]\w*|performance|refactor|root cause|why (?:does|is|doesn't|do))\b/i;
@@ -202,7 +226,17 @@ export function pickTarget(
   // Promote on structure, never demote on it.
   if (comp === "standard" && looksHard(signals)) comp = "complex";
 
-  // Images need a vision model.
+  // Text-driven turn: no tool work is expected, so deepseek's intelligence
+  // (math, Q&A, 384k output) is usable without its tool-call leak firing.
+  // `coding` never qualifies — even a trivial coding ask ends in an edit tool
+  // call, which is exactly the failure deepseek must not be near.
+  const textWork =
+    (task === "chat" || task === "generation")
+    && !signals.edits
+    && signals.toolErrors === 0;
+
+  // Images need a vision model (deepseek and glm both have it; glm is cheaper
+  // on output, so it wins the tie).
   if (signals.vision) return GLM_FLASH;
 
   // A stuck loop (two failed tool calls this turn) is exactly when a stronger
@@ -212,31 +246,41 @@ export function pickTarget(
   // Planning is done and code is being written: implement on the cheap workhorse.
   if (signals.edits && comp !== "complex") return MUSE;
 
-  // Complex / architectural / hard debug → gpt-6-luna (best reasoning, 1M ctx).
+  // Text-driven turns → deepseek at every tier: hard + long output needs its
+  // 384k output, and math/Q&A is what it is best at.
+  if (textWork) return DEEPSEEK;
+
+  // Hard + tool-driven → gpt-6-luna: best reasoning, and the only tool-reliable
+  // step up from muse (deepseek is off-limits here).
   if (comp === "complex") return GPT6_LUNA;
 
-  // Reasoning-heavy but not complex → glm as balanced flash (also vision-capable).
+  // Reasoning-first planning that is not yet complex → balanced flash.
   if (task === "reasoning") return GLM_FLASH;
 
-  // Everything else — including chat, trivial Q&A and bulk generation — goes to
-  // muse: it is the cheapest model in this set ($0.10/$0.20 vs deepseek's
-  // $0.15/$0.60) *and* the most reliable with tools. Deepseek is deliberately
-  // unreachable here: its only edge is 384k output, which this router caps at
-  // 131k anyway, and it leaks tool calls as text. It stays only for legacy
-  // branches that persisted it (see LEGACY/pickTarget callers).
+  // Standard agentic coding → muse: cheapest output *and* the best tool
+  // discipline, which is what this path rewards.
   return MUSE;
 }
 
 /**
- * Keep a branch on the model it started with unless the evidence says otherwise:
- * switching costs a prompt-cache miss, so only escalate (or leave deepseek once
- * the work stops being pure chat), and step down once a plan becomes an edit.
+ * Keep a branch on the model it started with unless the affinity changed, so a
+ * stable session pays no cache misses:
+ *   - text ↔ tool turns flip model, because that is exactly when the right model
+ *     changes (deepseek for text, muse/luna for tools)
+ *   - escalate up when a turn turns out harder
+ *   - step gpt6 → muse once a plan becomes edits
+ *   - never silently downgrade otherwise
+ * RANK is the capability ladder for *tool-capable* models; deepseek is handled
+ * explicitly because it is specialized, not weak.
  */
 export function reconcile(previous: TargetId, next: TargetId, signals: RouteSignals): TargetId {
   if (previous === next) return next;
   if (signals.vision) return GLM_FLASH;
-  // deepseek is only for tool-free chat; if that stopped being true, move off it.
+  // deepseek is only for text turns; if that stopped being true, move off it.
   if (previous === DEEPSEEK) return next;
+  // A pure text turn mid-branch: deepseek's affinity (math, Q&A, 384k output)
+  // is worth the one cache miss, and the next tool turn moves off it again.
+  if (next === DEEPSEEK) return DEEPSEEK;
   // plan → implement: stop paying for the reasoner once edits are flowing.
   if (signals.edits && previous === GPT6_LUNA) return MUSE;
   // Escalate for a harder turn; never silently downgrade mid-branch.
