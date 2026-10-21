@@ -1,81 +1,43 @@
 /**
- * Jev router — model choice by measured capability, cost only as tie-break
+ * Jev router — model choice by measured capability and speed, cost as tie-break
  *
  * Virtual model `jev/auto` (also `opencode-go/auto` alias) that routes each
- * request to one of 4 opencode-go models using the TypeSafe Jev classifier.
+ * request to one of the opencode-go models using the TypeSafe Jev classifier.
  *
- * Selection is evidence-based, not vibes. Sources: the "opencode go model
- * league" (nahuelgenchi.com/software/opencode-go-model-league, 20 Oct 2026 —
- * 29 models, 8 benchmarks, blended per-request cost) and Artificial Analysis /
- * Vals comparisons for the pairwise calls. Est. $/req is that league's figure
- * for a typical go request; token prices come from pi's models-store.json.
+ * Selection is evidence-based. Benchmarks from the "opencode go model league"
+ * (nahuelgenchi.com/software/opencode-go-model-league, 20 Oct 2026 — 29 models,
+ * 8 benchmarks, blended per-request cost); Intelligence Index and output speed
+ * from Artificial Analysis; token prices from pi's models-store.json.
  *
- *   model                       DeepSWE  TB2.1  SciCode  AA-LCR  AA-code  $/req
- *   muse-spark-1.3-contributor     75.4   72.3     58.8    83.0     54.3  $0.00026
- *   mimo-v2.6-pro                  71.9   67.8     60.9    86.3      —     $0.00092
- *   deepseek-v4.1-flash            74.2   74.5     51.9    84.0      —     $0.00046
- *   glm-5.3-flash                  63.0   62.9     51.6    80.0     71.5  $0.00190
- *   (gpt-6-luna was dropped: 66.6 / 54.6 / 83.3 / 41.1 — dominated by muse on
- *    agentic work, by mimo-pro on long context, by glm-flash on math.
- *    gemini-4-argon is the raw leader — DeepSWE 77.9, TB4.0 57.58, GPQA 96.4 —
- *    but at $4/$20 per 1M and ~$0.028/req it stays out of automatic routing.)
+ *   model                  int  t/s    DeepSWE  TB2.1  SciCode  AA-LCR  AA-code   $/req
+ *   muse-spark-1.3-contrib  48  114.5     75.4   72.3     58.8    83.0     54.3  $0.00026
+ *   mimo-v2.6-pro           46   49.1     71.9   67.8     60.9    86.3      -     $0.00092
+ *   claude-haiku-5-5        43  236.0      -      -       55.0    82.7     36.5  $0.00078
+ *   deepseek-v4.1-flash     39  233.5     74.2   74.5     51.9    84.0      -     $0.00046
+ *   glm-5.3-flash           42   76.2     63.0   62.9     51.6    80.0     71.5  $0.00190
+ *   gpt-6-luna              38  122.5     66.6   73.0     54.6    83.3     41.1  $0.00071
+ *   kimi-k3                 44   41.2     69.0   80.9     59.5    88.7     51.9  $0.03060
+ *   grok-4.7                46   91.5     71.0   73.4     57.4    76.7     56.3  $0.01775
+ *
+ * What the numbers decided:
+ *   - No model on this plan is both faster *and* better at coding than muse
+ *     (DeepSWE 75.4 with the best AA coding index among the affordable ones), so
+ *     hard coding does not get a different, slower model: it gets more thinking
+ *     (effortFloor → xhigh). gpt-6-luna was dropped as dominated everywhere.
+ *   - mimo-v2.6-pro is the strongest long-context/coding-science model here
+ *     (SciCode 60.9, AA-LCR 86.3) but runs at 49 t/s, so it is kept for
+ *     compaction summaries only — one-off calls where latency is not loop-bound.
+ *   - Stuck loops (2+ failed tool calls) switch *family* to claude-haiku-5-5:
+ *     Intelligence 43 at 236 t/s (4.8x faster than mimo-pro) for a quick retry.
+ *   - gemini-4-argon is the raw leader (DeepSWE 77.9, TB4.0 57.58, GPQA 96.4)
+ *     but at $4/$20 per 1M and ~$0.028/req it stays out of automatic routing.
  *
  * Prices (per 1M, pi models-store.json):
- *   muse-spark-1.3-contributor  $0.10 in / $0.20 out / $0.002 cached  (226k req/mo, 1M ctx, 131k out, vision)
- *   deepseek-v4.1-flash         $0.15 in / $0.60 out / $0.003 cached  (384k out — longest; vision)
- *   glm-5.3-flash               $0.15 in / $0.50 out / $0.03 cached   (vision)
+ *   muse-spark-1.3-contributor  $0.10 in / $0.20 out / $0.002 cached   (226k req/mo, 1M ctx, 131k out, vision)
+ *   claude-haiku-5-5            $0.10 in / $0.50 out / $0.010 cached   (1M ctx, 128k out, vision)
+ *   deepseek-v4.1-flash         $0.15 in / $0.60 out / $0.003 cached   (384k out — longest; vision)
+ *   glm-5.3-flash               $0.15 in / $0.50 out / $0.030 cached   (vision)
  *   mimo-v2.6-pro               $0.435 in / $0.87 out / $0.0036 cached (vision; near-free cache)
- *
- * Triage (before_agent_start, below): Jev classifies each user prompt by scope
- * + action and, only when delegation is meaningful, adds a short
- * `jev-triage` system section naming the right subagent (scout/researcher/
- * worker/reviewer/oracle). Focused Q&A and single edits stay silent — no
- * section, no noise. Suggest-only: extensions can't spawn subagents, and
- * auto-spawning would fight the "only when meaningful" rule.
- *
- * Compaction (session_before_compact, below): Jev classifies the history being
- * summarized and picks the summarizer that fits — complex histories get
- * mimo-v2.6-pro (best long-context, AA-LCR 86.3), reasoning-heavy ones
- * glm-5.3-flash, everything else muse (cheapest, and summaries are bounded). Summaries run at low reasoning with no cache writes (one-off
- * prompt, same as pi's built-in path), instead of inheriting the session's high
- * thinking level. File lists are merged cumulatively (including the previous
- * compaction's, which pi skips for extension summaries) so repeated compactions
- * keep accumulating read/modified files exactly like the built-in one. Any
- * failure falls back to pi's default compaction (which routes direct → muse).
- *
- * Affinity, derived from the table above:
- *   muse-spark-1.3  — top-2 on DeepSWE while cheapest per request: the default.
- *   mimo-v2.6-pro   — best SciCode and AA-LCR on the plan: hard, long-context work.
- *   deepseek-v4.1   — 2nd on DeepSWE, best TB2.1, 384k output: text/bulk turns.
- *   glm-5.3-flash   — best AA coding index (71.5) and math (93.9) on the plan:
- *                     reasoning/planning, and the vision tie-break.
- *
- * Routing — capability first, price as tie-break. "Cheapest adequate" was the
- * wrong objective: the router picks the model whose affinity matches the turn.
- *
- *   tool-driven turns (coding, edits, any tool activity)
- *     standard   → muse          (top-2 DeepSWE, cheapest per request)
- *     complex    → mimo-v2.6-pro (best SciCode/AA-LCR on the plan)
- *     stuck      → mimo-v2.6-pro (2+ failed tool calls this turn)
- *   text-driven turns (chat, math, Q&A, bulk/long output)
- *     any tier   → deepseek-v4.1  (384k output, strongest at math/Q&A)
- *     complex    → deepseek-v4.1  (hard + long output; 384k output wins)
- *   reasoning (planning/trade-offs) → glm-5.3-flash (best coding index + math)
- *   images       → glm-5.3-flash (vision)
- *
- * deepseek is deliberately kept out of tool-driven turns only: it leaks tool
- * calls as DSML text. Its intelligence is used where that failure cannot fire.
- *
- * Routing mechanics:
- *   - Jev classifies `complexity` (trivial/standard/complex) and `task_kind`
- *     (coding/reasoning/generation/chat) per user turn, plus conversation
- *     evidence (images, failed tools, edits, code fences, paths).
- *   - `reconcile` keeps the branch's model unless the evidence justifies a
- *     switch (escalate up, step down once a plan becomes edits, leave deepseek
- *     when the turn needs tools), so stable sessions pay no cache misses.
- *   - Sticky routing for continuations/retries preserves prompt-cache & thinking
- *     signatures (per virtual-models.md).
- *   - Fallback when Jev unavailable → muse-spark-1.3-contributor.
  *
  * Declarative: this file lives in ~/niri-desktop/pi/extensions/ and is wired
  * via modules/core.nix `programs.pi.coding-agent.extensions`. No imperative
@@ -105,13 +67,15 @@ const STATUS_KEY = "jev-route";
 
 // Model IDs must match models-store.json exactly
 const MUSE = "muse-spark-1.3-contributor";
-const MIMO_PRO = "mimo-v2.6-pro";
+const HAIKU = "claude-haiku-5-5"; // fast second opinion for stuck loops
+const MIMO_PRO = "mimo-v2.6-pro"; // compaction only: best AA-LCR, but 49 t/s
 const DEEPSEEK = "deepseek-v4.1-flash";
 const GLM_FLASH = "glm-5.3-flash";
 
 /** Short footer labels — one glance per routed model. */
 const SHORT: Record<string, string> = {
   [MUSE]: "muse-1.3",
+  [HAIKU]: "haiku-5.5",
   [MIMO_PRO]: "mimo-2.6-pro",
   [DEEPSEEK]: "deepseek-v4.1",
   [GLM_FLASH]: "glm-5.3-flash",
@@ -122,7 +86,7 @@ const SHORT: Record<string, string> = {
 // which leaks tool calls, and not the new mimo-v2.6-pro, a different model).
 const LEGACY_MIMO = "mimo-v2.6-flash";
 
-type TargetId = typeof MUSE | typeof MIMO_PRO | typeof DEEPSEEK | typeof GLM_FLASH;
+type TargetId = typeof MUSE | typeof HAIKU | typeof MIMO_PRO | typeof DEEPSEEK | typeof GLM_FLASH;
 
 interface JevRouterState {
   target: TargetId;
@@ -134,7 +98,13 @@ interface JevRouterState {
 
 type Req = ModelRouteRequest<JevRouterState>;
 
-function routeTo(req: Req, ctx: ExtensionContext, id: TargetId, state?: JevRouterState): ModelRoute<JevRouterState> {
+function routeTo(
+  req: Req,
+  ctx: ExtensionContext,
+  id: TargetId,
+  state?: JevRouterState,
+  floor?: ThinkingLevel,
+): ModelRoute<JevRouterState> {
   const model = ctx.modelRegistry.find(PROVIDER, id);
   if (!model) throw new Error(`Model ${PROVIDER}/${id} not in catalog — check opencode-go auth / models-store.json`);
   // Optimistic footer: show the dispatched model as soon as the prompt is
@@ -145,8 +115,11 @@ function routeTo(req: Req, ctx: ExtensionContext, id: TargetId, state?: JevRoute
   } catch {
     // Footer bookkeeping must never fail the route.
   }
-  // pass through the user's thinking level; pi will clamp to the model's map
-  return { model, thinkingLevel: req.thinkingLevel, state };
+  // pass through the user's thinking level, raised by the turn's effort floor;
+  // pi clamps to whatever the model supports
+  let level = req.thinkingLevel;
+  if (floor && LEVELS.indexOf(level as ThinkingLevel) < LEVELS.indexOf(floor)) level = floor;
+  return { model, thinkingLevel: level, state };
 }
 
 function lastUserText(messages: readonly Message[]): string {
@@ -183,7 +156,8 @@ const RANK: Record<TargetId, number> = {
   [DEEPSEEK]: 1,
   [GLM_FLASH]: 2,
   [MUSE]: 3,
-  [MIMO_PRO]: 4,
+  [HAIKU]: 4,
+  [MIMO_PRO]: 0, // compaction-only; never a branch target
 };
 
 /** Conversation-derived evidence, independent of Jev's single-prompt verdict. */
@@ -226,55 +200,59 @@ function looksHard(signals: RouteSignals): boolean {
 }
 
 export function pickTarget(
-  complexity: string,
   taskKind: string,
   probs: Record<string, number>,
   signals: RouteSignals,
 ): TargetId {
-  // Confidence gate: a 0.34 "complex" is noise, not a verdict. Fall back to the
-  // agentic-safe defaults (standard coding) instead of a specialty.
-  const compRaw = complexity.toLowerCase();
   const taskRaw = taskKind.toLowerCase();
-  let comp = (probs[compRaw] ?? 1) >= 0.45 ? compRaw : "standard";
   const task = (probs[taskRaw] ?? 1) >= 0.4 ? taskRaw : "coding";
 
-  // Promote on structure, never demote on it.
-  if (comp === "standard" && looksHard(signals)) comp = "complex";
+  // Text-driven turn: no tool work expected, so deepseek's strengths (math, Q&A,
+  // 384k output) apply without its tool-call leak firing. `coding` never
+  // qualifies — even a trivial coding ask ends in an edit tool call.
+  const textWork = (task === "chat" || task === "generation")
+    && signals.toolErrors === 0
+    && !signals.edits;
 
-  // Text-driven turn: no tool work is expected, so deepseek's intelligence
-  // (math, Q&A, 384k output) is usable without its tool-call leak firing.
-  // `coding` never qualifies — even a trivial coding ask ends in an edit tool
-  // call, which is exactly the failure deepseek must not be near.
-  const textWork =
-    (task === "chat" || task === "generation")
-    && !signals.edits
-    && signals.toolErrors === 0;
-
-  // Images need a vision model (deepseek and glm both have it; glm is cheaper
-  // on output, so it wins the tie).
+  // Images need a vision model.
   if (signals.vision) return GLM_FLASH;
 
-  // A stuck loop (two failed tool calls this turn) is exactly when a stronger
-  // reasoner pays for itself.
-  if (signals.toolErrors >= 2) return MIMO_PRO;
+  // Two failed tool calls: switch families rather than escalate effort. Haiku is
+  // the fastest agentic model on the plan (236 t/s, int 43), so the retry lands
+  // quickly instead of making the user wait through a 49 t/s mono-pro.
+  if (signals.toolErrors >= 2) return HAIKU;
 
-  // Planning is done and code is being written: implement on the cheap workhorse.
-  if (signals.edits && comp !== "complex") return MUSE;
-
-  // Text-driven turns → deepseek at every tier: hard + long output needs its
-  // 384k output, and math/Q&A is what it is best at.
   if (textWork) return DEEPSEEK;
 
-  // Hard + tool-driven → mimo-v2.6-pro: best SciCode/AA-LCR on the plan, and it
-  // caches almost free ($0.0036/M), so long agentic sessions stay cheap.
-  if (comp === "complex") return MIMO_PRO;
-
-  // Reasoning-first planning that is not yet complex → balanced flash.
+  // Reasoning-first planning that is not agentic yet → glm-flash (best AA coding
+  // index 71.5 and math 93.9 on the plan), before tools start moving files.
   if (task === "reasoning") return GLM_FLASH;
 
-  // Standard agentic coding → muse: cheapest output *and* the best tool
-  // discipline, which is what this path rewards.
+  // Everything else — standard *and* hard coding — stays on muse: it is the best
+  // coding model on the plan (DeepSWE 75.4, AA-code 54.3) and reasonably fast
+  // (114 t/s). Hardness is expressed through effort, not a slower model.
   return MUSE;
+}
+
+/** Explicit effort floors, ascending. */
+const LEVELS = ["low", "medium", "high", "xhigh", "max"] as const;
+export type ThinkingLevel = (typeof LEVELS)[number];
+
+/**
+ * Effort floor for a turn. Since no plan model beats muse at coding, complexity
+ * buys *thinking*, not a different model: hard turns get xhigh reasoning while
+ * staying on the fast workhorse. Structural evidence (code fences, several
+ * paths, hard-debug vocabulary) promotes a "standard" verdict here.
+ */
+export function effortFloor(
+  complexity: string,
+  probs: Record<string, number>,
+  signals: RouteSignals,
+): ThinkingLevel | undefined {
+  const c = complexity.toLowerCase();
+  const confident = (probs[c] ?? 1) >= 0.45;
+  const effective = confident ? c : "standard";
+  return effective === "complex" || looksHard(signals) ? "xhigh" : undefined;
 }
 
 /**
@@ -297,7 +275,7 @@ export function reconcile(previous: TargetId, next: TargetId, signals: RouteSign
   // is worth the one cache miss, and the next tool turn moves off it again.
   if (next === DEEPSEEK) return DEEPSEEK;
   // plan → implement: stop paying for the reasoner once edits are flowing.
-  if (signals.edits && previous === MIMO_PRO) return MUSE;
+  if (signals.edits && (previous === HAIKU || previous === MIMO_PRO)) return MUSE;
   // Escalate for a harder turn; never silently downgrade mid-branch.
   if (RANK[next] > RANK[previous]) return next;
   return previous;
@@ -373,7 +351,7 @@ async function classifyText(
   return { complexity, taskKind, probs };
 }
 
-async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ target: TargetId; complexity: string; taskKind: string; probs: Record<string, number>; signals: RouteSignals } | null> {
+async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ target: TargetId; effort?: ThinkingLevel; complexity: string; taskKind: string; probs: Record<string, number>; signals: RouteSignals } | null> {
   const raw = lastUserText(req.messages);
   const prompt = raw.slice(0, 16_000);
   const classified = await classifyText(prompt, ctx, req.signal);
@@ -381,7 +359,8 @@ async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ targe
   const signals = readSignals(req.messages, raw);
   return {
     ...classified,
-    target: pickTarget(classified.complexity, classified.taskKind, classified.probs, signals),
+    target: pickTarget(classified.taskKind, classified.probs, signals),
+    effort: effortFloor(classified.complexity, classified.probs, signals),
     signals,
   };
 }
@@ -568,7 +547,7 @@ export default function (pi: ExtensionAPI) {
         const rawId = sticky.model.id as string;
         // Migrate legacy mimo sticky/state targets to deepseek.
         const id = (rawId === LEGACY_MIMO ? MUSE : rawId) as TargetId;
-        const known: TargetId[] = [MUSE, MIMO_PRO, DEEPSEEK, GLM_FLASH];
+        const known: TargetId[] = [MUSE, HAIKU, MIMO_PRO, DEEPSEEK, GLM_FLASH];
         if (sticky.model.provider === PROVIDER && known.includes(id)) {
           return routeTo(req, ctx, id, req.state);
         }
@@ -596,7 +575,7 @@ export default function (pi: ExtensionAPI) {
           taskKind: classified.taskKind,
           probs: classified.probs,
         };
-        return routeTo(req, ctx, target, state);
+        return routeTo(req, ctx, target, state, classified.effort);
       }
 
       // Jev unavailable (or empty prompt): keep the branch's model if it had one.
