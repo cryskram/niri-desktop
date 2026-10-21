@@ -13,6 +13,10 @@ let
   # extensions list and the skills list below can reference them.
   piPackages = import ../pi/packages.nix { inherit pkgs; };
 
+  # Official Bruno MCP server (pkgs/bruno-mcp.nix), hoisted for the mcp.json
+  # entry below. Loaded on demand by the adapter like every other server.
+  brunoMcp = pkgs.callPackage ../pkgs/bruno-mcp.nix { };
+
   # pi-subagents excludes global context and skills by default. Opt every built-in
   # role into the same instructions, memory skill, and project context as the parent.
   sharedSubagentContext = {
@@ -513,6 +517,22 @@ in
             "/home/vageesh/Projects/veridb/configs/veridb.local.yaml"
             "-env-file"
             "/home/vageesh/Projects/veridb/.env"
+          ];
+        };
+        # Bruno — official API-collections MCP (usebruno/bruno-mcp, pkgs/bruno-mcp.nix).
+        # Both workspaces are pinned (flags are repeatable), so the server exposes
+        # exactly these and skips auto-discovery's fallbacks. Reads list/inspect;
+        # execute_request/run_collection RUN real requests via the bundled bru, so
+        # treat their output as live traffic — per-request auth comes from the
+        # collections' own env files, nothing extra to sign in to.
+        bruno = {
+          command = "${pkgs.nodejs}/bin/node";
+          args = [
+            "${brunoMcp}/lib/node_modules/@usebruno/mcp/dist/index.js"
+            "--workspace"
+            "/home/vageesh/Documents/bruno/TAP"
+            "--workspace"
+            "/home/vageesh/Documents/bruno/PERSONAL"
           ];
         };
       };
