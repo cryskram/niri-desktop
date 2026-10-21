@@ -90,7 +90,7 @@ These are machine-level tools and applications.
 
 ### AI development
 
-* pi (1.2.0, nixpkgs-unstable binary + the declarative `pi.nix` wrapper) + extensions:
+* pi (1.3.0, nixpkgs-unstable binary + the declarative `pi.nix` wrapper) + extensions:
   * `mcp-adapter` — MCP client; **replaces pi's built-in MCP** (`settings.extensions = [ "-builtin:mcp" ]`). One `mcp` proxy tool for every server, lazy connections, idle servers stopped after 10 min, OAuth in the OS keychain. Servers live in `~/.pi/agent/mcp.json` (declared in `modules/core.nix`); `veridb` is the only one today. `/mcp` opens its panel, `pi-mcp-adapter doctor` checks connectivity
   * `pi-web-access` — `web_search`/`fetch_content`/`source_check`/`get_search_content` for web research (search works keyless via Exa). Config is declarative in `~/.pi/agent/web-search.json`: `workflow: none`, and summary/answer models pinned to a **concrete** model (`opencode/claude-haiku-4-5`) because the default `jev/auto` is a virtual router that cannot be streamed directly ("Virtual model jev/auto must be routed before streaming")
   * `pi-subagents` — scout/researcher/evidence-auditor/oracle/worker/reviewer/delegate (generic, any cwd; all `jev/auto` at high thinking). Children need `async: true` to see MCP, since foreground children never load ambient extensions
