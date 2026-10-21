@@ -476,6 +476,16 @@ in
     # parallel-search/deepwiki/chrome-devtools MCPs are redundant. The local
     # dummy harness that once lived here has been removed now that the MCP
     # wiring is understood; add servers as their own entries below.
+    # Toggling a server:
+    #   globally (here) → add `enabled = false;` to its entry. Verified against
+    #     the adapter: doctor then reports `veridb: disabled`. Note the adapter's
+    #     OWN configs (.mcp.json / mcp-adapter.json) use `disabled = true`
+    #     instead, and that key is ignored in pi's mcp.json
+    #     ("Ignored Pi mcp.json settings: disabled").
+    #   per project    → `/mcp` then ctrl+d on the server, or
+    #     `/mcp-adapter disable <name>` — writes <project>/.pi/mcp-adapter.json
+    #     and needs `/reload`. `enable` reverses it.
+    #   check          → `node <adapter>/cli.js doctor` (enabled servers only)
     home.file.".pi/agent/mcp.json".text = builtins.toJSON {
       mcpServers = {
         # VeriDB — policy-controlled database MCP for AI agents (PostgreSQL).

@@ -125,39 +125,123 @@ function lastUserText(messages: readonly Message[]): string {
     .join("\n");
 }
 
-function editedThisTurn(messages: readonly Message[]): boolean {
-  const lastUser = messages.findLastIndex((m) => m.role === "user");
-  return messages.slice(lastUser + 1).some((m) => m.role === "toolResult" && !m.isError && (m.toolName === "edit" || m.toolName === "write"));
-}
-
 // Map Jev answers → target. Costs are secondary to capability; muse is cheapest
 // so we default to it unless Jev signals a specialty.
-function pickTarget(complexity: string, taskKind: string, probs: Record<string, number>): TargetId {
-  const comp = complexity.toLowerCase();
-  const task = taskKind.toLowerCase();
+//
+// Two rules learned the hard way:
+//   * deepseek-v4.1-flash leaks tool calls as DSML/XML text instead of structured
+//     calls, so it is reserved for work with no tool calls at all (chat / bare
+//     Q&A, and compaction summaries elsewhere in this file). Any coding or
+//     generation task goes to muse/glm/luna, which have reliable tool discipline.
+//   * the classifier only sees one prompt, so structural evidence (code fences,
+//     several paths, hard-debug vocabulary) can promote a "standard" verdict —
+//     otherwise gpt-6-luna would almost never be reached.
+const HARD_PATTERN =
+  /\b(debug|race|deadlock|segfault|flaky|regression|architecture?|architectural|design|migrat\w*|trade-?offs?|optimi[sz]\w*|performance|refactor|root cause|why (?:does|is|doesn't|do))\b/i;
 
-  // Long bulk generation → deepseek (384k maxTokens vs 131k/128k others)
-  if (task.includes("generation") || task.includes("bulk") || task.includes("long")) {
-    // but if also complex, prefer gpt6 for reasoning + generation
-    if (comp === "complex" && (probs.complex ?? 0) > 0.7) return GPT6_LUNA;
-    return DEEPSEEK;
-  }
+/** Where a target sits on the capability ladder (used to escalate, not downgrade). */
+const RANK: Record<TargetId, number> = {
+  [DEEPSEEK]: 1,
+  [MUSE]: 2,
+  [GLM_FLASH]: 2,
+  [GPT6_LUNA]: 3,
+};
 
-  // Trivial / chat / summarization → deepseek ($0.15/$0.60, 130k req/mo).
-  // Outputs here are short, so the higher per-token output price barely
-  // registers in absolute cost, and 1M context keeps cache hits cheap.
-  if (comp === "trivial" || task.includes("chat") || task.includes("trivial")) {
-    return DEEPSEEK;
-  }
+/** Conversation-derived evidence, independent of Jev's single-prompt verdict. */
+export interface RouteSignals {
+  prompt: string;
+  vision: boolean;
+  codeFences: number;
+  paths: number;
+  toolErrors: number;
+  edits: boolean;
+}
 
-  // Complex / architectural / hard debug → gpt-6-luna (higher intelligence, $0.10/$0.50 ± tier)
+export function readSignals(messages: readonly Message[], prompt: string): RouteSignals {
+  const lastUser = messages.findLastIndex((m) => m.role === "user");
+  const tail = lastUser >= 0 ? messages.slice(lastUser + 1) : [];
+  const toolResults = tail.filter((m) => m.role === "toolResult");
+
+  const lastUserMessage = messages[lastUser];
+  const vision = Array.isArray(lastUserMessage?.content)
+    && lastUserMessage.content.some((b) => (b as { type?: string }).type === "image");
+
+  return {
+    prompt,
+    vision,
+    codeFences: (prompt.match(/```/g) ?? []).length >> 1,
+    // path-ish tokens: a/b, ./x, src/foo.ts, ~/x — catches multi-file asks
+    paths: new Set(prompt.match(/[~.]?\/?(?:[\w.-]+\/)+[\w.-]+/g) ?? []).size,
+    toolErrors: toolResults.filter((m) => m.isError).length,
+    edits: tail.some((m) => m.role === "toolResult" && !m.isError
+      && (m.toolName === "edit" || m.toolName === "write")),
+  };
+}
+
+/** Structural evidence that a "standard" prompt is really a hard one. */
+function looksHard(signals: RouteSignals): boolean {
+  return signals.codeFences >= 2
+    || signals.paths >= 3
+    || (signals.prompt.length > 1200 && HARD_PATTERN.test(signals.prompt))
+    || (HARD_PATTERN.test(signals.prompt) && signals.paths >= 2);
+}
+
+export function pickTarget(
+  complexity: string,
+  taskKind: string,
+  probs: Record<string, number>,
+  signals: RouteSignals,
+): TargetId {
+  // Confidence gate: a 0.34 "complex" is noise, not a verdict. Fall back to the
+  // agentic-safe defaults (standard coding) instead of a specialty.
+  const compRaw = complexity.toLowerCase();
+  const taskRaw = taskKind.toLowerCase();
+  let comp = (probs[compRaw] ?? 1) >= 0.45 ? compRaw : "standard";
+  const task = (probs[taskRaw] ?? 1) >= 0.4 ? taskRaw : "coding";
+
+  // Promote on structure, never demote on it.
+  if (comp === "standard" && looksHard(signals)) comp = "complex";
+
+  // Images need a vision model.
+  if (signals.vision) return GLM_FLASH;
+
+  // A stuck loop (two failed tool calls this turn) is exactly when a stronger
+  // reasoner pays for itself.
+  if (signals.toolErrors >= 2) return GPT6_LUNA;
+
+  // Planning is done and code is being written: implement on the cheap workhorse.
+  if (signals.edits && comp !== "complex") return MUSE;
+
+  // Complex / architectural / hard debug → gpt-6-luna (best reasoning, 1M ctx).
   if (comp === "complex") return GPT6_LUNA;
 
-  // Standard coding / agentic work → muse (cheapest $0.10/$0.20, best tool discipline)
-  // reasoning-heavy but not complex → glm as balanced flash
-  if (task.includes("reasoning")) return GLM_FLASH;
+  // Reasoning-heavy but not complex → glm as balanced flash (also vision-capable).
+  if (task === "reasoning") return GLM_FLASH;
 
-  return MUSE; // default workhorse
+  // Everything else — including chat, trivial Q&A and bulk generation — goes to
+  // muse: it is the cheapest model in this set ($0.10/$0.20 vs deepseek's
+  // $0.15/$0.60) *and* the most reliable with tools. Deepseek is deliberately
+  // unreachable here: its only edge is 384k output, which this router caps at
+  // 131k anyway, and it leaks tool calls as text. It stays only for legacy
+  // branches that persisted it (see LEGACY/pickTarget callers).
+  return MUSE;
+}
+
+/**
+ * Keep a branch on the model it started with unless the evidence says otherwise:
+ * switching costs a prompt-cache miss, so only escalate (or leave deepseek once
+ * the work stops being pure chat), and step down once a plan becomes an edit.
+ */
+export function reconcile(previous: TargetId, next: TargetId, signals: RouteSignals): TargetId {
+  if (previous === next) return next;
+  if (signals.vision) return GLM_FLASH;
+  // deepseek is only for tool-free chat; if that stopped being true, move off it.
+  if (previous === DEEPSEEK) return next;
+  // plan → implement: stop paying for the reasoner once edits are flowing.
+  if (signals.edits && previous === GPT6_LUNA) return MUSE;
+  // Escalate for a harder turn; never silently downgrade mid-branch.
+  if (RANK[next] > RANK[previous]) return next;
+  return previous;
 }
 
 async function classifyText(
@@ -230,13 +314,16 @@ async function classifyText(
   return { complexity, taskKind, probs };
 }
 
-async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ target: TargetId; complexity: string; taskKind: string; probs: Record<string, number> } | null> {
-  const prompt = lastUserText(req.messages).slice(0, 16_000);
+async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ target: TargetId; complexity: string; taskKind: string; probs: Record<string, number>; signals: RouteSignals } | null> {
+  const raw = lastUserText(req.messages);
+  const prompt = raw.slice(0, 16_000);
   const classified = await classifyText(prompt, ctx, req.signal);
   if (!classified) return null;
+  const signals = readSignals(req.messages, raw);
   return {
     ...classified,
-    target: pickTarget(classified.complexity, classified.taskKind, classified.probs),
+    target: pickTarget(classified.complexity, classified.taskKind, classified.probs, signals),
+    signals,
   };
 }
 
@@ -428,31 +515,39 @@ export default function (pi: ExtensionAPI) {
         }
       }
 
-      // already classified this branch → reuse (no extra Jev cost/latency)
-      // Migrate legacy mimo state targets to deepseek.
-      if (req.state?.target) {
-        if ((req.state.target as string) === LEGACY_MIMO) {
-          const migrated: JevRouterState = { ...req.state, target: DEEPSEEK };
-          return routeTo(req, ctx, DEEPSEEK, migrated);
-        }
-        // Optional: after first successful edit, could stay on same model;
-        // we keep the original classification to avoid cache miss churn.
-        // If you want the Luna promotion pattern (plan → implement), uncomment:
-        // if (editedThisTurn(req.messages) && req.state.target === GPT6_LUNA) {
-        //   return routeTo(req, ctx, MUSE, { ...req.state, target: MUSE });
-        // }
-        return routeTo(req, ctx, req.state.target, req.state);
-      }
+      // Legacy state migration for branches resumed with an old target.
+      const prevTarget: TargetId | undefined = req.state?.target
+        ? ((req.state.target as string) === LEGACY_MIMO ? DEEPSEEK : req.state.target)
+        : undefined;
 
+      // Re-read the conversation on every *user* turn rather than freezing the
+      // first verdict for the whole branch: a session that starts as chat and
+      // turns into debugging should escalate, and one that starts as planning
+      // should drop to the cheap workhorse once edits are flowing. `reconcile`
+      // keeps the previous model unless the evidence justifies a switch, so a
+      // stable session does not pay cache misses for re-classification.
       const classified = await classifyWithJev(req, ctx).catch(() => null);
       if (classified) {
+        const target = prevTarget
+          ? reconcile(prevTarget, classified.target, classified.signals)
+          : classified.target;
         const state: JevRouterState = {
-          target: classified.target,
+          target,
           complexity: classified.complexity,
           taskKind: classified.taskKind,
           probs: classified.probs,
         };
-        return routeTo(req, ctx, classified.target, state);
+        return routeTo(req, ctx, target, state);
+      }
+
+      // Jev unavailable (or empty prompt): keep the branch's model if it had one.
+      if (prevTarget) {
+        const state: JevRouterState = {
+          target: prevTarget,
+          complexity: req.state?.complexity ?? "standard",
+          taskKind: req.state?.taskKind ?? "coding",
+        };
+        return routeTo(req, ctx, prevTarget, state);
       }
 
       // fallback: Jev unavailable → cheapest workhorse (muse)
