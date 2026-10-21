@@ -12,7 +12,7 @@
  *   model                  int  t/s    DeepSWE  TB2.1  SciCode  AA-LCR  AA-code   $/req
  *   muse-spark-1.3-contrib  48  114.5     75.4   72.3     58.8    83.0     54.3  $0.00026
  *   mimo-v2.6-pro           46   49.1     71.9   67.8     60.9    86.3      -     $0.00092
- *   claude-haiku-5-5        43  236.0      -      -       55.0    82.7     36.5  $0.00078
+ *   claude-haiku-5-5        43  236.0      -      -       55.0    82.7     36.5  $0.00078  (rejected)
  *   deepseek-v4.1-flash     39  233.5     74.2   74.5     51.9    84.0      -     $0.00046
  *   glm-5.3-flash           42   76.2     63.0   62.9     51.6    80.0     71.5  $0.00190
  *   gpt-6-luna              38  122.5     66.6   73.0     54.6    83.3     41.1  $0.00071
@@ -27,14 +27,15 @@
  *   - mimo-v2.6-pro is the strongest long-context/coding-science model here
  *     (SciCode 60.9, AA-LCR 86.3) but runs at 49 t/s, so it is kept for
  *     compaction summaries only — one-off calls where latency is not loop-bound.
- *   - Stuck loops (2+ failed tool calls) switch *family* to claude-haiku-5-5:
- *     Intelligence 43 at 236 t/s (4.8x faster than mimo-pro) for a quick retry.
+ *   - Stuck loops stay on muse and raise effort. claude-haiku-5-5 was tried first
+ *     (236 t/s, int 43) but adds a fifth model and a second tool-reliability
+ *     profile for no measured coding gain; deepseek cannot take this slot because
+ *     a stuck loop is tool-driven, which is exactly where it leaks tool calls.
  *   - gemini-4-argon is the raw leader (DeepSWE 77.9, TB4.0 57.58, GPQA 96.4)
  *     but at $4/$20 per 1M and ~$0.028/req it stays out of automatic routing.
  *
  * Prices (per 1M, pi models-store.json):
  *   muse-spark-1.3-contributor  $0.10 in / $0.20 out / $0.002 cached   (226k req/mo, 1M ctx, 131k out, vision)
- *   claude-haiku-5-5            $0.10 in / $0.50 out / $0.010 cached   (1M ctx, 128k out, vision)
  *   deepseek-v4.1-flash         $0.15 in / $0.60 out / $0.003 cached   (384k out — longest; vision)
  *   glm-5.3-flash               $0.15 in / $0.50 out / $0.030 cached   (vision)
  *   mimo-v2.6-pro               $0.435 in / $0.87 out / $0.0036 cached (vision; near-free cache)
@@ -67,7 +68,6 @@ const STATUS_KEY = "jev-route";
 
 // Model IDs must match models-store.json exactly
 const MUSE = "muse-spark-1.3-contributor";
-const HAIKU = "claude-haiku-5-5"; // fast second opinion for stuck loops
 const MIMO_PRO = "mimo-v2.6-pro"; // compaction only: best AA-LCR, but 49 t/s
 const DEEPSEEK = "deepseek-v4.1-flash";
 const GLM_FLASH = "glm-5.3-flash";
@@ -75,7 +75,6 @@ const GLM_FLASH = "glm-5.3-flash";
 /** Short footer labels — one glance per routed model. */
 const SHORT: Record<string, string> = {
   [MUSE]: "muse-1.3",
-  [HAIKU]: "haiku-5.5",
   [MIMO_PRO]: "mimo-2.6-pro",
   [DEEPSEEK]: "deepseek-v4.1",
   [GLM_FLASH]: "glm-5.3-flash",
@@ -86,7 +85,7 @@ const SHORT: Record<string, string> = {
 // which leaks tool calls, and not the new mimo-v2.6-pro, a different model).
 const LEGACY_MIMO = "mimo-v2.6-flash";
 
-type TargetId = typeof MUSE | typeof HAIKU | typeof MIMO_PRO | typeof DEEPSEEK | typeof GLM_FLASH;
+type TargetId = typeof MUSE | typeof MIMO_PRO | typeof DEEPSEEK | typeof GLM_FLASH;
 
 interface JevRouterState {
   target: TargetId;
@@ -135,7 +134,7 @@ function lastUserText(messages: readonly Message[]): string {
 // Capability-first routing (price only breaks ties). Each target is chosen for
 // the *affinity* it is known to be good at:
 //   muse      — agentic coding, top-2 DeepSWE, cheapest per request
-//   mimo-pro  — hard/long-context tool work; SciCode 60.9, AA-LCR 86.3, cheap cache
+//   mimo-pro  — compaction only: best AA-LCR (86.3) but 49 t/s, so never in the loop
 //   deepseek  — math, Q&A, bulk/long output (384k); leaks tool calls as text, so
 //               text-driven turns only
 //   glm-flash — balanced flash + vision
@@ -147,16 +146,15 @@ function lastUserText(messages: readonly Message[]): string {
 //     bulk generation.
 //   * the classifier only sees one prompt, so structural evidence (code fences,
 //     several paths, hard-debug vocabulary) promotes a "standard" verdict —
-//     otherwise the hard tier would almost never be reached.
+//     otherwise hard turns would never get their extra thinking.
 const HARD_PATTERN =
   /\b(debug|race|deadlock|segfault|flaky|regression|architecture?|architectural|design|migrat\w*|trade-?offs?|optimi[sz]\w*|performance|refactor|root cause|why (?:does|is|doesn't|do))\b/i;
 
-/** Where a target sits on the capability ladder (used to escalate, not downgrade). */
+/** Capability ladder: escalate up, never silently downgrade mid-branch. */
 const RANK: Record<TargetId, number> = {
   [DEEPSEEK]: 1,
   [GLM_FLASH]: 2,
   [MUSE]: 3,
-  [HAIKU]: 4,
   [MIMO_PRO]: 0, // compaction-only; never a branch target
 };
 
@@ -217,10 +215,10 @@ export function pickTarget(
   // Images need a vision model.
   if (signals.vision) return GLM_FLASH;
 
-  // Two failed tool calls: switch families rather than escalate effort. Haiku is
-  // the fastest agentic model on the plan (236 t/s, int 43), so the retry lands
-  // quickly instead of making the user wait through a 49 t/s mono-pro.
-  if (signals.toolErrors >= 2) return HAIKU;
+  // Two failed tool calls: stay on muse and raise effort (see effortFloor).
+  // deepseek is disqualified here — a stuck loop is tool-driven, which is exactly
+  // where it leaks tool calls as text — and no other plan model beats muse at
+  // coding, so switching model would trade reliability for nothing.
 
   if (textWork) return DEEPSEEK;
 
@@ -252,7 +250,10 @@ export function effortFloor(
   const c = complexity.toLowerCase();
   const confident = (probs[c] ?? 1) >= 0.45;
   const effective = confident ? c : "standard";
-  return effective === "complex" || looksHard(signals) ? "xhigh" : undefined;
+  // Stuck loops get the same treatment as hard turns: more thinking, same model.
+  return effective === "complex" || looksHard(signals) || signals.toolErrors >= 2
+    ? "xhigh"
+    : undefined;
 }
 
 /**
@@ -275,7 +276,7 @@ export function reconcile(previous: TargetId, next: TargetId, signals: RouteSign
   // is worth the one cache miss, and the next tool turn moves off it again.
   if (next === DEEPSEEK) return DEEPSEEK;
   // plan → implement: stop paying for the reasoner once edits are flowing.
-  if (signals.edits && (previous === HAIKU || previous === MIMO_PRO)) return MUSE;
+  if (signals.edits && previous === MIMO_PRO) return MUSE;
   // Escalate for a harder turn; never silently downgrade mid-branch.
   if (RANK[next] > RANK[previous]) return next;
   return previous;
@@ -547,7 +548,7 @@ export default function (pi: ExtensionAPI) {
         const rawId = sticky.model.id as string;
         // Migrate legacy mimo sticky/state targets to deepseek.
         const id = (rawId === LEGACY_MIMO ? MUSE : rawId) as TargetId;
-        const known: TargetId[] = [MUSE, HAIKU, MIMO_PRO, DEEPSEEK, GLM_FLASH];
+        const known: TargetId[] = [MUSE, MIMO_PRO, DEEPSEEK, GLM_FLASH];
         if (sticky.model.provider === PROVIDER && known.includes(id)) {
           return routeTo(req, ctx, id, req.state);
         }
