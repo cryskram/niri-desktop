@@ -1,17 +1,30 @@
 /**
- * Jev router — opencode-go cost & intelligence aware
+ * Jev router — model choice by measured capability, cost only as tie-break
  *
  * Virtual model `jev/auto` (also `opencode-go/auto` alias) that routes each
- * request to one of 4 opencode-go models using the TypeSafe Jev classifier:
+ * request to one of 4 opencode-go models using the TypeSafe Jev classifier.
  *
- *   muse-spark-1.3-contributor | gpt-6-luna | deepseek-v4.1-flash
- *   | glm-5.3-flash
+ * Selection is evidence-based, not vibes. Sources: the "opencode go model
+ * league" (nahuelgenchi.com/software/opencode-go-model-league, 20 Oct 2026 —
+ * 29 models, 8 benchmarks, blended per-request cost) and Artificial Analysis /
+ * Vals comparisons for the pairwise calls. Est. $/req is that league's figure
+ * for a typical go request; token prices come from pi's models-store.json.
  *
- * Costs (per 1M, from opencode.ai/docs/go + pi models-store.json):
- *   muse-spark-1.3-contributor  $0.10 in / $0.20 out / $0.002 cached  (cheapest, 226k req/mo, 1M ctx, 131k out)
- *   glm-5.3-flash               $0.15 in / $0.50 out / $0.03 cached   (balanced flash)
- *   deepseek-v4.1-flash         $0.15 in / $0.60 out / $0.003 cached  (384k maxTokens — longest output; also serves trivial)
- *   gpt-6-luna                  $0.10 in / $0.50 out / $0.01 cached   (≤272k; $0.20/$0.75 above, 21k req/mo, 1M ctx)
+ *   model                       DeepSWE  TB2.1  SciCode  AA-LCR  AA-code  $/req
+ *   muse-spark-1.3-contributor     75.4   72.3     58.8    83.0     54.3  $0.00026
+ *   mimo-v2.6-pro                  71.9   67.8     60.9    86.3      —     $0.00092
+ *   deepseek-v4.1-flash            74.2   74.5     51.9    84.0      —     $0.00046
+ *   glm-5.3-flash                  63.0   62.9     51.6    80.0     71.5  $0.00190
+ *   (gpt-6-luna was dropped: 66.6 / 54.6 / 83.3 / 41.1 — dominated by muse on
+ *    agentic work, by mimo-pro on long context, by glm-flash on math.
+ *    gemini-4-argon is the raw leader — DeepSWE 77.9, TB4.0 57.58, GPQA 96.4 —
+ *    but at $4/$20 per 1M and ~$0.028/req it stays out of automatic routing.)
+ *
+ * Prices (per 1M, pi models-store.json):
+ *   muse-spark-1.3-contributor  $0.10 in / $0.20 out / $0.002 cached  (226k req/mo, 1M ctx, 131k out, vision)
+ *   deepseek-v4.1-flash         $0.15 in / $0.60 out / $0.003 cached  (384k out — longest; vision)
+ *   glm-5.3-flash               $0.15 in / $0.50 out / $0.03 cached   (vision)
+ *   mimo-v2.6-pro               $0.435 in / $0.87 out / $0.0036 cached (vision; near-free cache)
  *
  * Triage (before_agent_start, below): Jev classifies each user prompt by scope
  * + action and, only when delegation is meaningful, adds a short
@@ -21,32 +34,33 @@
  * auto-spawning would fight the "only when meaningful" rule.
  *
  * Compaction (session_before_compact, below): Jev classifies the history being
- * summarized and picks the cheapest adequate summarizer — complex histories get
- * gpt-6-luna's reasoning, reasoning-heavy ones glm-5.3-flash, everything else the
- * cheapest muse. Summaries run at low reasoning with no cache writes (one-off
+ * summarized and picks the summarizer that fits — complex histories get
+ * mimo-v2.6-pro (best long-context, AA-LCR 86.3), reasoning-heavy ones
+ * glm-5.3-flash, everything else muse (cheapest, and summaries are bounded). Summaries run at low reasoning with no cache writes (one-off
  * prompt, same as pi's built-in path), instead of inheriting the session's high
  * thinking level. File lists are merged cumulatively (including the previous
  * compaction's, which pi skips for extension summaries) so repeated compactions
  * keep accumulating read/modified files exactly like the built-in one. Any
  * failure falls back to pi's default compaction (which routes direct → muse).
  *
- * Intelligence / task affinity (observed):
- *   muse-spark-1.3  — best agentic tool use, strong coding, cheapest. Default workhorse.
- *   gpt-6-luna      — highest reasoning for complex / cross-cutting / hard debug.
- *   deepseek-v4.1   — bulk generation / 384k output / math heavy + trivial Q&A.
- *   glm-5.3-flash   — balanced flash, vision-capable, good for mixed media.
+ * Affinity, derived from the table above:
+ *   muse-spark-1.3  — top-2 on DeepSWE while cheapest per request: the default.
+ *   mimo-v2.6-pro   — best SciCode and AA-LCR on the plan: hard, long-context work.
+ *   deepseek-v4.1   — 2nd on DeepSWE, best TB2.1, 384k output: text/bulk turns.
+ *   glm-5.3-flash   — best AA coding index (71.5) and math (93.9) on the plan:
+ *                     reasoning/planning, and the vision tie-break.
  *
  * Routing — capability first, price as tie-break. "Cheapest adequate" was the
  * wrong objective: the router picks the model whose affinity matches the turn.
  *
  *   tool-driven turns (coding, edits, any tool activity)
- *     standard   → muse        (cheap, best tool discipline)
- *     complex    → gpt-6-luna  (hard + tools needs reasoning)
- *     stuck      → gpt-6-luna  (2+ failed tool calls this turn)
+ *     standard   → muse          (top-2 DeepSWE, cheapest per request)
+ *     complex    → mimo-v2.6-pro (best SciCode/AA-LCR on the plan)
+ *     stuck      → mimo-v2.6-pro (2+ failed tool calls this turn)
  *   text-driven turns (chat, math, Q&A, bulk/long output)
  *     any tier   → deepseek-v4.1  (384k output, strongest at math/Q&A)
  *     complex    → deepseek-v4.1  (hard + long output; 384k output wins)
- *   reasoning (planning/trade-offs) → glm-5.3-flash unless complex → luna
+ *   reasoning (planning/trade-offs) → glm-5.3-flash (best coding index + math)
  *   images       → glm-5.3-flash (vision)
  *
  * deepseek is deliberately kept out of tool-driven turns only: it leaks tool
@@ -91,23 +105,24 @@ const STATUS_KEY = "jev-route";
 
 // Model IDs must match models-store.json exactly
 const MUSE = "muse-spark-1.3-contributor";
-const GPT6_LUNA = "gpt-6-luna";
+const MIMO_PRO = "mimo-v2.6-pro";
 const DEEPSEEK = "deepseek-v4.1-flash";
 const GLM_FLASH = "glm-5.3-flash";
 
 /** Short footer labels — one glance per routed model. */
 const SHORT: Record<string, string> = {
   [MUSE]: "muse-1.3",
-  [GPT6_LUNA]: "gpt-6-luna",
+  [MIMO_PRO]: "mimo-2.6-pro",
   [DEEPSEEK]: "deepseek-v4.1",
   [GLM_FLASH]: "glm-5.3-flash",
 };
 
-// Back-compat: old branches may persist a mimo target in router state.
-// Resolve it to deepseek so resumed sessions keep routing cleanly.
+// Back-compat: old branches may persist a mimo-v2.6-flash target in router
+// state. Flash is tool-capable, so resume on the safe workhorse (not deepseek,
+// which leaks tool calls, and not the new mimo-v2.6-pro, a different model).
 const LEGACY_MIMO = "mimo-v2.6-flash";
 
-type TargetId = typeof MUSE | typeof GPT6_LUNA | typeof DEEPSEEK | typeof GLM_FLASH;
+type TargetId = typeof MUSE | typeof MIMO_PRO | typeof DEEPSEEK | typeof GLM_FLASH;
 
 interface JevRouterState {
   target: TargetId;
@@ -146,8 +161,8 @@ function lastUserText(messages: readonly Message[]): string {
 
 // Capability-first routing (price only breaks ties). Each target is chosen for
 // the *affinity* it is known to be good at:
-//   muse      — agentic coding, reliable tool calls, cheapest output
-//   gpt-6-luna— deep reasoning / hard debugging; cheapest input, 21k req/mo cap
+//   muse      — agentic coding, top-2 DeepSWE, cheapest per request
+//   mimo-pro  — hard/long-context tool work; SciCode 60.9, AA-LCR 86.3, cheap cache
 //   deepseek  — math, Q&A, bulk/long output (384k); leaks tool calls as text, so
 //               text-driven turns only
 //   glm-flash — balanced flash + vision
@@ -159,16 +174,16 @@ function lastUserText(messages: readonly Message[]): string {
 //     bulk generation.
 //   * the classifier only sees one prompt, so structural evidence (code fences,
 //     several paths, hard-debug vocabulary) promotes a "standard" verdict —
-//     otherwise gpt-6-luna would almost never be reached.
+//     otherwise the hard tier would almost never be reached.
 const HARD_PATTERN =
   /\b(debug|race|deadlock|segfault|flaky|regression|architecture?|architectural|design|migrat\w*|trade-?offs?|optimi[sz]\w*|performance|refactor|root cause|why (?:does|is|doesn't|do))\b/i;
 
 /** Where a target sits on the capability ladder (used to escalate, not downgrade). */
 const RANK: Record<TargetId, number> = {
   [DEEPSEEK]: 1,
-  [MUSE]: 2,
   [GLM_FLASH]: 2,
-  [GPT6_LUNA]: 3,
+  [MUSE]: 3,
+  [MIMO_PRO]: 4,
 };
 
 /** Conversation-derived evidence, independent of Jev's single-prompt verdict. */
@@ -241,7 +256,7 @@ export function pickTarget(
 
   // A stuck loop (two failed tool calls this turn) is exactly when a stronger
   // reasoner pays for itself.
-  if (signals.toolErrors >= 2) return GPT6_LUNA;
+  if (signals.toolErrors >= 2) return MIMO_PRO;
 
   // Planning is done and code is being written: implement on the cheap workhorse.
   if (signals.edits && comp !== "complex") return MUSE;
@@ -250,9 +265,9 @@ export function pickTarget(
   // 384k output, and math/Q&A is what it is best at.
   if (textWork) return DEEPSEEK;
 
-  // Hard + tool-driven → gpt-6-luna: best reasoning, and the only tool-reliable
-  // step up from muse (deepseek is off-limits here).
-  if (comp === "complex") return GPT6_LUNA;
+  // Hard + tool-driven → mimo-v2.6-pro: best SciCode/AA-LCR on the plan, and it
+  // caches almost free ($0.0036/M), so long agentic sessions stay cheap.
+  if (comp === "complex") return MIMO_PRO;
 
   // Reasoning-first planning that is not yet complex → balanced flash.
   if (task === "reasoning") return GLM_FLASH;
@@ -282,7 +297,7 @@ export function reconcile(previous: TargetId, next: TargetId, signals: RouteSign
   // is worth the one cache miss, and the next tool turn moves off it again.
   if (next === DEEPSEEK) return DEEPSEEK;
   // plan → implement: stop paying for the reasoner once edits are flowing.
-  if (signals.edits && previous === GPT6_LUNA) return MUSE;
+  if (signals.edits && previous === MIMO_PRO) return MUSE;
   // Escalate for a harder turn; never silently downgrade mid-branch.
   if (RANK[next] > RANK[previous]) return next;
   return previous;
@@ -374,8 +389,8 @@ async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ targe
 // Map Jev answers → compaction summarizer. Unlike live routing, summary output
 // is short and bounded, so input price dominates and muse (cheapest everywhere)
 // is the default; Jev only promotes histories that need better reasoning.
-function pickSummarizer(complexity: string, taskKind: string): TargetId {
-  if (complexity.toLowerCase() === "complex") return GPT6_LUNA;
+export function pickSummarizer(complexity: string, taskKind: string): TargetId {
+  if (complexity.toLowerCase() === "complex") return MIMO_PRO;
   if (taskKind.toLowerCase().includes("reasoning")) return GLM_FLASH;
   return MUSE;
 }
@@ -552,8 +567,8 @@ export default function (pi: ExtensionAPI) {
       if (req.reason !== "user" && sticky) {
         const rawId = sticky.model.id as string;
         // Migrate legacy mimo sticky/state targets to deepseek.
-        const id = (rawId === LEGACY_MIMO ? DEEPSEEK : rawId) as TargetId;
-        const known: TargetId[] = [MUSE, GPT6_LUNA, DEEPSEEK, GLM_FLASH];
+        const id = (rawId === LEGACY_MIMO ? MUSE : rawId) as TargetId;
+        const known: TargetId[] = [MUSE, MIMO_PRO, DEEPSEEK, GLM_FLASH];
         if (sticky.model.provider === PROVIDER && known.includes(id)) {
           return routeTo(req, ctx, id, req.state);
         }
@@ -561,7 +576,7 @@ export default function (pi: ExtensionAPI) {
 
       // Legacy state migration for branches resumed with an old target.
       const prevTarget: TargetId | undefined = req.state?.target
-        ? ((req.state.target as string) === LEGACY_MIMO ? DEEPSEEK : req.state.target)
+        ? ((req.state.target as string) === LEGACY_MIMO ? MUSE : req.state.target)
         : undefined;
 
       // Re-read the conversation on every *user* turn rather than freezing the
@@ -607,7 +622,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerVirtualModel({ ...def, provider: PROVIDER });
 
   // Jev-routed compaction: classify the history being summarized and use the
-  // cheapest adequate summarizer (complex → gpt-6-luna, reasoning → glm flash,
+  // summarizer that fits (complex → mimo-v2.6-pro, reasoning → glm flash,
   // else muse). Runs at low reasoning with no cache writes instead of
   // inheriting the session's thinking level, and merges file lists
   // cumulatively like pi's built-in compaction. Returning undefined (or
