@@ -451,6 +451,18 @@ in
     home.file.".pi/agent/AGENTS.md".source = ../pi/brain/AGENTS.md;
     home.file.".pi/agent/brain".source = ../pi/brain;
 
+    # pi-btw (/btw, Alt+B) builds its side sub-session with its own
+    # DefaultResourceLoader, so the wrapper's ambient `--extension` set is NOT
+    # present there. The default model `jev/auto` is a *virtual* model registered
+    # by jev-router.ts, so without that extension BTW resolves provider "jev" as a
+    # plain provider, finds no API key, and fails with "No API key found for jev."
+    # BTW's only config surface is this file (keys: `extensions`, `workspace`), so
+    # loading the router into the sub-session is what makes BTW inherit the main
+    # thread's routing instead of a fixed model.
+    home.file.".pi/agent/btw.json".text = builtins.toJSON {
+      extensions = [ "${../pi/extensions/jev-router.ts}" ];
+    };
+
     xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
       "$schema" = "https://opencode.ai/config.json";
     };
