@@ -163,9 +163,9 @@ in
       # destructive operations are gated, and every other tool the agent can call
       # is listed as an outright allow. Adding a *new extension* means adding its
       # tools here (`/guard list` shows what is in effect, and the prompt UI offers
-      # to save a permanent allow). Adding an *MCP server* does not: pi-mcp-adapter
-      # funnels every server through one `mcp` proxy tool, so MCP policy is
-      # server-agnostic and needs no edit no matter how many servers get added.
+      # to save a permanent allow). Adding an *MCP server* means adding its
+      # direct `<server>_<tool>` names (see the MCP block below) — the proxy `mcp`
+      # alone is not enough, because the model prefers the direct tools.
       #
       # Two levels: `deny` blocks with no prompt (nothing denied is ever the right
       # answer to a request), `ask` confirms first — with an "allow for this
@@ -293,13 +293,42 @@ in
             web_enable = "allow";
             web_search = "allow";
 
-            # MCP. pi-mcp-adapter replaces the built-in MCP and reaches *every*
-            # server through ONE `mcp` proxy tool, so this one line covers any
-            # number of future MCP servers — there is deliberately no per-server
-            # or per-tool entry here to maintain or remove. Per-tool caution, when
-            # wanted, lives in the adapter's own config (approveTools /
-            # directTools) rather than in this map.
+            # MCP. pi-mcp-adapter reaches servers two ways, and pi-guard sees a
+            # different tool name for each, so both need rules:
+            #   `mcp`               — the proxy tool (model calls it with
+            #                         mcp({search})/mcp({tool}); also what headless
+            #                         `pi -p` sessions use)
+            #   `<server>_<tool>`   — direct tools the adapter registers as
+            #                         first-class pi tools at startup ("direct tools
+            #                         refreshed (+N)"), e.g. veridb_list_databases.
+            #                         The model prefers these, so without these
+            #                         rules every MCP call prompts — and the
+            #                         prompt's "save permanent allow" cannot write
+            #                         the store-symlinked user settings.json, so it
+            #                         offers the project's .pi/settings.json instead.
+            #                         These rules are that save, done declaratively.
+            # Adding a future MCP server means adding its direct names here too;
+            # find them in session files (grep '"toolName"' under
+            # ~/.pi/agent/sessions) or `/mcp-adapter tools`.
             mcp = "allow";
+            # veridb (9 tools).
+            veridb_describe_table = "allow";
+            veridb_explain_query = "allow";
+            veridb_list_databases = "allow";
+            veridb_list_schemas = "allow";
+            veridb_list_tables = "allow";
+            veridb_query = "allow";
+            veridb_sample_rows = "allow";
+            veridb_search_columns = "allow";
+            veridb_status = "allow";
+            # bruno (7 tools).
+            bruno_list_collections = "allow";
+            bruno_list_requests = "allow";
+            bruno_get_request = "allow";
+            bruno_execute_request = "allow";
+            bruno_run_collection = "allow";
+            bruno_list_environments = "allow";
+            bruno_get_environment = "allow";
 
             # Google Workspace extension tools (pi/extensions/google-workspace).
             # pi-guard matches tool names exactly, so all of them are listed;
