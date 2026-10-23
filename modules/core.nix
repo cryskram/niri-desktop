@@ -402,6 +402,11 @@ in
             slack_conversations_search_messages = "allow";
             slack_users_search = "allow";
             slack_conversations_add_message = "allow";
+            # slack-message extension (../pi/extensions/slack-message.ts) — chat.update
+            # and chat.delete, which the MCP server does not wrap. Fixing a typo stays
+            # quiet; deleting asks (Vageesh, 2026-10-22), so it fails closed headless.
+            slack_edit_message = "allow";
+            slack_delete_message = "ask";
 
             # Google Workspace extension tools (pi/extensions/google-workspace).
             # pi-guard matches tool names exactly, so all of them are listed;
@@ -515,6 +520,13 @@ in
         # else dropped). /stash, /stash-history, /stash-clear. State rides the
         # session branch via appendEntry, so /reload and resume keep it.
         ../pi/extensions/stash.ts
+        # Slack message edit/delete — chat.update and chat.delete, the two Web API
+        # methods the Slack MCP server does not wrap (v1.3.0 has no such tools).
+        # Reads the MCP server's own credential files, so there is one Slack setup,
+        # not two. Channel names are NOT resolved here (#channel / @username_dm live
+        # in the MCP server's caches), so callers pass IDs or a message permalink.
+        # See docs/slack.md § Editing and deleting.
+        ../pi/extensions/slack-message.ts
         # Google Workspace — `/google` adds Google accounts the way /login picks a
         # provider (personal and Workspace-managed side by side), and 13 tools work
         # on Sheets, Docs and Drive with the selected account's own token. See

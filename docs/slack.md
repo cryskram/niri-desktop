@@ -81,6 +81,40 @@ Target formats the server accepts: `C…`/`D…` IDs, `#channel-name`, or
 `@username_dm` (the `_dm` suffix is required for a person — that is what maps to
 the existing DM conversation). Posting is `ask`-gated, so expect one confirm.
 
+## Editing and deleting messages
+
+The MCP server has **no** `chat.update` and **no** `chat.delete` — its 18 tools cover
+history, search, posting, reactions, unreads, usergroups and saved items, and
+v1.3.0 is the latest release. Those two methods therefore come from a small local
+extension, `pi/extensions/slack-message.ts`, which reads the *same* credential files
+(one Slack setup, not two):
+
+| Tool | Slack method | pi-guard |
+|---|---|---|
+| `slack_edit_message` | `chat.update` | `allow` |
+| `slack_delete_message` | `chat.delete` | `ask` |
+
+```text
+slack_edit_message    { channel: "C0AB12CD34E", ts: "1730000000.123456", text: "moved to 4pm" }
+slack_edit_message    { ts: "https://tap.slack.com/archives/C0AB12CD34E/p1730000000123456", text: "fixed" }
+slack_delete_message  { channel: "C0AB12CD34E", ts: "1730000000.123456" }
+```
+
+Just ask: *"fix my last message in #release-notes to say 4pm"*, *"delete the message
+I just sent to Priya"*. The model reads the channel first (for the ID and `ts`) and
+then calls the tool.
+
+Constraints worth knowing:
+
+- Only **your own** messages. Slack refuses anyone else's with `cant_update_message` /
+  `cant_delete_message` — that is an account rule, not a scope problem.
+- Channel *names* are not resolved by this extension: `#channel` and `@username_dm`
+  resolution lives in the MCP server's caches, so the ID comes from
+  `channels_list`/`conversations_history`, or from a permalink.
+- Deleting leaves Slack's **"This message was deleted"** tombstone. Nothing removes it.
+- Deleting prompts first; in headless runs (subagents, `pi -p`) the `ask` rule blocks
+  it outright. Editing does not prompt.
+
 ## If you would rather use a proper Slack app (`xoxp`)
 
 Sanctioned, stable, and does not die when you log out of the browser — worth it if
@@ -146,4 +180,6 @@ printf '%s\n' \
 | `Authentication failed - check your Slack tokens` | `xoxd` cookie rotated (logged out / password change), or the app token was revoked |
 | Posting asks every time | Expected: `slack_conversations_add_message = "ask"`. `ask` blocks headless subagent calls entirely, so flip it to `allow` if you script this |
 | `@username_dm` not found | Wrong handle — `users_search` uses Slack usernames, not display names; caches must be warm (never pass `-no-cache`) |
+| `cant_update_message` / `cant_delete_message` | The message is not yours, or Slack does not allow editing that message type |
+| Edit/delete tools missing from pi | The extension did not load — check `/reload` and that `../pi/extensions/slack-message.ts` is in `programs.pi.coding-agent.extensions` |
 | Channel lookups fail / stale | Delete `~/.cache/slack-mcp/` and let it rebuild |

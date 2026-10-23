@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top.
 
+## 2026-10-22 — The Slack MCP has no edit/delete; a 2-tool extension fills the gap (decision) — `pi/slack`
+
+- What: `korotovsky/slack-mcp-server` exposes 18 tools and **none** is `chat.update` or `chat.delete` (checked master docs and source; v1.3.0 is the latest release), so `pi/extensions/slack-message.ts` adds `slack_edit_message` / `slack_delete_message` reading the MCP server's own credential files (browser session first, then app token).
+- Why/Context: one Slack setup instead of two; channel-*name* resolution stays in the MCP server's caches, so the extension takes IDs or a message permalink and refuses `#name` with an explanation. Slack's own rule is unchanged by any credential: only your own messages are editable/deletable. Guard: `slack_edit_message = allow`, `slack_delete_message = ask` (headless delete blocked). Note `slack_conversations_add_message` was flipped to `allow` outside that session ("whitelist slack mcp things"), so posting no longer prompts.
+- How/Apply: no-token validation recipe — load with `discoverAndLoadExtensions([ext], cwd, agentDir)` from pi's `dist/core/extensions/loader.js`, and point the extension at a stub API with `SLACK_API_BASE_URL=http://127.0.0.1:PORT/api` (read at call time, so fake creds exercise real request bodies, the `Bearer xoxc` + `d=` cookie pair, permalink parsing, and every error mapping).
+
+Source: user asked how to edit or delete a Slack message through the MCP set up minutes earlier.
+
 ## 2026-10-21 — Triage must authorize, not suggest (fix) + codemode nudge (finding) — `pi/delegate`
 
 - What: triage sections now read "Delegation authorized for this run" with the exact `subagent({ agent, task })` call shape. Vague "consider delegating" nudges lost to the pi-subagents skill, which only permits delegation on operator request or standing project instructions — the section now *is* that instruction. Verified via loader harness (section + notify + footer status fire; silent cases unchanged).
