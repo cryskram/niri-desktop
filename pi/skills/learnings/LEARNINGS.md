@@ -2,6 +2,38 @@
 
 Reverse chronological. Newest on top.
 
+## 2026-10-21 — Triage must authorize, not suggest (fix) + codemode nudge (finding) — `pi/delegate`
+
+- What: triage sections now read "Delegation authorized for this run" with the exact `subagent({ agent, task })` call shape. Vague "consider delegating" nudges lost to the pi-subagents skill, which only permits delegation on operator request or standing project instructions — the section now *is* that instruction. Verified via loader harness (section + notify + footer status fire; silent cases unchanged).
+- Why/Context: Vageesh reported triage verdicts showing in the footer/notify but the model never delegating. Root cause is the skill's authorization rule, not missing tools. Parallel session had meanwhile rewritten the router (benchmark-driven routing, mimo for compaction) and already whitelisted all MCP direct tools (22 rules + `mcp` proxy, commit 8e8af58) — verified coverage complete for veridb/bruno/slack; future servers still need exact names (pi-guard 1.6.0 has no tool-name wildcards, confirmed in its matcher source).
+- How/Apply: codemode push is a 2-line standing nudge in `pi/brain/APPEND_SYSTEM.md` (batch parallel calls in one script); `codemode.mode: "only"` deliberately not set — it hides all other tools, stronger than "as much as needed". Left others' staged work alone; my delta is `jev-router.ts` guidance + the APPEND_SYSTEM line.
+
+Source: user report 2026-10-21 in a pi session — "agent never gets invoked" + "whitelist MCP" + "use codemode more".
+
+## 2026-10-22 — Slack posting fully whitelisted; server has its own gate besides pi-guard (decision + gotcha) — `pi/mcp`
+
+- What: `slack_conversations_add_message` flipped `ask`→`allow` in `modules/core.nix` per Vageesh ("whitelist slack mcp things") — posting now goes out silently, including headless. Supersedes: 2026-10-22 — Slack as *you* (the `ask` fails-closed rationale).
+- Why/Context: sending failed twice behind TWO gates, not one: pi-guard `ask` AND the server's own `SLACK_MCP_ADD_MESSAGE_TOOL` env (unset = tool refuses with "disabled to guard ... against accidental spamming"). Fixed both: `env.SLACK_MCP_ADD_MESSAGE_TOOL = "true"` on the slack server entry; corrected the stale "unset allows any channel" comment.
+- How/Apply: after `core.nix` MCP/guard edits, `sudo nixos-rebuild switch --flake .#nixos` AND restart the pi session — the adapter reads config once at startup, so killing the server just respawns it with the cached (old) definition (verified: respawned PID lacked the new env). `~/.pi/agent/mcp-adapter.json` (layer 5, beats `mcp.json` layer 4) works as a no-rebuild override, but the live `settings.json`/`mcp-adapter.json` edits are session-local until the rebuild lands.
+
+Source: user asked to whitelist slack in pi-guard and send "." to Akhin S — retry proved pi-guard open, server gate still closed pending rebuild + session restart.
+
+## 2026-10-22 — Slack as *you*, not as a bot: xoxc/xoxd through the third-party MCP (decision) — `pi/mcp`
+
+- What: Slack is `korotovsky/slack-mcp-server` (`pkgs/slack-mcp-server.nix`, buildGoModule v1.3.0) wrapped in `modules/core.nix`, authenticating from `secrets/slack-{xoxc,xoxd}-token`. Vageesh rejected the Slack-app route outright ("i dont want to build a bot to send messages") — the goal is Pi DMing *people* as him, and `conversations_add_message` takes `@username_dm` for exactly that.
+- Why/Context: browser-session tokens need no app, no install, no admin approval; Slack's official `mcp.slack.com` needs a published/internal app plus admin-approved MCP integration plus confidential OAuth (no DCR), and an `xoxp` app token still needs an app install. Trade-off accepted knowingly: session tokens expire on logout/password change and carry the account's full authority — hence `slack_conversations_add_message = "ask"` (fails closed headless).
+- How/Apply: wrapper order is xoxc/xoxd files, then one `slack-mcp-token` (xoxp/xoxb by prefix), exporting only the matching variables — upstream prefers xoxp > xoxb > xoxc/xoxd, so a leftover app token would silently win. Caches are pinned to `~/.cache/slack-mcp/` because they are what resolves `#channel` and `@username_dm` (never run `-no-cache`). Files are raw and hand-made: pi-guard denies agent writes under `**/secrets/**`, proved by a blocked test write. Docs: `docs/slack.md`.
+
+Source: user asked whether Slack needed an MCP or an extension, then corrected the goal twice — third-party MCP for the TAP workspace, send + read/search, and explicitly no bot identity.
+
+## 2026-10-21 — Phoenix stacks are per-stack for BOTH urls and DBs; ports are a formula (gotcha) — `dev/phoenix`
+
+- What: service URLs are `https://s<stack>-<service>.<vm-domain>` and every stack owns its **own** postgres/mariadb/redis: postgres `15432 + N - 1`, mariadb `13306 + N - 1`, redis `16379 + N - 1` for global stack number N (`ansible/roles/stackdata/tasks/main.yaml:92`). s1 → 15432, s2 → 15433 … s4 → 15435 on `one.phoenix.sustvest.in`; s5–s8 (→ 15436–15439) sit on `two.phoenix.sustvest.in`, since stack_min/max = `(vm_index-1)*stride + N`. Credentials are identical across stacks (one `/opt/data/.env` per VM) — only host/port change.
+- Why/Context: pointing an API client at one stack while reading another stack's DB silently compares two environments — that exact mismatch produced a 43-vs-10 "discrepancy" that was really stage-API vs prod-DB. Never mix a stack's API with a different stack's database.
+- How/Apply: `phoenix url s<N> [bondscanner|ultra]` for endpoints; `phoenix slots` prints each stack's data ports; user `superman`, password = `sudo grep '^POSTGRES_PASSWORD=' /opt/data/.env` on that VM, always `sslmode=disable`.
+
+Source: session 2026-10-21 — user rejected stage URLs, asked for phoenix s1 URLs, then flagged the per-stack DB-port rule before exploring s2.
+
 ## 2026-10-20 — pi-btw sub-sessions don't load ambient extensions, so virtual models break there (gotcha) — `pi/btw`
 
 - What: `/btw` failed with `No API key found for jev.` while the main thread ran `jev/auto` fine. pi-btw builds its side sub-session with its own `DefaultResourceLoader`, so the wrapper's `--extension` set is absent — including `jev-router.ts`, which registers the *virtual* model `jev/auto`. Provider `jev` then resolves as a plain provider, and the key lookup fails.
@@ -530,3 +562,11 @@ Source: `AGENTS.md` §12 + repo history.
 - How: Tee container + Traefik route; mirrors to public `https://sX-nebula...` URLs avoid docker-network juggling.
 
 Source: user instruction 2026-10-09 — "remember these options".
+
+## 2026-10-22 — Phoenix Java deploys: synth vs. defaults merge, and vm2 capacity — `phoenix`
+
+- What: (1) A Spring service has no committed `.env`, so `remote-patch.sh` generates one; that `cat >` ran after the `default.env` merge and silently discarded every app key (kraken booted with 25 keys, died on `redis.cluster.nodes`). Fix: `merge_defaults` is a function, called again post-synth (synth keys win). (2) `SUBDIR` must only apply when the subdirectory exists in the transfer — deploying from `monolith/deals` re-nested it to `/srv/dev/s5/deals/deals` and pointed the defaults lookup at a missing path, which hid (1). (3) Ultra services go `deploy <stack> <dir> --as <service>`; a bare name is refused because they sit in the `ultra` batch, not the deployable set.
+- Why: Vageesh deploys ultra on vm2 and wants defaults to be authoritative; both bugs were invisible in the deploy summary and only surfaced as app-side bean failures.
+- How: `bash -n` the patch script, deploy one service, inspect `/srv/dev/<stack>/<svc>/.env` key count and `docker logs`. vm2 is 8 GB with no swap and ~18 JVMs at `-Xmx512m`; parallel Node builds wedged SSH/HTTPS while ICMP still answered. Agreed hardening: swap via `ops/ops.yaml --tags base` (vault-free) + cap concurrency at 2.
+
+Source: session 2026-10-22 deploy grind on s5; user chose "wait it out" + "swap + cap concurrency".
