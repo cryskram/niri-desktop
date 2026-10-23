@@ -203,9 +203,23 @@ in
       # exactly the "subagent takes forever" behaviour.
       subagents = {
         defaultModel = "auto";
-        # Ensure researcher/evidence-auditor have web tools even as foreground children
-        # (background children already inherit ambient extensions). Works for any cwd.
-        defaultSubagentOnlyExtensions = [ "${piPackages.pi-web-access}" ];
+        # Children run with ambient extensions OFF — a detached async runner is
+        # spawned with `--no-extensions`, and an in-process child only loads the
+        # parent's ambient set when host === "runner" (pi-subagents
+        # child-launch.ts). So anything a child needs must be named here:
+        #   pi-web-access  → web_search/fetch/source_check for researcher and
+        #                    evidence-auditor (foreground children otherwise lack them).
+        #   jev-router.ts  → registers the *virtual* model `jev/auto`. Without it a
+        #                    child launched as `--model jev/auto:high` dies before
+        #                    its first turn with `Model "jev/auto:high" not found`,
+        #                    which is exactly what killed the researcher run on
+        #                    2026-10-23. The router's triage handler no-ops inside
+        #                    children (PI_SUBAGENT_CHILD=1), so this only restores
+        #                    model routing + compaction there.
+        defaultSubagentOnlyExtensions = [
+          "${piPackages.pi-web-access}"
+          "${../pi/extensions/jev-router.ts}"
+        ];
         agentOverrides = {
           # Second-opinion oracle, reviews and research stay on jev/auto; only budgets differ.
           oracle = sharedSubagentContext // {

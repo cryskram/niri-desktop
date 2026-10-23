@@ -723,9 +723,16 @@ export default function (pi: ExtensionAPI) {
   // action and, only when a subagent earns its keep, adds a short guidance
   // section naming the role. Focused work stays silent (section deleted so no
   // stale verdict leaks across runs). Never blocks the run.
+  //
+  // Skipped inside subagent children (PI_SUBAGENT_CHILD=1) and in any session
+  // where `subagent` is not an active tool: delegation guidance is inert there
+  // (pi-subagents grants nested spawning only explicitly), and the extra Jev
+  // classification call would be pure overhead on every child run.
   pi.on("before_agent_start", async (event, ctx) => {
     try {
       if (event.messageType !== "user") return undefined;
+      if (process.env.PI_SUBAGENT_CHILD === "1") return undefined;
+      if (!event.systemPromptOptions.selectedTools.includes("subagent")) return undefined;
       const triaged = await classifyTriage(event.prompt.slice(0, 16_000), ctx).catch(() => null);
       const role = triaged ? triageVerdict(triaged.scope, triaged.action, triaged.actionP) : null;
       if (!role) {
