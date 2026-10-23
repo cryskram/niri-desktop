@@ -17,6 +17,10 @@ let
   # entry below. Loaded on demand by the adapter like every other server.
   brunoMcp = pkgs.callPackage ../pkgs/bruno-mcp.nix { };
 
+  # pi-lens (pkgs/pi-lens.nix) — LSP / lint / format / structural feedback while
+  # the agent edits. Ships an extension plus four skills.
+  piLens = pkgs.callPackage ../pkgs/pi-lens.nix { };
+
   # Slack MCP server (pkgs/slack-mcp-server.nix) — korotovsky/slack-mcp-server,
   # chosen over Slack's official remote MCP because that one needs a
   # directory-published/internal app plus workspace-admin approval of the MCP
@@ -154,6 +158,17 @@ in
   programs.pi.coding-agent = {
     enable = true;
     package = nixpkgs-unstable.legacyPackages.${pkgs.stdenv.hostPlatform.system}.pi-coding-agent;
+
+    # pi-lens would otherwise `go install` / `gem install` / pip-install the
+    # language servers and linters it needs. On NixOS that is imperative drift
+    # into the home directory, and this repo already provides the servers
+    # declaratively through devenv (dev/shared/*.nix: gopls, typescript,
+    # pyright, rust-analyzer, kotlin-language-server), so they are on PATH in any
+    # project shell. Missing servers now degrade instead of installing.
+    environment = {
+      PI_LENS_DISABLE_LSP_INSTALL.value = "1";
+      PI_LENS_DISABLE_TOOL_INSTALL.value = "1";
+    };
 
     settings = {
       defaultProvider = "jev";
@@ -383,6 +398,29 @@ in
             veridb_sample_rows = "allow";
             veridb_search_columns = "allow";
             veridb_status = "allow";
+            # pi-lens (13 pi tools, the authoritative list from dist's `piName`
+            # fields — the docs undercount it). Five are always active, five load on
+            # demand by pi_lens_activate_tools, which the model calls itself — so
+            # the loader needs a rule too, or activating anything prompts.
+            lens_diagnostics = "allow";
+            module_report = "allow";
+            project_report = "allow";
+            effective_config = "allow";
+            read_symbol = "allow";
+            read_enclosing = "allow";
+            symbol_search = "allow";
+            pi_lens_activate_tools = "allow";
+            ast_grep_search = "allow";
+            ast_grep_outline = "allow";
+            lsp_navigation = "allow";
+            lens_diagnostic_mark = "allow";
+            # ast_grep_replace DOES write (pattern → rewrite across files). It is
+            # allowed because a refactor is its whole point, but note the gap:
+            # its targets come from an array param (`paths`), and pi-guard's glob
+            # matcher only reads string params, so protectedPaths does not apply
+            # to it. Flip to "ask" if you want a confirmation on every rewrite.
+            ast_grep_replace = "allow";
+
             # bruno (7 tools).
             bruno_list_collections = "allow";
             bruno_list_requests = "allow";
@@ -444,6 +482,8 @@ in
     skills = [
       ../pi/skills
       "${piPackages.pi-btw}/skills/btw"
+      # pi-lens ships four skills (ast-grep, LSP navigation, rule authoring).
+      "${piLens}/lib/node_modules/pi-lens/skills"
     ];
 
     # Compact global Pi bootstrap, appended to the built-in system prompt.
@@ -507,6 +547,11 @@ in
         # above). One `mcp` proxy tool, lazy server connections, idle servers
         # stopped after 10 min, OAuth tokens in the OS keychain.
         "${mcp-adapter}"
+        # pi-lens — LSP diagnostics/navigation, linters, formatters and ast-grep
+        # structural rules on every write. Registers 11 tools (see the guard rules
+        # below). Directory, not index.js: pi resolves package.json's
+        # `pi.extensions` and needs the bundled grammars/rules beside dist.
+        "${piLens}/lib/node_modules/pi-lens"
         # Permission gate — the policy is settings.guard below. Supersedes the
         # former repo-local safety.ts: bash is parsed as an AST (so wrapper
         # commands like `sudo rm -rf` are re-checked instead of slipping past a
@@ -731,6 +776,12 @@ in
 
   environment.systemPackages = with pkgs; [
     opencode
+    # Nix tooling for pi-lens: it drives language servers/formatters found on PATH,
+    # and this repo has no devenv shell (dev/shared/*.nix covers go/node/python/
+    # rust/java elsewhere). Nix coverage is LSP + nixfmt; servers start lazily on
+    # the first edit in that language.
+    nil
+    nixfmt-rfc-style
     awscli2
     jq
     jdk17
