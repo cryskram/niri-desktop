@@ -154,7 +154,8 @@
     # Keep both goland and idea available; user can pick.
     jetbrains.goland
     jetbrains.idea
-    android-studio # SDK + adb owned by modules/android.nix; point its wizard at $ANDROID_HOME
+    # android-studio lives in modules/android.nix: it ships a Wayland-toolkit
+    # wrapper (no XWayland here), so installing it unwrapped breaks the app grid entry.
 
     # database viewers
     beekeeper-studio
