@@ -17,6 +17,68 @@ let
   # entry below. Loaded on demand by the adapter like every other server.
   brunoMcp = pkgs.callPackage ../pkgs/bruno-mcp.nix { };
 
+  # Slack MCP server (pkgs/slack-mcp-server.nix) — korotovsky/slack-mcp-server,
+  # chosen over Slack's official remote MCP because that one needs a
+  # directory-published/internal app plus workspace-admin approval of the MCP
+  # integration, while this one runs off a plain user token. Hoisted so the
+  # wrapper below can exec it.
+  slackMcp = pkgs.callPackage ../pkgs/slack-mcp-server.nix { };
+
+  # The server authenticates at start-up and exits before serving when the token
+  # is bad (`invalid_auth`), so credentials have to be in the environment before
+  # exec. They come from gitignored files under secrets/ — the same pattern as
+  # querion's tokenFile — so nothing secret can reach mcp.json or the Nix store.
+  # Raw files (not a sourced .env) are deliberate: pi-guard denies writes to
+  # `**/secrets/**` and `**/*.env`, and sourcing a user-editable shell file buys
+  # nothing here.
+  #
+  # Two routes, upstream's own priority order (xoxp > xoxb > xoxc/xoxd):
+  #   slack-xoxc-token + slack-xoxd-token  browser session (no Slack app at all)
+  #   slack-mcp-token                      single xoxp/xoxb token (needs an app)
+  # Only the matching variables are exported; upstream would otherwise prefer a
+  # stale xoxp over a fresh browser session.
+  #
+  # Caches are pinned under ~/.cache: upstream otherwise writes
+  # .users_cache.json / .channels_cache_v2.json into the cwd, littering every
+  # project the server is started from. They are also what makes `#channel` and
+  # `@username_dm` resolution work, so never run this with `-no-cache`.
+  slackMcpWrapped = pkgs.writeShellScriptBin "slack-mcp-server" ''
+    set -euo pipefail
+    export PATH=${lib.makeBinPath [ pkgs.coreutils ]}:$PATH
+
+    secrets_dir="''${SLACK_MCP_SECRETS_DIR:-$HOME/niri-desktop/secrets}"
+
+    if [ -n "''${SLACK_MCP_XOXC_TOKEN:-}" ] && [ -n "''${SLACK_MCP_XOXD_TOKEN:-}" ]; then
+      : # browser session already exported
+    elif [ -r "$secrets_dir/slack-xoxc-token" ] && [ -r "$secrets_dir/slack-xoxd-token" ]; then
+      export SLACK_MCP_XOXC_TOKEN="$(tr -d '\r\n' < "$secrets_dir/slack-xoxc-token")"
+      export SLACK_MCP_XOXD_TOKEN="$(tr -d '\r\n' < "$secrets_dir/slack-xoxd-token")"
+    else
+      token="''${SLACK_MCP_XOXP_TOKEN:-}"
+      [ -n "$token" ] || token="''${SLACK_MCP_XOXB_TOKEN:-}"
+      if [ -z "$token" ] && [ -r "$secrets_dir/slack-mcp-token" ]; then
+        token="$(tr -d '\r\n' < "$secrets_dir/slack-mcp-token")"
+      fi
+      if [ -z "$token" ]; then
+        echo "slack-mcp-server: no Slack credentials — write the xoxc/xoxd pair to $secrets_dir/slack-{xoxc,xoxd}-token, or an xoxp token to $secrets_dir/slack-mcp-token (see docs/slack.md)" >&2
+        exit 78
+      fi
+      # Upstream prioritises xoxp over xoxb, so the token is exported under the
+      # variable that matches its prefix rather than guessing.
+      case "$token" in
+        xoxb-*) export SLACK_MCP_XOXB_TOKEN="$token" ;;
+        *) export SLACK_MCP_XOXP_TOKEN="$token" ;;
+      esac
+    fi
+
+    cache_dir="''${XDG_CACHE_HOME:-$HOME/.cache}/slack-mcp"
+    mkdir -p "$cache_dir"
+    export SLACK_MCP_USERS_CACHE="$cache_dir/users_cache.json"
+    export SLACK_MCP_CHANNELS_CACHE="$cache_dir/channels_cache_v2.json"
+
+    exec ${slackMcp}/bin/slack-mcp-server "$@"
+  '';
+
   # pi-subagents excludes global context and skills by default. Opt every built-in
   # role into the same instructions, memory skill, and project context as the parent.
   sharedSubagentContext = {
@@ -329,6 +391,17 @@ in
             bruno_run_collection = "allow";
             bruno_list_environments = "allow";
             bruno_get_environment = "allow";
+            # slack (korotovsky/slack-mcp-server; the 6 tools enabled in mcp.json).
+            # All allowed outright per Vageesh 2026-10-22 ("whitelist slack mcp
+            # things"): posting goes out as Vageesh in a work workspace, so this
+            # can post silently headless (subagents, `pi -p`) — flip back to "ask"
+            # to fail closed again.
+            slack_channels_list = "allow";
+            slack_conversations_history = "allow";
+            slack_conversations_replies = "allow";
+            slack_conversations_search_messages = "allow";
+            slack_users_search = "allow";
+            slack_conversations_add_message = "allow";
 
             # Google Workspace extension tools (pi/extensions/google-workspace).
             # pi-guard matches tool names exactly, so all of them are listed;
@@ -563,6 +636,33 @@ in
             "--workspace"
             "/home/vageesh/Documents/bruno/PERSONAL"
           ];
+        };
+        # Slack — korotovsky/slack-mcp-server (pkgs/slack-mcp-server.nix), token
+        # auth instead of Slack's admin-approved OAuth MCP (see docs/slack.md).
+        # The enabled-tools list is deliberately six entries: unset, the server
+        # registers everything it has, including usergroup writes and
+        # conversations_join/leave/mark. Write tools are not registered by default
+        # unless named, so conversations_add_message is named to make posting (and
+        # DMing people) possible at all. Posting is additionally gated in
+        # settings.guard below. `channels_list` + `users_search` are what resolve
+        # "message xyz" to a `@username_dm` target through the server's caches.
+        slack = {
+          command = "${slackMcpWrapped}/bin/slack-mcp-server";
+          args = [
+            "--transport"
+            "stdio"
+            "--enabled-tools"
+            "channels_list,conversations_history,conversations_replies,conversations_search_messages,users_search,conversations_add_message"
+          ];
+          # Non-secret knobs. The server keeps conversations_add_message DISABLED
+          # unless SLACK_MCP_ADD_MESSAGE_TOOL is set (verified: unset refuses with
+          # "by default, the conversations_add_message tool is disabled"). "true"
+          # allows any channel or DM the credential can reach; a comma-separated
+          # channel-ID list restricts posting (`!C123` = everything except C123).
+          # SLACK_MCP_USER_AGENT / SLACK_MCP_CUSTOM_TLS are needed by some
+          # Enterprise workspaces (set the user agent to the browser's own),
+          # SLACK_MCP_LOG_LEVEL takes debug/info/warn/error.
+          env.SLACK_MCP_ADD_MESSAGE_TOOL = "true";
         };
       };
     };
