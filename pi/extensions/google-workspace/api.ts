@@ -415,6 +415,51 @@ export function writeLocalFile(path: string, bytes: ArrayBuffer): number {
 	return bytes.byteLength;
 }
 
+/**
+ * Resumable upload (create, or PATCH an existing file's bytes when `fileId` is
+ * given). One PUT for the whole body keeps it simple and removes the 5 MB
+ * multipart ceiling; the content type is what decides whether Drive stores a
+ * real notebook type or an opaque blob.
+ */
+export async function resumableUpload(options: {
+	email: string;
+	bytes: Buffer;
+	contentType: string;
+	metadata: Record<string, unknown>;
+	fileId?: string;
+	signal?: AbortSignal;
+}): Promise<{ id: string; name: string; mimeType?: string }> {
+	const token = await accessToken(options.email, options.signal);
+	const fields = "fields=id,name,mimeType,size,webViewLink";
+	const base = options.fileId
+		? `${ENDPOINT.upload}/files/${options.fileId}?uploadType=resumable&supportsAllDrives=true&${fields}`
+		: `${ENDPOINT.upload}/files?uploadType=resumable&supportsAllDrives=true&${fields}`;
+
+	const start = await fetch(base, {
+		method: options.fileId ? "PATCH" : "POST",
+		headers: {
+			authorization: `Bearer ${token}`,
+			"content-type": "application/json; charset=UTF-8",
+			"x-upload-content-type": options.contentType,
+			"x-upload-content-length": String(options.bytes.byteLength),
+		},
+		body: JSON.stringify(options.metadata),
+		signal: options.signal,
+	});
+	if (!start.ok) throw new Error(`Upload could not start: ${start.status} ${await start.text()}`);
+	const session = start.headers.get("location");
+	if (!session) throw new Error("Upload session URI missing from Drive's response.");
+
+	const upload = await fetch(session, {
+		method: "PUT",
+		headers: { "content-type": options.contentType, "content-length": String(options.bytes.byteLength) },
+		body: options.bytes,
+		signal: options.signal,
+	});
+	if (!upload.ok) throw new Error(`Upload failed: ${upload.status} ${await upload.text()}`);
+	return (await upload.json()) as { id: string; name: string; mimeType?: string };
+}
+
 /* ------------------------------------------------------------------ *
  * Output shaping
  * ------------------------------------------------------------------ */

@@ -24,6 +24,7 @@ import {
 	googleJson,
 	MIME,
 	resolveFile,
+	resumableUpload,
 	searchFiles,
 	requireAccount,
 	writeLocalFile,
@@ -94,7 +95,13 @@ const UPLOAD_MIME: Record<string, string> = {
 	".odt": "application/vnd.oasis.opendocument.text",
 	".ods": "application/vnd.oasis.opendocument.spreadsheet",
 	".mp4": "video/mp4",
+	// Colab notebooks are ordinary Drive files with this type, which is what gives
+	// them the colab.research.google.com/drive/<id> link instead of a blob link.
+	".ipynb": "application/vnd.google.colaboratory",
 };
+
+/** Notebook MIME types — text, so read returns the JSON rather than just metadata. */
+const NOTEBOOK_MIMES = new Set(["application/vnd.google.colaboratory", "application/x-ipynb+json"]);
 
 function text(value: string, details: Record<string, unknown>) {
 	return { content: [{ type: "text" as const, text: value }], details };
@@ -567,7 +574,25 @@ const driveRead = defineTool({
 			`owner: ${file.owners?.[0]?.emailAddress ?? "?"}`,
 			file.webViewLink ?? fileLink(file.id),
 		].join("\n");
-		if (params.include_content === false || !GOOGLE_NATIVE.has(file.mimeType)) {
+		if (params.include_content === false) {
+			return text(header, { account: email, fileId: file.id, mimeType: file.mimeType });
+		}
+		if (NOTEBOOK_MIMES.has(file.mimeType)) {
+			// A notebook is text: download it (alt=media) and show the JSON, so the
+			// agent can edit cells and upload the result back.
+			const response = await fetch(`${ENDPOINT.drive}/files/${file.id}?alt=media&supportsAllDrives=true`, {
+				headers: { authorization: `Bearer ${await accessToken(email, signal)}` },
+				signal,
+			});
+			if (!response.ok) throw new Error(`Could not download the notebook: ${response.status} ${await response.text()}`);
+			const json = await response.text();
+			return text(`${header}\n\n${clampText(json, "drive-notebook")}`, {
+				account: email,
+				fileId: file.id,
+				mimeType: file.mimeType,
+			});
+		}
+		if (!GOOGLE_NATIVE.has(file.mimeType)) {
 			return text(header, { account: email, fileId: file.id, mimeType: file.mimeType });
 		}
 		if (file.mimeType === MIME.sheet) {
@@ -651,8 +676,9 @@ const driveWrite = defineTool({
 	name: "google_drive_write",
 	label: "Modify Drive",
 	description:
-		"Create and modify Drive items: create_folder, rename, move, copy, share, upload, trash, untrash, delete. " +
-		"delete is permanent; trash is recoverable. share defaults to not emailing the grantee.",
+		"Create and modify Drive items: create_folder, rename, move, copy, share, upload, update_content, trash, untrash, delete. " +
+		"delete is permanent; trash is recoverable. share defaults to not emailing the grantee. " +
+		"update_content replaces an existing file's bytes (an .ipynb notebook, a CSV, an image) without changing its id, link or sharing.",
 	parameters: Type.Object({
 		action: Type.Union(
 			[
@@ -662,17 +688,24 @@ const driveWrite = defineTool({
 				Type.Literal("copy"),
 				Type.Literal("share"),
 				Type.Literal("upload"),
+				Type.Literal("update_content"),
 				Type.Literal("trash"),
 				Type.Literal("untrash"),
 				Type.Literal("delete"),
 			],
 			{ description: "Operation to perform." },
 		),
-		file: Type.Optional(Type.String({ description: "Target file: ID, URL, or exact name (not needed for create_folder/upload)." })),
+		file: Type.Optional(
+			Type.String({ description: "Target file: ID, URL, or exact name (not needed for create_folder/upload)." }),
+		),
 		name: Type.Optional(Type.String({ description: "Name for create_folder, rename, copy or upload." })),
 		parent: Type.Optional(Type.String({ description: "Folder for create_folder/upload (ID, name, or 'root')." })),
 		to_parent: Type.Optional(Type.String({ description: "Destination folder for move/copy." })),
-		role: Type.Optional(Type.Union([Type.Literal("reader"), Type.Literal("commenter"), Type.Literal("writer")], { description: "Role for share." })),
+		role: Type.Optional(
+			Type.Union([Type.Literal("reader"), Type.Literal("commenter"), Type.Literal("writer")], {
+				description: "Role for share.",
+			}),
+		),
 		grantee_type: Type.Optional(
 			Type.Union([Type.Literal("user"), Type.Literal("group"), Type.Literal("domain"), Type.Literal("anyone")], {
 				description: "Permission type for share. Default user.",
@@ -685,14 +718,21 @@ const driveWrite = defineTool({
 		convert_to: Type.Optional(
 			Type.String({ description: "Convert an upload to a Google type: doc, sheet, or slides." }),
 		),
+		mime_type: Type.Optional(
+			Type.String({
+				description:
+					"Content type for upload/update_content. Inferred from the extension when omitted (.ipynb → application/vnd.google.colaboratory, so Colab opens it).",
+			}),
+		),
 		account: accountParam,
 	}),
 	namespace: NAMESPACE,
 	annotations: DESTRUCTIVE,
-	promptSnippet: "Create folders, rename/move/share/upload/trash Drive items",
+	promptSnippet: "Create folders, rename/move/share/upload/update/trash Drive items",
 	promptGuidelines: [
 		"Prefer trash over delete; delete cannot be undone.",
 		"Sharing grants real access to real people — confirm the grantee address before calling share.",
+		"A Colab notebook is an .ipynb file in Drive: write the JSON locally, upload it, then open https://colab.research.google.com/drive/<id>.",
 	],
 	async execute(_id, params, signal) {
 		const { email } = requireAccount(params.account);
@@ -785,44 +825,54 @@ const driveWrite = defineTool({
 					permissionId: permission.id,
 				});
 			}
-			case "upload": {
-				if (!params.local_path) throw new Error("upload needs local_path.");
+			case "upload":
+			case "update_content": {
+				if (!params.local_path) throw new Error(`${params.action} needs local_path.`);
 				const size = statSync(params.local_path).size;
 				if (size > 200 * 1024 * 1024) throw new Error(`${params.local_path} is ${size} bytes; this tool caps uploads at 200 MB.`);
 				const targetMime = params.convert_to
 					? { doc: MIME.doc, sheet: MIME.sheet, slides: MIME.slides }[params.convert_to]
 					: undefined;
-				const contentType = targetMime ?? UPLOAD_MIME[extname(params.local_path).toLowerCase()] ?? "application/octet-stream";
-				const metadata: Record<string, unknown> = { name: params.name ?? basename(params.local_path) };
-				const parent = await folderId(params.parent);
-				if (parent) metadata.parents = [parent];
-				if (targetMime) metadata.mimeType = targetMime;
-				const token = await accessToken(email, signal);
-				const start = await fetch(`${ENDPOINT.upload}/files?uploadType=resumable&supportsAllDrives=true&fields=id,name,webViewLink`, {
-					method: "POST",
-					headers: {
-						authorization: `Bearer ${token}`,
-						"content-type": "application/json; charset=UTF-8",
-						"x-upload-content-type": contentType,
-						"x-upload-content-length": String(size),
-					},
-					body: JSON.stringify(metadata),
+				const contentType =
+					params.mime_type ??
+					targetMime ??
+					UPLOAD_MIME[extname(params.local_path).toLowerCase()] ??
+					"application/octet-stream";
+
+				if (params.action === "upload") {
+					const metadata: Record<string, unknown> = { name: params.name ?? basename(params.local_path) };
+					const parent = await folderId(params.parent);
+					if (parent) metadata.parents = [parent];
+					// Always state the type: Drive will otherwise have to infer it, and an
+					// .ipynb that lands as octet-stream is not a notebook.
+					metadata.mimeType = contentType;
+					const uploaded = await resumableUpload({
+						email,
+						bytes: readFileSync(params.local_path),
+						contentType,
+						metadata,
+						signal,
+					});
+					return text(`Uploaded ${params.local_path} → "${uploaded.name}" (${uploaded.id}, ${contentType}).`, {
+						account: email,
+						fileId: uploaded.id,
+						mimeType: contentType,
+					});
+				}
+
+				const target = await resolveFile({ email, ref: params.file ?? "", signal });
+				const updated = await resumableUpload({
+					email,
+					fileId: target.id,
+					bytes: readFileSync(params.local_path),
+					contentType: params.mime_type ?? target.mimeType ?? contentType,
+					metadata: params.name ? { name: params.name } : {},
 					signal,
 				});
-				if (!start.ok) throw new Error(`Upload could not start: ${start.status} ${await start.text()}`);
-				const session = start.headers.get("location");
-				if (!session) throw new Error("Upload session URI missing from Drive's response.");
-				const upload = await fetch(session, {
-					method: "PUT",
-					headers: { "content-type": contentType, "content-length": String(size) },
-					body: readFileSync(params.local_path),
-					signal,
-				});
-				if (!upload.ok) throw new Error(`Upload failed: ${upload.status} ${await upload.text()}`);
-				const uploaded = (await upload.json()) as { id: string; name: string };
-				return text(`Uploaded ${params.local_path} → "${uploaded.name}" (${uploaded.id}).`, {
+				return text(`Replaced the content of "${updated.name}" (${updated.id}) with ${params.local_path}.`, {
 					account: email,
-					fileId: uploaded.id,
+					fileId: updated.id,
+					mimeType: updated.mimeType ?? null,
 				});
 			}
 			case "trash":

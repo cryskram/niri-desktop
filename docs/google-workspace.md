@@ -70,6 +70,20 @@ Every tool takes an optional `account` (email). Omitting it uses the active acco
 File arguments accept an ID, a `docs.google.com`/`drive.google.com` URL, or an exact
 name — a name that matches several files fails with the candidates rather than guessing.
 
+## Colab notebooks
+
+A Colab notebook is an ordinary `.ipynb` file in Drive: there is no notebook-creation API
+the way there is a Docs or Sheets one (Google's Colab API `colaboratory.googleapis.com` is
+allowlist-beta and manages *runtimes*, not files). Creating one therefore means writing the
+notebook JSON and uploading it as `application/vnd.google.colaboratory` — which is the
+type `google_drive_write` picks for `.ipynb`, and the thing that makes Drive answer with a
+`colab.research.google.com/drive/<id>` link instead of a generic file link.
+
+The agent can loop on one: `google_drive_read` returns the notebook JSON, and
+`google_drive_write` with `update_content` replaces those bytes in place, keeping the
+file's id, link and sharing. Running the cells still happens in the browser — Drive APIs
+cannot execute a notebook.
+
 ## Where things live
 
 `$PI_CODING_AGENT_DIR/google/` (default `~/.pi/agent/google/`), directory `0700`:
