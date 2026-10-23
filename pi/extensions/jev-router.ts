@@ -441,11 +441,11 @@ const TRIAGE_STATUS_KEY = "jev-triage";
 type TriageRole = "scout" | "researcher" | "worker" | "reviewer" | "oracle";
 
 const TRIAGE_GUIDANCE: Record<TriageRole, string> = {
-  scout: "Triage: broad exploration. Consider delegating recon to the scout subagent first, then implement from its findings. If it proves single-file, do it directly.",
-  researcher: "Triage: multi-part investigation. Consider delegating to the researcher subagent to gather findings in parallel, then synthesize. If it's answerable from visible context, answer directly.",
-  worker: "Triage: multi-file implementation. Consider delegating the work to the worker subagent while you hold the plan. If it proves single-file, do it directly.",
-  reviewer: "Triage: a change spanning files wants verification. Consider having the reviewer subagent check the work after implementation.",
-  oracle: "Triage: broad, high-stakes change. Consider consulting the oracle subagent for a second opinion on the approach before implementing.",
+  scout: "Delegation authorized for this run: dispatch recon with the subagent tool — subagent({ agent: \"scout\", task: \"<bounded recon objective + expected report>\" }) — then implement from its findings. If it proves single-file, do it directly.",
+  researcher: "Delegation authorized for this run: delegate the investigation with the subagent tool — subagent({ agent: \"researcher\", task: \"<questions + expected synthesis>\", async: true }) — then synthesize the findings. If it's answerable from visible context, answer directly.",
+  worker: "Delegation authorized for this run: hand the work package to the subagent tool — subagent({ agent: \"worker\", task: \"<bounded objective + acceptance criteria>\", async: true }) — while you hold the plan. If it proves single-file, do it directly.",
+  reviewer: "Delegation authorized for this run: after implementing, have the change verified with the subagent tool — subagent({ agent: \"reviewer\", task: \"<what to verify>\" }).",
+  oracle: "Delegation authorized for this run: consult a second opinion before implementing with the subagent tool — subagent({ agent: \"oracle\", task: \"<decision + options considered>\" }).",
 };
 
 async function classifyTriage(
