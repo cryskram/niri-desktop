@@ -106,6 +106,7 @@
           ./modules/vpn.nix
           ./modules/tailscale.nix
           ./modules/ssh.nix
+          ./modules/android.nix
           pi.nixosModules.default
           home-manager.nixosModules.home-manager
         ];

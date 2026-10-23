@@ -154,6 +154,7 @@
     # Keep both goland and idea available; user can pick.
     jetbrains.goland
     jetbrains.idea
+    android-studio # SDK + adb owned by modules/android.nix; point its wizard at $ANDROID_HOME
 
     # database viewers
     beekeeper-studio

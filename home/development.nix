@@ -67,6 +67,9 @@
     clippy
     rustfmt
 
+    # ── Mobile ──
+    flutter # Android SDK via $ANDROID_HOME (modules/android.nix); JDK 17 already below
+
     # ── C / C++ ──
     # gcc + clang both provide bin/c++ -> clang lower priority so gcc wins (DEV fix)
     (lib.lowPrio clang)
