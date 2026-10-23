@@ -733,6 +733,7 @@ const driveWrite = defineTool({
 		"Prefer trash over delete; delete cannot be undone.",
 		"Sharing grants real access to real people — confirm the grantee address before calling share.",
 		"A Colab notebook is an .ipynb file in Drive: write the JSON locally, upload it, then open https://colab.research.google.com/drive/<id>.",
+		"upload always creates a new file. To change an existing one, read it, edit locally, and call update_content — same id, link and sharing.",
 	],
 	async execute(_id, params, signal) {
 		const { email } = requireAccount(params.account);
@@ -840,8 +841,20 @@ const driveWrite = defineTool({
 					"application/octet-stream";
 
 				if (params.action === "upload") {
-					const metadata: Record<string, unknown> = { name: params.name ?? basename(params.local_path) };
+					const name = params.name ?? basename(params.local_path);
 					const parent = await folderId(params.parent);
+					// Refuse to silently shadow an existing file: Drive does not dedupe by
+					// name, so the usual accident is a second analysis.ipynb and a lost
+					// Colab link. Point at update_content instead.
+					const clash = await searchFiles({ email, query: driveQuery({ name }), pageSize: 2, signal });
+					if (clash.files?.length) {
+						const existingFile = clash.files[0]!;
+						throw new Error(
+							`"${name}" already exists (id ${existingFile.id}, ${existingFile.mimeType}). upload always creates a new file — ` +
+								`use update_content with file: "${existingFile.id}" to replace its bytes, or pass a different name to keep both.`,
+						);
+					}
+					const metadata: Record<string, unknown> = { name };
 					if (parent) metadata.parents = [parent];
 					// Always state the type: Drive will otherwise have to infer it, and an
 					// .ipynb that lands as octet-stream is not a notebook.

@@ -84,6 +84,11 @@ The agent can loop on one: `google_drive_read` returns the notebook JSON, and
 file's id, link and sharing. Running the cells still happens in the browser — Drive APIs
 cannot execute a notebook.
 
+`upload` always creates a new file, so it refuses to shadow an existing name: it returns
+the existing id and points at `update_content` instead of quietly producing a second
+`analysis.ipynb` with a different link. Pass a different `name` when you really do want
+both.
+
 ## Where things live
 
 `$PI_CODING_AGENT_DIR/google/` (default `~/.pi/agent/google/`), directory `0700`:
