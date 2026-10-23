@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top.
 
+## 2026-10-23 — Subagent children do NOT inherit ambient extensions; virtual models must be named (gotcha) — `pi/subagents`
+
+- What: every subagent run died before its first turn with `Model "jev/auto:high" not found. Use --list-models` (researcher, async, empty run-0 dir). The `subagents` comment claimed "background children already inherit ambient extensions" — false for the detached async runner: `child-launch.ts` sets `ambientExtensions = host === "runner" && …`, and the async runner is spawned as `--no-extensions … --extension <bootstrap>`. Only `extensions` / `subagentOnlyExtensions` reach a child.
+- Why/Context: `jev/auto` is a *virtual* model registered by `jev-router.ts`; without that file the child's catalog has no `jev` provider, so the launch-time `--model` resolves to nothing. The Nix HM wrapper always injects `-e jev-router.ts`, which is why this masks in the main thread and in any test run through `pi` — a reproduction must use the raw binary (`/nix/store/…-pi-coding-agent/bin/pi --no-extensions`). Same failure class as the /btw one (2026-10-20).
+- How/Apply: `${../pi/extensions/jev-router.ts}` added to `subagents.defaultSubagentOnlyExtensions` in `modules/core.nix`; the router's triage handler now no-ops on `PI_SUBAGENT_CHILD=1` or when `subagent` is absent from `systemPromptOptions.selectedTools` (inert guidance + a wasted Jev classify call otherwise). Verified: raw binary without `-e` = exact same error, with `-e` = OK; harness shows 0 classify calls in both skip paths. New server/extension that children need ⇒ add it there, not to `extensions`.
+
+Source: user report 2026-10-23 — "[subagent] researcher failed … Model \"jev/auto:high\" not found".
+
 ## 2026-10-22 — The Slack MCP has no edit/delete; a 2-tool extension fills the gap (decision) — `pi/slack`
 
 - What: `korotovsky/slack-mcp-server` exposes 18 tools and **none** is `chat.update` or `chat.delete` (checked master docs and source; v1.3.0 is the latest release), so `pi/extensions/slack-message.ts` adds `slack_edit_message` / `slack_delete_message` reading the MCP server's own credential files (browser session first, then app token).
