@@ -23,7 +23,12 @@
  *   - No model on this plan is both faster *and* better at coding than muse
  *     (DeepSWE 75.4 with the best AA coding index among the affordable ones), so
  *     hard coding does not get a different, slower model: it gets more thinking
- *     (effortFloor → xhigh). gpt-6-luna was dropped as dominated everywhere.
+ *     (effortBand floor → xhigh). gpt-6-luna was dropped as dominated everywhere.
+ *   - The symmetric half: the *type* of work matters as much as complexity, so
+ *     effort is a band per (task kind × complexity) — bulk chat/generation is
+ *     clamped low, coding/reasoning raises it, structural evidence or repeated
+ *     tool failures force xhigh. Band clamping only adjusts a turn's thinking
+ *     level, never the session's model choice or its history.
  *   - mimo-v2.6-pro is the strongest long-context/coding-science model here
  *     (SciCode 60.9, AA-LCR 86.3) but runs at 49 t/s, so it is kept for
  *     compaction summaries only — one-off calls where latency is not loop-bound.
@@ -97,12 +102,14 @@ interface JevRouterState {
 
 type Req = ModelRouteRequest<JevRouterState>;
 
-function routeTo(
+// Exported for harness testing (same as pickSummarizer/effortBand below).
+export function routeTo(
   req: Req,
   ctx: ExtensionContext,
   id: TargetId,
   state?: JevRouterState,
   floor?: ThinkingLevel,
+  ceiling?: ThinkingLevel,
 ): ModelRoute<JevRouterState> {
   const model = ctx.modelRegistry.find(PROVIDER, id);
   if (!model) throw new Error(`Model ${PROVIDER}/${id} not in catalog — check opencode-go auth / models-store.json`);
@@ -114,10 +121,13 @@ function routeTo(
   } catch {
     // Footer bookkeeping must never fail the route.
   }
-  // pass through the user's thinking level, raised by the turn's effort floor;
-  // pi clamps to whatever the model supports
+  // pass through the user's thinking level, raised by the turn's effort floor
+  // and lowered by its effort ceiling (floor wins on conflict), then snapped to
+  // what this model actually offers so pi never clamps it somewhere pricier.
   let level = req.thinkingLevel;
   if (floor && LEVELS.indexOf(level as ThinkingLevel) < LEVELS.indexOf(floor)) level = floor;
+  else if (ceiling && LEVELS.indexOf(level as ThinkingLevel) > LEVELS.indexOf(ceiling)) level = ceiling;
+  level = snapToModel(level as ThinkingLevel, model as { thinkingLevelMap?: Record<string, unknown> });
   return { model, thinkingLevel: level, state };
 }
 
@@ -215,7 +225,7 @@ export function pickTarget(
   // Images need a vision model.
   if (signals.vision) return GLM_FLASH;
 
-  // Two failed tool calls: stay on muse and raise effort (see effortFloor).
+  // Two failed tool calls: stay on muse and raise effort (see effortBand).
   // deepseek is disqualified here — a stuck loop is tool-driven, which is exactly
   // where it leaks tool calls as text — and no other plan model beats muse at
   // coding, so switching model would trade reliability for nothing.
@@ -232,28 +242,96 @@ export function pickTarget(
   return MUSE;
 }
 
-/** Explicit effort floors, ascending. */
+/** Thinking levels, ascending — used for floor/ceiling comparisons. */
 const LEVELS = ["low", "medium", "high", "xhigh", "max"] as const;
 export type ThinkingLevel = (typeof LEVELS)[number];
 
 /**
- * Effort floor for a turn. Since no plan model beats muse at coding, complexity
- * buys *thinking*, not a different model: hard turns get xhigh reasoning while
- * staying on the fast workhorse. Structural evidence (code fences, several
- * paths, hard-debug vocabulary) promotes a "standard" verdict here.
+ * Snap a level to one the chosen model actually exposes.
+ *
+ * The plan's models do not share a ladder: muse supports low/medium/high/xhigh,
+ * while glm-5.3-flash and deepseek-v4.1-flash support only low/high/max (no
+ * medium, no xhigh). Left to pi, `xhigh` on glm clamps *up* to `max` — verified
+ * in a real run — which spends more than the band intended. Nearest-supported
+ * with ties broken toward the cheaper level keeps the router in charge:
+ * xhigh on glm → high, medium on glm → low. The tie rule is a deliberate cost
+ * guard rather than an escalation: on a ladder that lacks a tier, an effort
+ * floor lands on the closest supported tier *below* it instead of jumping to
+ * `max`.
  */
-export function effortFloor(
+function snapToModel(level: ThinkingLevel, model: { thinkingLevelMap?: Record<string, unknown> }): ThinkingLevel {
+  const map = model?.thinkingLevelMap;
+  if (!map) return level; // no map: pi decides
+  const supported = LEVELS.filter((l) => map[l] !== null && map[l] !== undefined);
+  if (supported.length === 0 || supported.includes(level)) return level;
+  const target = LEVELS.indexOf(level);
+  let best: ThinkingLevel = supported[0]!;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const candidate of supported) {
+    const distance = Math.abs(LEVELS.indexOf(candidate) - target);
+    if (distance < bestDistance
+      || (distance === bestDistance && LEVELS.indexOf(candidate) < LEVELS.indexOf(best))) {
+      best = candidate;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+/**
+ * Effort band for a turn: (prompt type × complexity) → thinking levels.
+ *
+ * Since no plan model beats muse at coding, complexity buys *thinking*, not a
+ * different model. Type matters as much as complexity: bulk *generation* and
+ * *chat* gain little from reasoning tokens, while *coding* and *reasoning* gain
+ * a lot — so the same "standard" verdict maps to different bands.
+ *
+ * The band is applied by clamping the session level (which the user may have
+ * set explicitly): the floor raises, the ceiling lowers, and the floor wins on
+ * a conflict. Confidence is required per dimension — an uncertain complexity
+ * falls back to "standard" (a no-op band), and an uncertain type falls back to
+ * "coding", which is the agentic norm here.
+ *
+ * Structural evidence overrides the labels: several code fences, three-plus
+ * paths, hard-debug vocabulary, or two failed tool calls force the xhigh floor
+ * even when Jev called the prompt trivial/standard.
+ */
+export function effortBand(
+  taskKind: string,
   complexity: string,
   probs: Record<string, number>,
   signals: RouteSignals,
-): ThinkingLevel | undefined {
+): { floor?: ThinkingLevel; ceiling?: ThinkingLevel } {
   const c = complexity.toLowerCase();
-  const confident = (probs[c] ?? 1) >= 0.45;
-  const effective = confident ? c : "standard";
-  // Stuck loops get the same treatment as hard turns: more thinking, same model.
-  return effective === "complex" || looksHard(signals) || signals.toolErrors >= 2
-    ? "xhigh"
-    : undefined;
+  const level = (probs[c] ?? 1) >= 0.45 ? c : "standard";
+  const taskRaw = taskKind.toLowerCase();
+  const task = (probs[taskRaw] ?? 1) >= 0.4 ? taskRaw : "coding";
+
+  // Stuck loops and structurally-hard prompts get maximum reasoning on muse.
+  if (looksHard(signals) || signals.toolErrors >= 2) return { floor: "xhigh" };
+
+  switch (task) {
+    case "chat":
+    case "generation":
+      // Explaining, summarizing, or emitting bulk text: thinking adds little
+      // beyond a floor. Generation gets a slightly higher floor than chat
+      // because long output still needs a plan.
+      if (level === "complex") return task === "chat" ? { floor: "high", ceiling: "xhigh" } : { floor: "high" };
+      if (level === "trivial") return { floor: "low", ceiling: "low" };
+      return { floor: task === "chat" ? "low" : "medium", ceiling: "medium" };
+    case "reasoning":
+      // Planning, trade-offs, root-cause analysis: thinking *is* the work.
+      if (level === "complex") return { floor: "xhigh" };
+      if (level === "trivial") return { floor: "medium", ceiling: "medium" };
+      return { floor: "high" };
+    default: {
+      // coding — the agentic norm. Trivial edits are mechanical; standard work
+      // keeps the session default; complex work gets the xhigh floor.
+      if (level === "complex") return { floor: "xhigh" };
+      if (level === "trivial") return { floor: "low", ceiling: "low" };
+      return { ceiling: "high" };
+    }
+  }
 }
 
 /**
@@ -352,7 +430,7 @@ async function classifyText(
   return { complexity, taskKind, probs };
 }
 
-async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ target: TargetId; effort?: ThinkingLevel; complexity: string; taskKind: string; probs: Record<string, number>; signals: RouteSignals } | null> {
+async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ target: TargetId; effort: { floor?: ThinkingLevel; ceiling?: ThinkingLevel }; complexity: string; taskKind: string; probs: Record<string, number>; signals: RouteSignals } | null> {
   const raw = lastUserText(req.messages);
   const prompt = raw.slice(0, 16_000);
   const classified = await classifyText(prompt, ctx, req.signal);
@@ -361,7 +439,8 @@ async function classifyWithJev(req: Req, ctx: ExtensionContext): Promise<{ targe
   return {
     ...classified,
     target: pickTarget(classified.taskKind, classified.probs, signals),
-    effort: effortFloor(classified.complexity, classified.probs, signals),
+    // Type × complexity, with structural evidence able to force the xhigh floor.
+    effort: effortBand(classified.taskKind, classified.complexity, classified.probs, signals),
     signals,
   };
 }
@@ -576,7 +655,9 @@ export default function (pi: ExtensionAPI) {
           taskKind: classified.taskKind,
           probs: classified.probs,
         };
-        return routeTo(req, ctx, target, state, classified.effort);
+        // Band clamps the session level: the floor raises hard turns, the
+        // ceiling lowers mechanical ones, floor wins on conflict.
+        return routeTo(req, ctx, target, state, classified.effort.floor, classified.effort.ceiling);
       }
 
       // Jev unavailable (or empty prompt): keep the branch's model if it had one.
