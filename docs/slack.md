@@ -9,6 +9,10 @@ Tool calls are gated by the `slack_*` rules in `settings.guard`:
 read/search is `allow`, and `slack_conversations_add_message` is `allow` too —
 posting goes out as you even headless, so flip it back to `ask` to fail closed.
 
+Setting this up on a machine that is not this NixOS box (or handing it to someone
+else)? Use **[docs/slack-setup.md](slack-setup.md)** — the same server and extension
+through npm and `pi mcp add`, with no Nix involved.
+
 ## Why not Slack's official MCP server
 
 Slack does ship `https://mcp.slack.com/mcp`, and its docs even have a "Connect to
@@ -79,7 +83,7 @@ target, then posts:
 
 Target formats the server accepts: `C…`/`D…` IDs, `#channel-name`, or
 `@username_dm` (the `_dm` suffix is required for a person — that is what maps to
-the existing DM conversation). Posting is `ask`-gated, so expect one confirm.
+the existing DM conversation). Posting is `allow` here, so it does not prompt.
 
 ## Editing and deleting messages
 
@@ -178,7 +182,7 @@ printf '%s\n' \
 |---|---|
 | `/mcp` shows slack disconnected, stderr `no Slack credentials …` | Neither secrets pair present/readable; the wrapper exits `78` |
 | `Authentication failed - check your Slack tokens` | `xoxd` cookie rotated (logged out / password change), or the app token was revoked |
-| Posting asks every time | Expected: `slack_conversations_add_message = "ask"`. `ask` blocks headless subagent calls entirely, so flip it to `allow` if you script this |
+| Posting asks every time | You set `slack_conversations_add_message = "ask"`; the repo default is `allow`. `ask` blocks headless subagent calls entirely |
 | `@username_dm` not found | Wrong handle — `users_search` uses Slack usernames, not display names; caches must be warm (never pass `-no-cache`) |
 | `cant_update_message` / `cant_delete_message` | The message is not yours, or Slack does not allow editing that message type |
 | Edit/delete tools missing from pi | The extension did not load — check `/reload` and that `../pi/extensions/slack-message.ts` is in `programs.pi.coding-agent.extensions` |
