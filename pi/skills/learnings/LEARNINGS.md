@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top.
 
+## 2026-10-24 — DMS is now Dux Shell 2.0.0; config dir moved, binary/unit did not (decision) — `niri/dms`
+
+- What: nixpkgs renamed `dms-shell` → `dux-shell` (2026-10-20, alias kept + warns) and it is now **2.0.0**. `modules/dms-shell.nix` takes the *stable* NixOS module (`programs.dms-shell`, whose option names still describe 1.6 — `enableDynamicTheming` etc. are removed only in unstable's `programs.dux-shell`) but the *unstable* package, so the option name is not the thing to migrate.
+- Why/Context: unchanged — `dms` binary, `dms.service`, `dms ipc call …` targets, `/etc/xdg/quickshell/dms-plugins` system plugin root, `DMS_DISABLE_MATUGEN` (verified in 2.0.0 `Theme.qml`), and the custom-theme keys in `theme/dms-macchiato.json`. Changed — **config dir `~/.config/DankMaterialShell` → `~/.config/dms`** (also state/cache/data), and the UI is embedded in the binary (old `~/.config/quickshell/dms` auto-discovery gone).
+- How/Apply: 2.0.0 migrates the dir itself, but HM creates `~/.config/dms/themes/…` first, so its migration sees conflicts and refuses — `home.activation.dmsMigrateConfigDir` moves whatever the new dir lacks before the seed runs. Helper binaries (dgop/cava/wtype) are NOT bundled in the package's PATH: the stable module's flags still supply them, so keep them on.
+
+Source: user report 2026-10-24 — "i have run a nix update. and got to know dms shell is now called as dux-shell".
+
 ## 2026-10-23 — Subagent children do NOT inherit ambient extensions; virtual models must be named (gotcha) — `pi/subagents`
 
 - What: every subagent run died before its first turn with `Model "jev/auto:high" not found. Use --list-models` (researcher, async, empty run-0 dir). The `subagents` comment claimed "background children already inherit ambient extensions" — false for the detached async runner: `child-launch.ts` sets `ambientExtensions = host === "runner" && …`, and the async runner is spawned as `--no-extensions … --extension <bootstrap>`. Only `extensions` / `subagentOnlyExtensions` reach a child.
@@ -586,3 +594,37 @@ Source: user instruction 2026-10-09 — "remember these options".
 - How: `bash -n` the patch script, deploy one service, inspect `/srv/dev/<stack>/<svc>/.env` key count and `docker logs`. vm2 is 8 GB with no swap and ~18 JVMs at `-Xmx512m`; parallel Node builds wedged SSH/HTTPS while ICMP still answered. Agreed hardening: swap via `ops/ops.yaml --tags base` (vault-free) + cap concurrency at 2.
 
 Source: session 2026-10-22 deploy grind on s5; user chose "wait it out" + "swap + cap concurrency".
+
+## 2026-10-23 — Nix invocation style: `nix shell`, not `nix-shell`
+
+- What: Vageesh wants the current Nix CLI everywhere. `nix-shell -p ansible --run "cmd args"` becomes `nix shell nixpkgs#ansible -c cmd args` (Nix 2.34.9 here, flakes + nix-command already enabled). Converted all six occurrences in phoenix's `docs/runbook.md` and `README.md`.
+- Why: the `nix-*` family is the older interface; `-p/--run` has no direct successor there, so new docs should not teach commands the toolchain is moving away from.
+- How: verify with `nix shell nixpkgs#<pkg> -c <cmd> --version` before rewriting docs; if flakes are off, the fallback is `--extra-experimental-features 'nix-command flakes'`.
+
+Source: user instruction 2026-10-23 — "from here on, lets use the latest nix nomenclature".
+
+## 2026-10-26 — vm1 Kafka is public (release/kafka_public, 7 commits, pushed)
+
+- What: `one.phoenix.sustvest.in:9092` is now SASL_SSL with a real LE cert (Traefik issues the bare-domain cert through its own ACME; `kafka-cert-sync` hourly timer publishes a PKCS12 bundle out of acme.json). Per-user SCRAM-SHA-512 + prefix ACLs under default-deny; roster in `ansible/group_vars/all/local.yaml` (`kafka_external_users`, vault-free); internal `kafka:9093` untouched.
+- Four hard-won facts: (1) certbot-behind-Traefik is impossible (internal ACME router at MaxInt64); (2) per-listener PEM is impossible with cp-kafka images (global JKS config poisons every listener — PKCS12 bundle with the internal storepass instead, zero new secrets); (3) SCRAM needs the ScramLoginModule JAAS stanza or handshakes die silently; (4) confluent CLIs have no `.sh`, ansible `command:` takes no quotes, kafka-acls removal must mirror the add, /opt/kafka-external must be uid-1000-owned.
+- ANONYMOUS is a broker super-user (PLAINTEXT controller listener can't register under the authorizer otherwise); confined to unpublished 9094.
+- kafka-python clients need `api_version=(3,6,0)` pinned + pre-created topics. Passwords must be alphanumeric (no shell quoting in ansible argv).
+
+## 2026-10-26 — Docker aliases die with the container; re-attaches must pass --alias
+
+- What: after recreating vm1's Kafka, `kafka` stopped resolving on stack nets (fresh s1-horizon deploy died `lookup kafka: no such host`) while old containers worked fine on cached IPs. Cause: `docker network connect` without `--alias kafka` attaches the container but registers no name. `docker network inspect` showing Aliases None is cosmetic -- `getent hosts kafka` from a stack container is the ground truth.
+- Rule: EVERY re-attach path (ansible roles, sync scripts, hand-run loops) must use `docker network connect --alias <name>`, and the deploy-time attachScript already did. Fixed in kafka-cert-sync + data role; same class of bug as the Traefik detach outage earlier the same day.
+- Also: never truncate `kafka-acls --remove` output through head/tail (SIGPIPE kills it mid-confirmation), and `PIPESTATUS[0]`-style rc checks through pipes lie -- verify delivery by consuming.
+
+## 2026-10-26 — Phoenix branch convention: `release/<effort>`, never `fix/*`
+
+- What: Vageesh corrected me for opening `fix/bridge-volume-key`. Phoenix convention (documented at `docs/DECISIONS.md:200`, and every one of the last 6 merged PRs) is one branch per effort named `release/<effort>` — e.g. `release/rollback`, `release/deploy-batch`, `release/kafka_public`, `release/ops-followups`. Underscores vs hyphens after the slash has varied; the `release/` prefix has not.
+- Why: the release branch is also what devs cut service `release/phoenix` branches from (docs/backlog.md:194), so the prefix carries meaning beyond tidiness.
+- How to fix a wrong name without losing the PR: renaming a branch with `gh api -X POST repos/O/R/branches/<url-encoded>/rename` moves it, but GitHub then AUTO-CLOSES the PR whose head vanished. There is no API to repoint an open PR's head — open a fresh PR from the renamed branch and note the supersession in the body. Better: pick the name right first time.
+
+## 2026-10-27 — Jev router: thinking level from prompt type × complexity (effortBand + snapToModel)
+
+- What: `pi/extensions/jev-router.ts` now derives the per-turn thinking level from Jev's (taskKind × complexity) as a band — floor raises, ceiling lowers, floor wins — instead of complexity alone. Ceilings only ever lower (session default respected; explicit `--thinking low` untouched), floors only raise, gating needs Jev confidence (0.45 complexity / 0.4 type, else fall back to standard/coding).
+- Gotcha that forced `snapToModel`: the plan's models do NOT share a thinking ladder — muse supports low/medium/high/xhigh, glm-5.3-flash and deepseek-v4.1-flash only low/high/max. A live run showed glm clamping requested `xhigh` UP to `max` (pricier). Router now snaps to the nearest supported tier with ties broken toward cheaper (xhigh→high, medium→low on glm). Verified live: complex reasoning → glm @ high, 14 reasoning tokens.
+- Matrix worth remembering (session high): trivial chat/coding → low (deepseek/muse); standard coding → ceiling high (unchanged); complex coding/reasoning → xhigh floor on muse; trivial+reasoning → medium/medium (thinking IS the work even when easy).
+- Test pattern that works: import the file's exported pure fns through pi's own loader (`discoverAndLoadExtensions` on a /tmp harness ext importing the working-tree file by absolute path) — 27/27 green; plus live `pi -e <working-tree file> --model jev/auto -p ...` runs with session-jsonl inspection of `thinkingLevel`. Note the install `pi` wrapper always injects the STORE copy, so `-e` with the working-tree path is required to test uncommitted router changes.
