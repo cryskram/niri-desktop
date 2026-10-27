@@ -1,38 +1,48 @@
-# DankMaterialShell — Wayland shell replacing Noctalia (RICE §13).
+# Dux Shell — Wayland shell, renamed from DankMaterialShell in nixpkgs 2026-10-20
+# (`dms-shell` → `dux-shell`, 1.6.3 → 2.0.0). The `dms` binary, the `dms.service`
+# unit and the IPC command names are unchanged, so keybinds and ux.nix still work.
 #
-# Package comes from nixpkgs-unstable via the overlay in modules/core.nix:
-# stable 26.05 ships 1.4.x, 1.6.x adds the island bar layout this rice uses.
+# Package comes from nixpkgs-unstable via the overlay in modules/core.nix.
 #
-# Declarative boundary (deliberate): DMS rewrites ~/.config/DankMaterialShell/settings.json
+# Declarative boundary (deliberate): the shell rewrites ~/.config/dms/settings.json
 # from its own UI, so the repo owns the *theme* and *plugins* while the bar layout
-# and widget choices stay app-owned. The seed below only writes the file when it
-# does not exist yet — never overwriting what the UI saved.
+# and widget choices stay app-owned. The seed writes a file only when absent.
+#
+# 2.0.0 moved the config dir `~/.config/DankMaterialShell` → `~/.config/dms` (its
+# own migration renames it, but Home Manager creates the new dir first, so the
+# one-time move below has to happen here or a UI-made layout would be stranded).
 { lib, pkgs, ... }:
 let
   tokens = import ../theme/tokens.nix;
-  themeFile = "/home/vageesh/.config/DankMaterialShell/themes/catppuccin-macchiato.json";
+  themeFile = "/home/vageesh/.config/dms/themes/catppuccin-macchiato.json";
 in
 {
+  # Still `programs.dms-shell`: this repo takes the NixOS module from stable
+  # 26.05, whose option names describe 1.6 (`enableDynamicTheming` etc.) and are
+  # not renamed there. Renaming the *package* is what matters — the module only
+  # wires dms.service, /etc/xdg/quickshell/dms-plugins and these helper packages.
   programs.dms-shell = {
     enable = true;
-    package = pkgs.dms-shell;
+    package = pkgs.dux-shell;
     quickshell.package = pkgs.quickshell;
 
-    # Helper packages the module gates behind options (the 1.6 module adds these
-    # unconditionally): system monitors, clipboard paste, audio visualizer, VPN.
+    # Helper binaries. 2.0.0's own module bundles these by default; the stable
+    # module needs the flags, and without them dgop/cava/wtype are missing at
+    # runtime (they are not in the package's PATH).
     enableSystemMonitoring = true; # dgop
     enableClipboardPaste = true; # wtype
     enableAudioWavelength = true; # cava
     enableVPN = true; # glib + NetworkManager
 
-    # Kept installed but disabled at runtime (DMS_DISABLE_MATUGEN below): the rice
-    # is a fixed Catppuccin Macchiato scheme, not wallpaper-derived.
+    # Installed but disabled at runtime (DMS_DISABLE_MATUGEN below): the rice is a
+    # fixed Catppuccin Macchiato scheme, not wallpaper-derived.
     enableDynamicTheming = true;
   };
 
-  # Static theme must win. Without this DMS regenerates colors from the wallpaper
-  # through matugen and would also template compositor config fragments, which
-  # would fight the declarative niri config.
+  # Static theme must win. Without this the shell regenerates colors from the
+  # wallpaper through matugen and would also template compositor config fragments,
+  # which would fight the declarative niri config. The variable name is unchanged
+  # in 2.0.0 (verified in Theme.qml).
   systemd.user.services.dms.environment = {
     DMS_DISABLE_MATUGEN = "1";
 
@@ -43,14 +53,30 @@ in
   };
 
   home-manager.users.vageesh = {
-    xdg.configFile."DankMaterialShell/themes/catppuccin-macchiato.json".source =
-      ../theme/dms-macchiato.json;
+    # One-time carry-over of the pre-2.0 config dir. Copies only what the new dir
+    # lacks, so files Home Manager already owns are never overwritten; the old
+    # path is left alone if anything unexpected remains in it.
+    home.activation.dmsMigrateConfigDir = ''
+      old="$HOME/.config/DankMaterialShell"
+      new="$HOME/.config/dms"
+      if [ -d "$old" ] && [ ! -L "$old" ]; then
+        mkdir -p "$new"
+        for entry in "$old"/* "$old"/.[!.]*; do
+          [ -e "$entry" ] || continue
+          name="$(basename "$entry")"
+          [ -e "$new/$name" ] || mv "$entry" "$new/$name"
+        done
+        rmdir "$old" 2>/dev/null || true
+      fi
+    '';
 
-    # Seed DMS's own config, never overwriting it: DMS rewrites settings.json from
-    # its UI, so only absent values get filled — the theme on a fresh install, and
-    # the icon theme (Tela-circle purple, from home/theme.nix).
+    xdg.configFile."dms/themes/catppuccin-macchiato.json".source = ../theme/dms-macchiato.json;
+
+    # Seed the shell's own config, never overwriting it: it rewrites settings.json
+    # from its UI, so only absent values get filled — the theme on a fresh install,
+    # and the icon theme (Tela-circle purple, from home/theme.nix).
     home.activation.dmsSeedSettings = ''
-      cfg="$HOME/.config/DankMaterialShell/settings.json"
+      cfg="$HOME/.config/dms/settings.json"
       mkdir -p "$(dirname "$cfg")"
       if [ ! -f "$cfg" ]; then
         printf '%s\n' '{ "currentThemeName": "custom", "customThemeFile": "${themeFile}" }' > "$cfg"
@@ -74,7 +100,7 @@ in
     # every activation because the plugin store can replace the file, and skipped
     # once the file already handles the current shape (our patch or upstream's).
     home.activation.patchAiOverviewControlOpencode = ''
-      plugin="$HOME/.config/DankMaterialShell/plugins/aiOverviewControl"
+      plugin="$HOME/.config/dms/plugins/aiOverviewControl"
       adapter="$plugin/providers/native/opencode.bash"
       if [ -f "$adapter" ] && ! grep -q 'current_shape' "$adapter"; then
         if ${pkgs.patch}/bin/patch --forward --silent -p1 -d "$plugin" \
@@ -91,7 +117,7 @@ in
     # a long session under-reports recent windows. `pi` is what was in place before
     # this change; any other selection is a UI choice and is left alone.
     home.activation.dmsSeedPluginSettings = ''
-      cfg="$HOME/.config/DankMaterialShell/plugin_settings.json"
+      cfg="$HOME/.config/dms/plugin_settings.json"
       if [ -f "$cfg" ]; then
         tmp="$cfg.tmp"
         if ${pkgs.jq}/bin/jq '

@@ -122,7 +122,8 @@ in
   # for claude-code (unfree) even though the system sets allowUnfree. `config =
   # prev.config` mirrors the system nixpkgs config (allowUnfree, …).
   nixpkgs.overlays = [
-    (final: prev:
+    (
+      final: prev:
       let
         unstable = import nixpkgs-unstable {
           system = prev.stdenv.hostPlatform.system;
@@ -147,12 +148,15 @@ in
         # claude-code-bin attribute was merged into it upstream.
         claude-code = unstable.claude-code;
 
-        # DankMaterialShell — Wayland shell (bar/launcher/notifications/lock/wallpaper).
-        # Stable 26.05 ships 1.4.x; 1.6.x adds the island bar layout. quickshell is
-        # overlaid too because DMS 1.6 requires a current one.
-        dms-shell = unstable.dms-shell;
+        # Dux Shell — Wayland shell (bar/launcher/notifications/lock/wallpaper),
+        # renamed from DankMaterialShell in nixpkgs 2026-10-20 and now 2.0.0. The
+        # `dms` binary and unit names are unchanged; the config dir moved to
+        # ~/.config/dms. quickshell is overlaid too because the shell's module
+        # still installs it and stable 26.05 ships an older one.
+        dux-shell = unstable.dux-shell;
         quickshell = unstable.quickshell;
-      })
+      }
+    )
   ];
 
   programs.pi.coding-agent = {

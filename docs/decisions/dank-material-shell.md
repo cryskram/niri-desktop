@@ -1,7 +1,8 @@
-# Decision: DankMaterialShell (DMS) over Noctalia
+# Decision: DankMaterialShell over Noctalia
 
 **Date:** 2026-10-15
 **Status:** Accepted — supersedes [`noctalia.md`](noctalia.md)
+**Renamed 2026-10-24:** upstream/package is now **Dux Shell** (`dux-shell` 2.0.0)
 
 ## Context
 
@@ -27,9 +28,26 @@ Alternatives considered:
 
 ## Decision
 
-Use DankMaterialShell 1.6.x from `nixpkgs-unstable` via the existing unstable
-overlay, enabled through `programs.dms-shell` in `modules/dms-shell.nix`
-(stable 26.05 only has 1.4.x, which lacks the island layout).
+Use the shell from `nixpkgs-unstable` via the existing unstable overlay, enabled
+through `programs.dms-shell` in `modules/dms-shell.nix` (the NixOS module still
+comes from stable 26.05, which owns service/plugin wiring but has no
+`programs.dux-shell` name yet).
+
+nixpkgs renamed the package `dms-shell` → **`dux-shell`** on 2026-10-20 (alias kept,
+warns) and it is now **2.0.0**, a major bump from the 1.6.3 this rice was built on.
+What did *not* change — so keybinds, `home/ux.nix`, the `dms.service` unit and the
+`dms ipc call …` targets still work:
+
+- the `dms` binary, the unit name, and the IPC surface (APIVersion 28 is wire-compatible)
+- `/etc/xdg/quickshell/dms-plugins` as the system plugin root
+- `DMS_DISABLE_MATUGEN` (verified in 2.0.0's `Theme.qml`), and the custom-theme
+  keys in `theme/dms-macchiato.json` (`primaryContainer`, `backgroundText`, …)
+
+What did change — **the config dir**, `~/.config/DankMaterialShell` →
+**`~/.config/dms`** (state/cache/data too). 2.0.0 migrates it itself, but Home
+Manager creates the new dir first (the theme file), so its migration would see
+conflicts and refuse, stranding a UI-made bar layout. `home.activation.dmsMigrateConfigDir`
+therefore moves anything the new dir lacks, before the seed runs.
 
 ## Consequences
 
@@ -38,7 +56,7 @@ overlay, enabled through `programs.dms-shell` in `modules/dms-shell.nix`
 - **Repo-owned:** the package/overlay pin, module options,
   `theme/dms-macchiato.json` (Catppuccin Macchiato mapped to DMS/matugen color
   keywords), niri keybinds and layer rules.
-- **App-owned: `~/.config/DankMaterialShell/settings.json`** — bar layout, widget
+- **App-owned: `~/.config/dms/settings.json`** — bar layout, widget
   choices, theme selection. DMS rewrites this file from its own UI, so it is
   deliberately *not* a Home Manager symlink (a read-only store link would break
   every UI change). The module seeds it once — never overwriting — so a fresh
@@ -94,5 +112,6 @@ overlay, enabled through `programs.dms-shell` in `modules/dms-shell.nix`
 ## Rollback
 
 `git revert` the migration commit and rebuild. Noctalia's input, module, palette
-and plugin come back from history, and DMS leaves nothing outside
-`~/.config/DankMaterialShell/`.
+and plugin come back from history, and the shell leaves nothing outside
+`~/.config/dms/` (2.0.0's own migration leaves a `DankMaterialShell` symlink
+behind for older plugin binaries; remove it by hand if reverting pre-2.0).

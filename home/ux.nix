@@ -9,12 +9,12 @@
   services.swayidle = {
     enable = true;
     events = {
-      before-sleep = "sh -c '${pkgs.dms-shell}/bin/dms ipc call lock lock || ${pkgs.swaylock}/bin/swaylock -f'";
+      before-sleep = "sh -c '${pkgs.dux-shell}/bin/dms ipc call lock lock || ${pkgs.swaylock}/bin/swaylock -f'";
     };
     timeouts = [
       {
         timeout = 300; # 5 min -> lock (DMS lock, swaylock fallback)
-        command = "sh -c '${pkgs.dms-shell}/bin/dms ipc call lock lock || ${pkgs.swaylock}/bin/swaylock -f'";
+        command = "sh -c '${pkgs.dux-shell}/bin/dms ipc call lock lock || ${pkgs.swaylock}/bin/swaylock -f'";
       }
       {
         timeout = 305; # 5 sec after lock -> DPMS off, resume on input
