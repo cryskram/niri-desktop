@@ -71,6 +71,12 @@ const PROVIDER = "opencode-go" as const;
  * extension statuses — powerline customItems when that footer is active). */
 const STATUS_KEY = "jev-route";
 
+// The level pi asked for on the turn currently in flight. `routeTo` records it
+// so the `message_end` rewrite compares the actual level against the same
+// reference, instead of against whatever the session level happens to be by
+// then — otherwise the ↑/↓ arrow flickers between dispatch and answer.
+let turnSessionLevel: string | undefined;
+
 // Model IDs must match models-store.json exactly
 const MUSE = "muse-spark-1.3-contributor";
 const MIMO_PRO = "mimo-v2.6-pro"; // compaction only: best AA-LCR, but 49 t/s
@@ -102,6 +108,19 @@ interface JevRouterState {
 
 type Req = ModelRouteRequest<JevRouterState>;
 
+/** Footer label: routed model, effective thinking level, and an arrow when the
+ * router moved the level away from the session's (↑ raised by the band floor,
+ * ↓ lowered by its ceiling). zentui's footer renders extension statuses but has
+ * modelInfo off and never reads `routedModel`, so this string is the only place
+ * a per-turn thinking change becomes visible. */
+function statusLabel(id: string, level: string, sessionLevel?: string): string {
+  const base = SHORT[id] ?? id;
+  const from = LEVELS.indexOf(sessionLevel as ThinkingLevel);
+  const to = LEVELS.indexOf(level as ThinkingLevel);
+  const delta = from < 0 || to < 0 || to === from ? "" : to > from ? "↑" : "↓";
+  return `${base} [${level}${delta}]`;
+}
+
 // Exported for harness testing (same as pickSummarizer/effortBand below).
 export function routeTo(
   req: Req,
@@ -113,14 +132,12 @@ export function routeTo(
 ): ModelRoute<JevRouterState> {
   const model = ctx.modelRegistry.find(PROVIDER, id);
   if (!model) throw new Error(`Model ${PROVIDER}/${id} not in catalog — check opencode-go auth / models-store.json`);
-  // Optimistic footer: show the dispatched model as soon as the prompt is
-  // sent, not just after the answer lands via `message_end`. Guarded so
-  // headless modes (print/rpc/json) never break routing.
-  try {
-    (ctx as unknown as { ui?: { setStatus?: (k: string, v: string | undefined) => void } }).ui?.setStatus?.(STATUS_KEY, SHORT[id] ?? id);
-  } catch {
-    // Footer bookkeeping must never fail the route.
-  }
+  // Footer bookkeeping is best-effort in every mode, so it goes through a
+  // narrow structural view of ctx rather than the full ExtensionContext.
+  // SAFETY: ctx.ui is optional in headless modes (print/rpc/json); the narrow
+  // structural view plus optional calls make footer bookkeeping a no-op there,
+  // and setStatus(key, text|undefined) is the documented surface.
+  const ui = (ctx as unknown as { ui?: { setStatus?: (k: string, v: string | undefined) => void } }).ui;
   // pass through the user's thinking level, raised by the turn's effort floor
   // and lowered by its effort ceiling (floor wins on conflict), then snapped to
   // what this model actually offers so pi never clamps it somewhere pricier.
@@ -128,6 +145,14 @@ export function routeTo(
   if (floor && LEVELS.indexOf(level as ThinkingLevel) < LEVELS.indexOf(floor)) level = floor;
   else if (ceiling && LEVELS.indexOf(level as ThinkingLevel) > LEVELS.indexOf(ceiling)) level = ceiling;
   level = snapToModel(level as ThinkingLevel, model as { thinkingLevelMap?: Record<string, unknown> });
+  // Optimistic footer: show the dispatched model *and* the level it will run
+  // at, plus ↑/↓ when the band moved it, before the answer lands.
+  turnSessionLevel = req.thinkingLevel;
+  try {
+    ui?.setStatus?.(STATUS_KEY, statusLabel(id, level, req.thinkingLevel));
+  } catch {
+    // Footer bookkeeping must never fail the route.
+  }
   return { model, thinkingLevel: level, state };
 }
 
@@ -850,8 +875,13 @@ export default function (pi: ExtensionAPI) {
         return undefined;
       }
       if (msg.provider !== PROVIDER) return undefined;
-      const label = SHORT[msg.model] ?? msg.model;
-      ctx.ui.setStatus(STATUS_KEY, label);
+      const label = msg.model;
+      const level = (event as { message?: { thinkingLevel?: string } }).message?.thinkingLevel;
+      // SAFETY: getThinkingLevel exists on every mode's context; the optional
+      // call keeps older hosts (and stubs in tests) working.
+      const sessionLevel = turnSessionLevel
+        ?? (ctx as unknown as { getThinkingLevel?: () => string }).getThinkingLevel?.();
+      ctx.ui.setStatus(STATUS_KEY, level ? statusLabel(label, level, sessionLevel) : SHORT[label] ?? label);
     } catch {
       // Never break the turn on footer bookkeeping.
     }
