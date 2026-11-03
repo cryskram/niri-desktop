@@ -520,8 +520,15 @@ in
     # Keep `pi/prompts/.gitkeep` so the directory tracks; add real templates deliberately.
     promptTemplates = [ ];
 
+    # Pick with /settings (or /theme); `theme` below is only the default.
+    # Every file here becomes selectable at runtime without a rebuild.
     themes = [
       ../pi/themes/catppuccin-macchiato.json
+      ../pi/themes/catppuccin-mocha.json
+      ../pi/themes/tokyo-night-storm.json
+      ../pi/themes/gruvbox-dark.json
+      ../pi/themes/kanagawa-wave.json
+      ../pi/themes/everforest-dark.json
     ];
 
     extraArgs = [
