@@ -198,6 +198,14 @@ in
         reserveTokens = 16384;
         keepRecentTokens = 20000;
       };
+      # 429 ttft_admission_refused clears after ~13 s; the stock 3-attempt ladder
+      # tops out at ~14 s, so widen to a 4 s base with 5 retries (120 s worst case).
+      retry = {
+        enabled = true;
+        baseDelayMs = 4000;
+        maxRetries = 5;
+        maxAgentDelayMs = 60000;
+      };
       # Generic subagent defaults — works in any project (cwd).
       # All children use jev/auto (provider jev), same as main session — high thinking.
       # deepseek-v4-flash is deliberately NOT used: it emits tool calls as plain
