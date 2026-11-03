@@ -2,6 +2,86 @@
 
 Reverse chronological. Newest on top.
 
+## 2026-11-03 — set -u scripts: always emit env vars, even empty ones (gotcha) — `dev/phoenix`
+
+- What: `envAssignments` skipped blank values, so any unset optional died as `unbound variable` under the patch's `set -u` *after* env rendering (read as compose failure, broke all 16). Emit `KEY=''` always; `:-`/tests treat unset and empty identically.
+- Why: one guarded site (line 982) was whack-a-mole; the systemic fix in `cli/internal/deploy/transport.go` kills the class. Audited all 100+ expansions — the rest were assigned or guarded.
+- How: never `continue` on empty in env builders for `set -u` scripts; related: freeze deadlines in UTC RFC3339 (wall-clock parsed as UTC over-lasted freezes 5h30m), `--down` must remove `<stack>-latest` not `<user>-latest`, sshd `MaxSessions 50` for seed+deploy+tunnel overlap.
+
+Source: 2026-11-03 phoenix deploy-hardening sweep (PR #69), proven live on s3.
+
+## 2026-11-03 — pi-lens reports stale line numbers after an edit; trust pyright/mypy instead (gotcha) — `pi/lens`
+
+- What: after fixing a real type error, `lens_diagnostics` kept reporting the *old* findings at the *old* line numbers (L101/102/106 in a file where L101 is now an unrelated assignment), and `source=lsp` returned `inconclusive` on a push-only server that never confirms clean.
+- Why/Context: same cache family as the 2026-10-29 kill-the-children entry — cached findings survive the edit. A diagnostic whose line content no longer matches the reported error is the tell; do not "fix" code that is already correct.
+- How/Apply: `sed -n 'A,Bp'` the reported lines to check they still contain the error, then settle it with `pyright <file>` / `mypy <file>` (both installed) — 0 errors there is the real answer.
+
+Source: mail_automation session 2026-11-03 — stale `dict[str,str]` findings survived the `richness` dict refactor; pyright and mypy both clean.
+
+## 2026-10-29 — Killing pi-lens LSP children wedges its manager until pi restarts (gotcha) — `pi/lens`
+
+- What: killing `pyright/langserver.index.js` mid-session left pi-lens reporting `ready=0/5` for **every** language (including TypeScript files never touched) and forever re-serving the pre-kill cached findings; fresh `lens_diagnostics --source=lsp` probes return "no LSP client is currently ready" and never respawn.
+- Why: the manager holds the child handles; there is no respawn path after an external SIGTERM, and `lens_diagnostic_mark ... false-positive` does not clear an entry it can no longer re-verify.
+- How/Apply: never kill lens LSP children to force a config re-read — restart the pi session instead. Config changes (venv path, `extraPaths`) are only honoured by a **newly spawned** server.
+
+Source: modelcourt session 2026-10-29 — two stale `reportMissingImports` findings survived every fix.
+
+## 2026-10-29 — pi-lens Python import resolution needs a venv *inside* the server's root (gotcha) — `pi/lens`
+
+- What: pi-lens picks pyright's `pythonPath` via its own `detectPythonEnvironment(root)` and rejects candidates whose resolved path falls outside that root, so a `backend/.venv -> ../.venv` symlink is discarded. Put the real venv where `requirements.txt`/`pyproject.toml` anchors the root, or add the site-packages dir to `extraPaths` in `pyrightconfig.json`.
+- Why/Context: pyright discovers `pyrightconfig.json` relative to **cwd**, so `pyright` run from `$HOME` on a repo file reports unresolved third-party imports while the same command from the repo root is clean.
+- How/Apply: keep a `pyrightconfig.json` in the directory lens anchors to, with `venvPath` + `venv` **and** an explicit `extraPaths` entry for `<venv>/lib/pythonX.Y/site-packages`; run the authoritative check from the repo root.
+
+Source: modelcourt session 2026-10-29 — sklearn/datasets/fastapi unresolved in-lens, `pyright` CLI exit 0.
+
+## 2026-10-29 — NixOS: pip venv wheels need LD_LIBRARY_PATH; nix-shell avoids it (tooling) — `dev/nix`
+
+- What: a plain `python -m venv` from the Nix profile python installs numpy/sklearn fine but importing them dies with `libstdc++.so.6: cannot open shared object file`, then `libz.so.1` once that is added.
+- Why/Context: pip wheels are not patched with Nix RPATHs; the Nix interpreter's own libs are found, the wheels' are not. `nix-shell` with `python3.withPackages` gets correct RPATHs and needs no env var (`LD_LIBRARY_PATH` is empty inside a pure shell).
+- How/Apply: prefer `shell.nix` + `nix-shell --run 'python ...'` for running; keep a pip venv only for editor/type-checker import resolution, and never claim a venv-based run succeeded without importing numpy first.
+
+Source: modelcourt session 2026-10-29 — venv numpy import failed until zlib+gcc-lib were on LD_LIBRARY_PATH.
+
+## 2026-10-29 — Global npm registry points at an expired CodeArtifact token (gotcha) — `tooling/npm`
+
+- What: `npm install` in a new project fails with `E401 ... authentication token seems to be invalid`; `~/.npmrc` sets `registry` and `_authToken` for `ppipl-313208865236.d.codeartifact.ap-south-1.amazonaws.com`.
+- Why/Context: the private work registry is global, so unrelated open-source projects inherit a dead token; `npm whoami` confirms it is auth, not network.
+- How/Apply: `npm install --registry=https://registry.npmjs.org/` per project; do not edit `~/.npmrc` (that would break the work setup).
+
+Source: modelcourt session 2026-10-29 — Next.js install blocked until the public registry was passed explicitly.
+
+## 2026-10-29 — `docker system df` hides container logs; daemon log-opts need a dockerd restart (gotcha) — `dev/phoenix`
+
+- What: 173G used vs ~54G reported by `docker system df` was **122G of `/var/lib/docker/containers/*/*-json.log`** — `system df` never counts them. One Java Kafka consumer (`s1-dakiya-1`) holding a retry loop wrote 121G in ~4h because it predated the `log-opts`.
+- Why: `daemon.json` `log-opts` (50m×3) applies only at container **creation**, and only after dockerd reloads it — here the file was written 19:19 but dockerd started 17:00, so all 71 containers were unbounded.
+- How: Audit with `sudo du -sm /var/lib/docker/containers/*/*-json.log | sort -rn`; `sudo truncate -s 0 <id>-json.log` frees instantly; then `--tags base` (dockerd restart) + recreate containers. `docker inspect <c> --format '{{.HostConfig.LogConfig.Config}}'` proves whether a container has rotation.
+
+Source: 2026-10-29 phoenix-1 disk 90%→27% after truncating one runaway log.
+
+## 2026-10-29 — Consumer group names are shared with outside consumers (gotcha) — `dev/kafka`
+
+- What: `s1-dakiya-1` looped on `JoinGroup failed: supported protocols are incompatible` — group `dakiya-service` is *Stable* with an **external AWS EC2 member** (`3.111.127.182`, client-id `kafka-consumer`, strategy `roundrobin`), while our Spring consumer offers `range`. No protocol intersection → fatal join, infinite retry.
+- Why: the public Kafka listener (`one.phoenix:9092`, VM-wide credential) lets outside apps use the same group names we do. Topic `dakiya.webhook` had offset 0, so nothing was actually consumed/lost — the loop was pure log spam.
+- How: Inspect with `docker exec data-kafka-1 kafka-consumer-groups --bootstrap-server localhost:9093 --command-config /etc/kafka/secrets/client.properties --describe --group <g> --members --verbose`; fix by per-stack group ids, not by deleting the group.
+
+Source: 2026-10-29 disk incident follow-up — 12MB/s of retry logs from a group collision.
+
+## 2026-10-29 — Seeding a fresh Phoenix stack with the OBPP mock (workflow) — `dev/phoenix`
+
+- What: Copy schemas `s1-postgres -> s4` (`pg_dump -s --no-owner`), add the 3 drift columns the v1.2.0 dump expects (`user_relationship_managers.rm_role_provider/rm_type_provider`, `calls.customer_phone`, all nullable text), load the per-db `split/` files, verify with `verify_s4.py` (direct-psql `query_fn`, the stock `--db` path needs the query gateway).
+- Why: The dump is INSERT-only and a fresh stack has no service DBs at all; `verify` counts model rows per table so any dropped row shows as mismatch.
+- How: Files live in `~/Projects/TAP/obpp-testdata/latest/`; `TABLE_ORDER` + `PURGE_COLUMNS` in `obpp_testdata.py` define the contract; run `refresh`+reload daily to keep `current_date` checks green.
+
+Source: s4 mock setup 2026-10-29 — 106/107 checks green, the 1 FAIL was UTC `current_date` vs IST-anchored seed.
+
+## 2026-10-28 — Code comments: 1-2 lines max, explain the most (preference) — `code/comments`
+
+- What: every code comment is one or two lines that carry the maximum explanation; no multi-line war stories in code.
+- Why/Context: user correction on the redis-cluster-ports PR — lengthy comments removed, story belongs in DECISIONS.md.
+- How/Apply: when writing or trimming comments, compress to the why; move history to `docs/DECISIONS.md`.
+
+Source: user correction 2026-10-28 — "comments should just be one or 2 lines which explain the most out of it".
+
 ## 2026-10-24 — DMS is now Dux Shell 2.0.0; config dir moved, binary/unit did not (decision) — `niri/dms`
 
 - What: nixpkgs renamed `dms-shell` → `dux-shell` (2026-10-20, alias kept + warns) and it is now **2.0.0**. `modules/dms-shell.nix` takes the *stable* NixOS module (`programs.dms-shell`, whose option names still describe 1.6 — `enableDynamicTheming` etc. are removed only in unstable's `programs.dux-shell`) but the *unstable* package, so the option name is not the thing to migrate.
