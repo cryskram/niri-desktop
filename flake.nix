@@ -102,6 +102,7 @@
           ./modules/niri.nix
           ./modules/sddm.nix
           ./modules/docker.nix
+          ./modules/ollama.nix
           ./modules/direnv.nix
           ./modules/vpn.nix
           ./modules/tailscale.nix
