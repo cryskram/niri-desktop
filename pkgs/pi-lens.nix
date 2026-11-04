@@ -29,6 +29,14 @@ let
     hash = "sha256-CW7PWQBzEnTCofetJSSeTvU6o6ys8SkUb3LZ6tsGVuo=";
   };
 
+  # The published tarball omits package-lock.json, but the tag has one. Without
+  # it `npm install` re-resolved the ^ ranges on every build, so an upstream
+  # patch release changed node_modules and broke the fixed-output hash.
+  lock = fetchurl {
+    url = "https://raw.githubusercontent.com/apmantza/pi-lens/v${version}/package-lock.json";
+    hash = "sha256-dPKzIpMiJ60N/14RQ28BHpQxRbpQuCn9sx5gKGpy5d8=";
+  };
+
   nodeModules = stdenvNoCC.mkDerivation {
     pname = "pi-lens-node-modules";
     inherit version src;
@@ -43,12 +51,13 @@ let
     dontFixup = true;
     sourceRoot = "package";
 
-    # The npm tarball has no package-lock.json, so `npm ci` is unavailable and
-    # the install resolves from package.json; the FOD hash pins the result.
+    # `npm ci` against the upstream lockfile: same versions every build, so the
+    # hash only changes when the pinned release itself changes.
     buildPhase = ''
       runHook preBuild
       export HOME="$TMPDIR"
-      npm install --omit=dev --omit=peer --ignore-scripts \
+      cp ${lock} package-lock.json
+      npm ci --omit=dev --omit=peer --ignore-scripts \
         --no-audit --no-fund --loglevel=error
       runHook postBuild
     '';
