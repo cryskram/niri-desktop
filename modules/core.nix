@@ -650,6 +650,10 @@ in
     # Pi discovers this user-level context file across working directories.
     # Expose the whole canonical brain beside it for global/child-agent lookup;
     # never hand-edit these generated ~/.pi links.
+    # Ad-hoc legacy commands (nix-shell -p, import <nixpkgs>) read this, not the
+    # system config. Same value as nixpkgs.config.allowUnfree in configuration.nix.
+    home.file.".config/nixpkgs/config.nix".text = "{ allowUnfree = true; }";
+
     home.file.".pi/agent/AGENTS.md".source = ../pi/brain/AGENTS.md;
     home.file.".pi/agent/brain".source = ../pi/brain;
 
@@ -799,6 +803,9 @@ in
   };
 
   environment.sessionVariables = {
+    # Flake commands (nix shell/run #pkg) ignore config files entirely; this is
+    # their only allowUnfree knob. System builds already allow unfree (below).
+    NIXPKGS_ALLOW_UNFREE = "1";
     # System-wide cursor Catppuccin Macchiato Mauve
     XCURSOR_SIZE = "24";
     XCURSOR_THEME = "catppuccin-macchiato-mauve-cursors";
