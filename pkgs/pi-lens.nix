@@ -46,7 +46,7 @@ let
 
     outputHashMode = "recursive";
     outputHashAlgo = "sha256";
-    outputHash = "sha256-1E5h0C0aRFylZ1uBy1nNBeWKEW92sRG4Lp4B8jIGFhw=";
+    outputHash = "sha256-xN7/QGnj1XgVruy67T8bCO6h+e806NaRizadmxAUjw4=";
 
     dontFixup = true;
     sourceRoot = "package";
@@ -66,6 +66,10 @@ let
       runHook preInstall
       mkdir -p $out
       cp -r node_modules/. $out/
+      # npm stamps install-time mtimes and NAR hashes include them, so without
+      # this every rebuild (or a new npm patch release) changes the hash even
+      # though the file *contents* are identical. Clamp everything to @1.
+      find $out -exec touch -h -d @1 {} +
       runHook postInstall
     '';
   };
