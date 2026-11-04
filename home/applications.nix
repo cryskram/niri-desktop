@@ -17,6 +17,10 @@
     defaultApplications = {
       "x-scheme-handler/figma" = "figma-linux.desktop";
       "application/pdf" = "sioyek.desktop";
+      # VSCode's OAuth handoff (vscode://vscode.github-authentication/...). The
+      # vscode package ships this association, but relying on a package default
+      # is fragile — declare it so the browser always finds the handler.
+      "x-scheme-handler/vscode" = "code-url-handler.desktop";
     };
   };
   # ── Sioyek — Catppuccin Macchiato ─────────────────────────────────
