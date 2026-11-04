@@ -18,7 +18,12 @@ let
       patches ? [ ],
     }:
     pkgs.stdenvNoCC.mkDerivation {
-      inherit pname version src patches;
+      inherit
+        pname
+        version
+        src
+        patches
+        ;
       installPhase = ''
         runHook preInstall
         mkdir -p $out
@@ -209,7 +214,7 @@ in
   # fetch_content, source_check and get_search_content. Search is keyless via Exa.
   # Answer/summary models are pinned to a concrete provider in
   # ~/.pi/agent/web-search.json (declared in modules/core.nix) because the default
-  # jev/auto is a virtual router that cannot be streamed directly.
+  # The virtual `auto` router cannot be streamed directly.
   pi-web-access = withDeps {
     pname = "pi-web-access";
     version = "0.41.0";
