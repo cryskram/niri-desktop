@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top.
 
+## 2026-11-04 — BTW + virtual models: two independent bugs, same symptom (gotcha) — `pi/btw`
+
+- What: "No API key found for jev." in `/btw` came from pi resolving credentials **per provider**, and `jev` has none (opencode-go/opencode/typesafe/github-copilot do). Normal turns hide it because routing swaps in a physical model before auth; pi-btw calls `getApiKeyAndHeaders(virtualModel)` directly. Fix: default to the **same virtual def registered under `opencode-go`** (`opencode-go/auto`) — pi's docs say a virtual model's provider "may be a provider with physical models".
+- Why/Context: after that fix `/btw:summarize` still failed, differently — `Virtual model … must be routed before streaming` — because summarize builds its child with `createBtwResourceLoader(ctx, [], …)`: **no extensions**, so nothing registers the router inside it. `btw.json` cannot pin a model (only `extensions`/`workspace`), so `/btw:model` is the no-patch workaround.
+- How/Apply: patch `pi-btw` (`patches/pi-btw-summarize-router.patch`; the `plain` builder now takes `patches`) to pass btw.json sources as `extensionResources` for the summarize child; tools stay `[]`, so the summary is still tool-free. Verified by pty: `/btw:new` answers, `/btw:summarize` injects with no errors.
+
+Source: user report 2026-11-04 — "/btw:summarize → No API key found for jev."
+
 ## 2026-11-03 — set -u scripts: always emit env vars, even empty ones (gotcha) — `dev/phoenix`
 
 - What: `envAssignments` skipped blank values, so any unset optional died as `unbound variable` under the patch's `set -u` *after* env rendering (read as compose failure, broke all 16). Emit `KEY=''` always; `:-`/tests treat unset and empty identically.
