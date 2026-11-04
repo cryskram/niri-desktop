@@ -2,6 +2,14 @@
 
 Reverse chronological. Newest on top.
 
+## 2026-11-04 — `buff/cache` is reclaimable, not pressure; dropping it is cosmetic (gotcha) — `dev/ops`
+
+- What: `free -h` counts page cache under `buff/cache`, so a post-seed VM looks "full" while `available` is healthy. `sync && echo 3 | sudo tee /proc/sys/vm/drop_caches` (1=pagecache, 2=dentries/inodes, 3=both) moves it back to `free`, but the kernel already reclaims on demand.
+- Why: relevant to Phoenix sizing calls — an 8 GB dump load refills cache and reads as memory pressure on a 4-vCPU box; dropping it changes the number, not headroom, and never fixes an OOM kill.
+- How: judge with `free -h` **available** column, not `used`; if a container really died, `docker inspect -f '{{.State.OOMKilled}}'` and `dmesg -T | grep -i 'killed process'` are the evidence.
+
+Source: side conversation 2026-11-04, folded in during the phoenix deploy-hardening work.
+
 ## 2026-11-04 — BTW + virtual models: two independent bugs, same symptom (gotcha) — `pi/btw`
 
 - What: "No API key found for jev." in `/btw` came from pi resolving credentials **per provider**, and `jev` has none (opencode-go/opencode/typesafe/github-copilot do). Normal turns hide it because routing swaps in a physical model before auth; pi-btw calls `getApiKeyAndHeaders(virtualModel)` directly. Fix: default to the **same virtual def registered under `opencode-go`** (`opencode-go/auto`) — pi's docs say a virtual model's provider "may be a provider with physical models".
