@@ -231,7 +231,7 @@ That is not a breakage — the build is reporting the new hash. Either let `scri
 nix build --no-link '.#pi-web-access'   # or .#mcp-adapter / .#pi-subagents / .#rpiv-todo
 ```
 
-Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: main session and every child use `jev/auto` at high thinking (a virtual router that dispatches to the cheapest adequate physical model; deepseek is excluded for tool work because it leaks DSML tool calls as text). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`). MCP is a separate namespace: `pi-mcp-adapter` exposes one `mcp` proxy tool for all servers (`veridb` today) — a child that needs it must run as a background child (`async: true`).
+Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: main session and every child use the virtual `auto` router (`opencode-go/auto`) at high thinking (it dispatches to the cheapest adequate physical model; deepseek is excluded for tool work because it leaks DSML tool calls as text). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`). MCP is a separate namespace: `pi-mcp-adapter` exposes one `mcp` proxy tool for all servers (`veridb` today) — a child that needs it must run as a background child (`async: true`).
 
 A `nixpkgs` bump of `nodejs`/`npm` changes what the pi extension fixed-output derivations produce:
 
@@ -250,7 +250,7 @@ nix build --no-link --impure --expr '
   in ext.pi-web-access'   # or ext.mcp-adapter / ext.pi-subagents / ext.rpiv-todo
 ```
 
-Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: `jev/auto` at high thinking for the main session and every child (virtual router → cheapest adequate physical model; deepseek is excluded for tool work because it leaks DSML tool calls as text). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`). MCP is a separate namespace: `pi-mcp-adapter` exposes one `mcp` proxy tool for all servers (`veridb` today) — a child that needs it must run as a background child (`async: true`).
+Pi subagents (scout/researcher/evidence-auditor/oracle/worker/reviewer) are generic — work in any project cwd, not just `niri-desktop`. Defaults: the virtual `auto` router (`opencode-go/auto`) at high thinking for the main session and every child (→ cheapest adequate physical model; deepseek is excluded for tool work because it leaks DSML tool calls as text). Researcher uses `pi-web-access` (`web_search`/`fetch_content`/`source_check`). MCP is a separate namespace: `pi-mcp-adapter` exposes one `mcp` proxy tool for all servers (`veridb` today) — a child that needs it must run as a background child (`async: true`).
 
 See [Rollback & tags](#rollback--tags) for backing out of an update.
 
