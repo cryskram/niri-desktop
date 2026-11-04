@@ -1,0 +1,40 @@
+--- a/extensions/btw.ts
++++ b/extensions/btw.ts
+@@ -2908,13 +2908,36 @@
+ 
+     const modelRuntimeOptions = await createBtwModelRuntimeOptions(ctx, model);
+ 
++    // The summarize child keeps no tools, but it still needs the extension that
++    // registers a virtual model, or streaming fails with "Virtual model
++    // <provider>/<id> must be routed before streaming".
++    const btwAgentDir = getAgentDir();
++    const btwSources = await readBtwExtensionSources({
++      cwd: ctx.cwd,
++      agentDir: btwAgentDir,
++      projectTrusted: ctx.isProjectTrusted(),
++    });
++    const btwExtensionResources = btwSources.length > 0
++      ? await loadBtwExtensionResources({
++          cwd: ctx.cwd,
++          agentDir: btwAgentDir,
++          sources: btwSources,
++          parentExtensionPaths: [
++            ...pi.getAllTools().map((tool) => tool.sourceInfo.path),
++            ...pi.getCommands().flatMap((command) => command.sourceInfo ? [command.sourceInfo.path] : []),
++          ],
++        })
++      : undefined;
++
+     const sessionOptions: CreateAgentSessionOptions = {
+       sessionManager: SessionManager.inMemory(),
+       model,
+       ...modelRuntimeOptions,
+       thinkingLevel: "off",
+       tools: [],
+-      resourceLoader: createBtwResourceLoader(ctx, [], [BTW_SUMMARIZE_SYSTEM_PROMPT]),
++      resourceLoader: createBtwResourceLoader(
++        ctx, [], [BTW_SUMMARIZE_SYSTEM_PROMPT], btwExtensionResources,
++      ),
+     };
+     const { session } = await createAgentSession(sessionOptions);
+ 

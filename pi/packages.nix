@@ -15,9 +15,10 @@ let
       pname,
       version,
       src,
+      patches ? [ ],
     }:
     pkgs.stdenvNoCC.mkDerivation {
-      inherit pname version src;
+      inherit pname version src patches;
       installPhase = ''
         runHook preInstall
         mkdir -p $out
@@ -161,6 +162,11 @@ in
       tag = "v0.8.0";
       hash = "sha256-ktDQhWAmv8AaiVkiNFrpUp5iwRueYZ6dqrLDSCKUxJ0=";
     };
+    # /btw:summarize builds a tool-free child with no extensions, so a virtual
+    # model (our `auto` router) cannot be routed there and streaming dies with
+    # "Virtual model … must be routed before streaming". Loads btw.json sources
+    # for that child too; tools stay empty. Drop when upstream fixes it.
+    patches = [ ../patches/pi-btw-summarize-router.patch ];
   };
 
   # Starship-style statusline + opencode-style TUI (owns the footer).

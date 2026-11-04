@@ -175,7 +175,13 @@ in
     };
 
     settings = {
-      defaultProvider = "jev";
+      # Default model is the virtual router `auto`, listed under opencode-go
+      # rather than `jev`: pi resolves credentials by provider, and opencode-go
+      # has them while `jev` has none. Anything that looks up auth for the
+      # *virtual* model directly (pi-btw's /btw and /btw:summarize pre-check)
+      # otherwise dies with "No API key found for jev" — normal turns mask it
+      # because routing substitutes a physical model first.
+      defaultProvider = "opencode-go";
       defaultModel = "auto";
       defaultThinkingLevel = "high";
       theme = "catppuccin-macchiato";
@@ -207,7 +213,7 @@ in
         maxAgentDelayMs = 60000;
       };
       # Generic subagent defaults — works in any project (cwd).
-      # All children use jev/auto (provider jev), same as main session — high thinking.
+      # All children use the virtual `auto` router, same as main session — high thinking.
       # deepseek-v4-flash is deliberately NOT used: it emits tool calls as plain
       # DSML/XML text instead of structured calls (22 such leaks in one session;
       # deepseek-v4.1-flash leaks the same way), so a tool-driven child spends its
@@ -221,9 +227,9 @@ in
         # child-launch.ts). So anything a child needs must be named here:
         #   pi-web-access  → web_search/fetch/source_check for researcher and
         #                    evidence-auditor (foreground children otherwise lack them).
-        #   jev-router.ts  → registers the *virtual* model `jev/auto`. Without it a
-        #                    child launched as `--model jev/auto:high` dies before
-        #                    its first turn with `Model "jev/auto:high" not found`,
+        #   jev-router.ts  → registers the *virtual* model `auto`. Without it a
+        #                    child launched as `--model opencode-go/auto:high` dies
+        #                    before its first turn with `Model … not found`,
         #                    which is exactly what killed the researcher run on
         #                    2026-10-23. The router's triage handler no-ops inside
         #                    children (PI_SUBAGENT_CHILD=1), so this only restores
@@ -233,7 +239,7 @@ in
           "${../pi/extensions/jev-router.ts}"
         ];
         agentOverrides = {
-          # Second-opinion oracle, reviews and research stay on jev/auto; only budgets differ.
+          # Second-opinion oracle, reviews and research stay on the router; only budgets differ.
           oracle = sharedSubagentContext // {
             model = "auto";
             thinking = "high";
@@ -649,7 +655,7 @@ in
 
     # pi-btw (/btw, Alt+B) builds its side sub-session with its own
     # DefaultResourceLoader, so the wrapper's ambient `--extension` set is NOT
-    # present there. The default model `jev/auto` is a *virtual* model registered
+    # present there. The default model `opencode-go/auto` is a *virtual* model registered
     # by jev-router.ts, so without that extension BTW resolves provider "jev" as a
     # plain provider, finds no API key, and fails with "No API key found for jev."
     # BTW's only config surface is this file (keys: `extensions`, `workspace`), so
@@ -760,8 +766,8 @@ in
     # pi-web-access config (web_search / fetch_content / source_check).
     # Search and plain fetch need no keys (Exa search, direct HTTP fetch), but the
     # answer and summary features call a provider directly, so they cannot use the
-    # virtual router model: with the default jev/auto they fail with "Virtual model
-    # jev/auto must be routed before streaming". Pinning one concrete model here
+    # virtual router model: with the default `auto` they fail with "Virtual model
+    # … must be routed before streaming". Pinning one concrete model here
     # fixes answer mode, the summary workflow and the curator everywhere, including
     # inside subagents. Swap the pair below rather than hand-editing the file.
     # (Free options exist — e.g. opencode/cat-jam-free — but this pair is verified.)
