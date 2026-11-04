@@ -154,6 +154,8 @@
     # Keep both goland and idea available; user can pick.
     jetbrains.goland
     jetbrains.idea
+    # VSCode (Microsoft build, unfree). Electron rides the Wayland ozone flags.
+    vscode
     # android-studio lives in modules/android.nix: it ships a Wayland-toolkit
     # wrapper (no XWayland here), so installing it unwrapped breaks the app grid entry.
 
