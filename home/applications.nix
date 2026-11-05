@@ -134,6 +134,22 @@
     StartupWMClass=figma-linux
   '';
 
+  # Obsidian's self-updater swaps in a bundle whose renderer blanks the window on
+  # nixpkgs' Electron 43; the packaged bundle renders, so disable the updater.
+  home.activation.obsidianDisableSelfUpdate = ''
+    cfg="$HOME/.config/obsidian/obsidian.json"
+    mkdir -p "$(dirname "$cfg")"
+    [ -f "$cfg" ] || printf '%s\n' '{"vaults":{}}' > "$cfg"
+    tmp="$cfg.tmp"
+    if ${pkgs.jq}/bin/jq '.updateDisabled = true' "$cfg" > "$tmp" 2>/dev/null; then
+      mv "$tmp" "$cfg"
+    else
+      rm -f "$tmp"
+    fi
+    # Bundles already fetched while the updater was enabled.
+    rm -f "$HOME/.config/obsidian"/obsidian-*.asar
+  '';
+
   home.packages = with pkgs; [
     # ── Browsers / terminals / files (already elsewhere, kept here for completeness) ──
     google-chrome
