@@ -134,20 +134,19 @@
     StartupWMClass=figma-linux
   '';
 
-  # Obsidian's self-updater swaps in a bundle whose renderer blanks the window on
-  # nixpkgs' Electron 43; the packaged bundle renders, so disable the updater.
-  home.activation.obsidianDisableSelfUpdate = ''
-    cfg="$HOME/.config/obsidian/obsidian.json"
-    mkdir -p "$(dirname "$cfg")"
-    [ -f "$cfg" ] || printf '%s\n' '{"vaults":{}}' > "$cfg"
-    tmp="$cfg.tmp"
-    if ${pkgs.jq}/bin/jq '.updateDisabled = true' "$cfg" > "$tmp" 2>/dev/null; then
-      mv "$tmp" "$cfg"
-    else
-      rm -f "$tmp"
+  # Electron 43.8.3 reuses V8 code-cache entries written by 43.7.x and paints a
+  # blank window (nixpkgs #578970). Wipe that cache whenever obsidian or its
+  # Electron changes — the stale profile is what breaks, not the app.
+  home.activation.obsidianCacheGuard = ''
+    stamp="$HOME/.config/obsidian/.nix-cache-key"
+    want="${pkgs.obsidian.version}-${pkgs.electron.version}"
+    if [ "$(cat "$stamp" 2>/dev/null)" != "$want" ]; then
+      rm -rf "$HOME/.config/obsidian/Cache" \
+             "$HOME/.config/obsidian/Code Cache" \
+             "$HOME/.config/obsidian/GPUCache"
+      mkdir -p "$HOME/.config/obsidian"
+      printf '%s' "$want" > "$stamp"
     fi
-    # Bundles already fetched while the updater was enabled.
-    rm -f "$HOME/.config/obsidian"/obsidian-*.asar
   '';
 
   home.packages = with pkgs; [
