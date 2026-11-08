@@ -520,12 +520,8 @@ Avoid overly busy images.
 
 # 19. Terminal
 
-Initial candidates:
-
-* Ghostty
-* Alacritty
-
-Evaluate both.
+Chosen: **Ghostty** (Wayland-native, native blur/transparency). Alacritty was
+evaluated as the alternative and is no longer used anywhere on this machine.
 
 The primary terminal should eventually use:
 

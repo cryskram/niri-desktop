@@ -112,6 +112,8 @@ in
       fi
     '';
 
+    # Docker Manager opened container logs in alacritty, which is not installed
+    # here (ghostty is the terminal); its `terminalApp` setting is migrated above.
     # The API-backed opencode card replaces the local pi card: pi's numbers come
     # from ~/.pi/agent/sessions/**/*.jsonl bucketed to each session's start day, so
     # a long session under-reports recent windows. `pi` is what was in place before
@@ -121,7 +123,11 @@ in
       if [ -f "$cfg" ]; then
         tmp="$cfg.tmp"
         if ${pkgs.jq}/bin/jq '
-             if .aiOverviewControl then
+             (if .dockerManager then
+                .dockerManager.terminalApp =
+                  (if ((.dockerManager.terminalApp // "alacritty") | test("alacritty")) then "ghostty" else .dockerManager.terminalApp end)
+              else . end)
+             | if .aiOverviewControl then
                (.aiOverviewControl.providerSelection =
                   (if (.aiOverviewControl.providerSelection // "pi") == "pi" then "opencode" else .aiOverviewControl.providerSelection end)
                 | .aiOverviewControl.pillProviders =

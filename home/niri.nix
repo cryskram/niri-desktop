@@ -124,7 +124,7 @@ in
         // position is auto by default (extend); toggle via Mod+M uses temporary niri msg output
     }
 
-    // Terminal — alacritty (primary per user preference, RICE §19).
+    // Terminal — ghostty (RICE §19).
     // UX — clipboard, screenshots, recording, DMS panels (RICE §26-27, §7)
     binds {
         "Mod+T" { spawn "ghostty"; }
