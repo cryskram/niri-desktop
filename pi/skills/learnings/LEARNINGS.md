@@ -2,6 +2,22 @@
 
 Reverse chronological. Newest on top.
 
+## 2026-11-04 — Never send email from someone else's account (rule) — `comms/email`
+
+- What: completion/follow-up emails go only through an account the user owns and names; never reuse credentials found in a project `.env` (e.g. a teammate's Gmail app password) to send as them.
+- Why/Context: the Daily Task Tracker completion mail went out from a mailbox that was not Vageesh's because `mail_automation/.env` belonged to someone else — explicitly corrected mid-session.
+- How/Apply: before any send, confirm sender identity matches the named account; if no owned sending path exists, report in-session instead of borrowing one.
+
+Source: user correction 2026-11-04 — "never send email using someone else's account".
+
+## 2026-11-04 — Slack is read-only for activity logs; never post on Vageesh's behalf (preference) — `pi/slack`
+
+- What: use Slack strictly as an evidence source when reconstructing activity; never send, edit or delete a Slack message for this, even to report completion.
+- Why/Context: stated while building the Daily Task Tracker from Slack history — posting as him is an outward action with social cost, and the tracker needs reading, not announcing.
+- How/Apply: call only the read tools (`slack_conversations_search_messages`, `conversations_history`, `conversations_replies`, `channels_list`, directory reads); report completion by email or in-session instead.
+
+Source: user instruction 2026-11-04 — "you should never send any messages in slack".
+
 ## 2026-11-04 — `buff/cache` is reclaimable, not pressure; dropping it is cosmetic (gotcha) — `dev/ops`
 
 - What: `free -h` counts page cache under `buff/cache`, so a post-seed VM looks "full" while `available` is healthy. `sync && echo 3 | sudo tee /proc/sys/vm/drop_caches` (1=pagecache, 2=dentries/inodes, 3=both) moves it back to `free`, but the kernel already reclaims on demand.
