@@ -2,6 +2,22 @@
 
 Reverse chronological. Newest on top.
 
+## 2026-11-10 — NetworkX traps: `common_neighbor_centrality` is CAR, and `set()` inside a comprehension (gotcha) — `dev/python`
+
+- What: `nx.common_neighbor_centrality(G, pairs, alpha=0)` is the **Cannistraci CAR index**, not plain CN — it is O(CN × neighbour-degree) per pair and hung a notebook for minutes on hub pairs. Plain CN = `len(list(nx.common_neighbors(G, u, v)))`. Separately, `[p for p in big_list if p in set(other)]` rebuilds the 67k set on *every* iteration and looks like a hang.
+- Why/Context: both showed up in the SNA AAT PPI link-prediction notebook as apparent "20-minute" stalls; nothing in the progress log pointed at the line.
+- How/Apply: for reference checks prefer `jaccard_coefficient` / `adamic_adar_index` / `preferential_attachment` (genuine references) and use the CN generator for CN; always hoist `set(...)` out of comprehensions; run notebooks with a per-cell timing hook (`nbclient` `on_cell_start`) so a stall is localisable in seconds.
+
+Source: sna_aat session 2026-11-10 — two aborted 20-minute nbconvert runs.
+
+## 2026-11-10 — BioSNAP PPI edge files use CR-only line endings (gotcha) — `data/ppi`
+
+- What: `PP-Pathways_ppi.csv.gz` (SNAP BioSNAP human interactome) splits rows with `\r` only, so `readlines()`/`wc -l` see **one** line and pandas returns a single garbage row. Normalise `\r\n` → `\n` and `\r` → `\n` before parsing.
+- Why/Context: 342k real interactions silently became one unusable row; also flag that Entrez IDs need NCBI `gene_info` for symbols, and renamed genes (H2AFX→H2AX) are only resolvable via the Synonyms column.
+- How/Apply: read the gzip as text, replace CR variants, split; build symbol→ID maps official-first then synonyms via `setdefault`.
+
+Source: sna_aat session 2026-11-10 — PPI link prediction project.
+
 ## 2026-11-04 — Never send email from someone else's account (rule) — `comms/email`
 
 - What: completion/follow-up emails go only through an account the user owns and names; never reuse credentials found in a project `.env` (e.g. a teammate's Gmail app password) to send as them.
