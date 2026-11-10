@@ -843,6 +843,7 @@ in
     # rust/java elsewhere). Nix coverage is LSP + nixfmt; servers start lazily on
     # the first edit in that language.
     nil
+    nixd # Zed's Nix LSP (languages.Nix.language_servers in ~/.config/zed/settings.json)
     nixfmt-rfc-style
     awscli2
     jq
