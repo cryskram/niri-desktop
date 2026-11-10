@@ -155,6 +155,22 @@ in
         # still installs it and stable 26.05 ships an older one.
         dux-shell = unstable.dux-shell;
         quickshell = unstable.quickshell;
+
+        # VSCode 1.144 moved its bundled ripgrep (@vscode/ripgrep →
+        # @vscode/ripgrep-universal under node_modules.asar.unpacked), but the
+        # derivation still `rm`s the old path and dies. Satisfy that `rm` with a
+        # placeholder and point the new location at nixpkgs ripgrep instead.
+        # Drop when nixpkgs handles the new layout.
+        vscode = prev.vscode.overrideAttrs (old: {
+          prePatch = (old.prePatch or "") + ''
+            mkdir -p resources/app/node_modules/@vscode/ripgrep/bin
+            touch resources/app/node_modules/@vscode/ripgrep/bin/rg
+          '';
+          postPatch = (old.postPatch or "") + ''
+            rm resources/app/node_modules.asar.unpacked/@vscode/ripgrep-universal/bin/linux-x64/rg
+            ln -s ${final.ripgrep}/bin/rg resources/app/node_modules.asar.unpacked/@vscode/ripgrep-universal/bin/linux-x64/rg
+          '';
+        });
       }
     )
   ];
