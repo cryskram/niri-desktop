@@ -800,6 +800,51 @@ in
       };
     };
 
+    # Local models through Ollama (modules/ollama.nix serves :11434). Ollama speaks
+    # the OpenAI API, so this is `models.json` — no provider extension needed.
+    # `apiKey` is a dummy: Ollama ignores it, but pi requires one to expose a
+    # provider. Model ids must match `ollama list` exactly (tag included), and a
+    # model missing from `models` is invisible to /model even when pulled.
+    home.file.".pi/agent/models.json".text = builtins.toJSON {
+      "$schema" = "https://pi.dev/schemas/models.schema.json";
+      providers.ollama = {
+        name = "Ollama (local)";
+        baseUrl = "http://127.0.0.1:11434/v1";
+        api = "openai-completions";
+        apiKey = "ollama";
+        models = [
+          {
+            id = "qwen2.5:3b";
+            name = "Qwen2.5 3B (local)";
+            contextWindow = 32768;
+            maxTokens = 8192;
+            cost = {
+              input = 0;
+              output = 0;
+              cacheRead = 0;
+              cacheWrite = 0;
+            };
+          }
+          {
+            id = "gemma3:4b";
+            name = "Gemma 3 4B (local, vision)";
+            input = [
+              "text"
+              "image"
+            ];
+            contextWindow = 131072;
+            maxTokens = 8192;
+            cost = {
+              input = 0;
+              output = 0;
+              cacheRead = 0;
+              cacheWrite = 0;
+            };
+          }
+        ];
+      };
+    };
+
     # One-time cleanup for the pi extensions removed on 2026-10-16. Their state is
     # regenerable and nothing owns it once the extension is gone: the FTS index
     # (11M) and the cache-optimizer's stat shards/config would otherwise linger.
