@@ -846,6 +846,7 @@ in
     nixd # Zed's Nix LSP (languages.Nix.language_servers in ~/.config/zed/settings.json)
     nixfmt-rfc-style
     awscli2
+    google-cloud-sdk # gcloud/bq/gsutil; `gcloud components update` cannot work (read-only store)
     jq
     jdk17
     jdk # latest (21) — for projects needing latest, use JAVA_HOME=${pkgs.jdk}/lib/openjdk or devenv override
